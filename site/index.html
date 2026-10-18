@@ -1195,7 +1195,7 @@ async function openViewer(p, opts){
       const f = document.createElement('iframe');
       f.className = 'vyt'; f.title = titleOf(p); f.allowFullscreen = true; f.referrerPolicy = 'strict-origin-when-cross-origin';
       f.setAttribute('allow','autoplay; encrypted-media; picture-in-picture; fullscreen');
-      f.src = 'https://www.youtube.com/embed/'+m.yt+'?autoplay=1&rel=0&playsinline=1';
+      f.src = 'https://www.youtube.com/embed/'+m.yt+'?autoplay=1&mute=1&rel=0&playsinline=1';
       VIEW.stage.replaceChildren(f);
     } else {
       const a = document.createElement('a');
@@ -1220,9 +1220,8 @@ async function openViewer(p, opts){
   if(vurl && !/\.gif(\?|$)/i.test(vurl)){
     const v = document.createElement('video');
     v.controls = true; v.loop = true; v.playsInline = true; v.preload = 'auto'; v.src = vurl;
-    /* Opening a clip full screen is a deliberate tap, so it starts with sound on (the browser may still refuse, see play() below). */
-    if(AUDIO.vol < 0.05) AUDIO.vol = 0.6;
-    AUDIO.muted = false; v.muted = false; v.volume = AUDIO.vol; applyAudio();
+    /* Sound is always off when a clip opens; the speaker button or slider turns it on. */
+    v.muted = true; v.volume = AUDIO.vol;
     v.addEventListener('volumechange',()=>{ if(VIEW.root.hidden) return; AUDIO.muted = v.muted; if(v.volume>0 && v.volume!==AUDIO.vol){ AUDIO.vol = v.volume; saveVol(); } applyAudio(); });
     if(thumbSrc) v.poster = thumbSrc;
     v.addEventListener('loadedmetadata',()=>{ if(opts.t){ try{ v.currentTime = opts.t; }catch(e){} } });
