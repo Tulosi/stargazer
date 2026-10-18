@@ -81,6 +81,8 @@ body.deck-collapsed #panel,body.src-collapsed #srcpanel{display:none}
 #srcpanel{grid-template-columns:1fr;max-width:460px;gap:12px}
 @media (max-width:880px){.panel{grid-template-columns:1fr;gap:22px;padding:18px}}
 .pcol{display:grid;gap:12px;align-content:start;min-width:0}
+.pcol[hidden]{display:none}
+@media (min-width:881px){#panel:has(#browseCol[hidden]){grid-template-columns:1fr 1fr;max-width:640px}}
 .pcol h2{margin:0 0 2px;font-size:12px;font-weight:600;color:var(--muted)}
 .grp{display:grid;gap:7px}
 .linkbtn{border:0;background:none;color:inherit;font:inherit;text-decoration:underline;cursor:pointer;padding:0 0 0 8px;opacity:.8}
@@ -245,6 +247,8 @@ body.info-hover .card:focus-within .info,body.info-hover .card:focus-within .bad
 #viewer[hidden]{display:none}
 #viewer .vstage{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
 #viewer img,#viewer video{max-width:100%;max-height:100%;object-fit:contain}
+#viewer iframe.vyt{border:0;background:#000;width:min(100%,calc(100vh*16/9));aspect-ratio:16/9;max-height:100%}
+#viewer .vytlink{position:absolute;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translateX(-50%);padding:10px 18px;border-radius:999px;background:rgba(255,255,255,.9);color:#111;text-decoration:none;font-weight:600;font-size:14px}
 #viewer img{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-user-drag:none;will-change:transform;transition:none}
 #viewer .vstage{touch-action:none;overflow:hidden}
 #viewer .vclose{position:absolute;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));z-index:2;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:16px;line-height:1;cursor:pointer;display:grid;place-items:center}
@@ -314,7 +318,7 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
     </div>
 
     <div class="panel" id="panel" role="region" aria-label="Filters">
-      <div class="pcol">
+      <div class="pcol" id="browseCol" hidden>
         <h2>Browse</h2>
         <div class="grp"><span class="lbl">Content</span><div class="chips" id="catChips"></div></div>
         <div class="grp"><span class="lbl">Kind</span><div class="chips" id="kindChips"></div></div>
@@ -1134,6 +1138,21 @@ async function openViewer(p, opts){
     return;
   }
   if(thumbSrc) VIEW.stage.appendChild(mkImg(thumbSrc));   // show what's on the card straight away, then upgrade
+  if(m && m.yt){
+    /* YouTube: the real player, with its own controls and sound. It needs a web address (http/https), not a file opened from disk. */
+    if(YT_PLAY){
+      const f = document.createElement('iframe');
+      f.className = 'vyt'; f.title = titleOf(p); f.allowFullscreen = true; f.referrerPolicy = 'strict-origin-when-cross-origin';
+      f.setAttribute('allow','autoplay; encrypted-media; picture-in-picture; fullscreen');
+      f.src = 'https://www.youtube.com/embed/'+m.yt+'?autoplay=1&rel=0&playsinline=1';
+      VIEW.stage.replaceChildren(f);
+    } else {
+      const a = document.createElement('a');
+      a.className = 'vytlink'; a.href = 'https://www.youtube.com/watch?v='+m.yt; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = 'Watch on YouTube';
+      VIEW.stage.appendChild(a);
+    }
+    return;
+  }
   if(rgNeeds(p) && !rgBusy.has(p.id)){ rgBusy.add(p.id); try{ await rgRun(p); }catch(e){} if(tok!==VIEW.token) return; m = metaOf(p); }
   const vurl = m ? (m.vh || m.v || '') : '';
   if(vurl && !/\.gif(\?|$)/i.test(vurl)){
@@ -1396,6 +1415,7 @@ function updateChips(){
   $('catChips').replaceChildren(...CAT_ORDER.filter(c=>cc[c]||state.cats.has(c)).map(c=>chip(c,cc[c]||0,state.cats.has(c),()=>toggle(state.cats,c))));
   $('kindChips').replaceChildren(...KINDS.filter(([k])=>kc[k]||state.kinds.has(k)).map(([k,l])=>chip(l,kc[k]||0,state.kinds.has(k),()=>toggle(state.kinds,k))));
   $('mediaChips').replaceChildren(...STATUS.filter(([k])=>mc[k]||state.media.has(k)).map(([k,l])=>chip(l,mc[k]||0,state.media.has(k),()=>toggle(state.media,k))));
+  $('browseCol').hidden = !($('catChips').childElementCount || $('kindChips').childElementCount || $('mediaChips').childElementCount);   // nothing to browse until something is loaded
 }
 function updateSummary(){
   const active = state.cats.size||state.kinds.size||state.media.size||state.sub||state.q||state.fav||state.nsfw!=='hide'||!state.hideBroken||state.range!=='all';
