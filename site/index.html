@@ -236,8 +236,9 @@ input[type=range]{width:100%;accent-color:var(--sel);margin:0}
   background:hsl(var(--h) var(--ph-s) var(--ph-l));color:var(--ink);font:500 13px/1.25 var(--font);overflow-wrap:anywhere;transition:opacity .15s}
 .thumb .ph span{opacity:.7}
 @keyframes shimmer{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
-body.previews-loading .card:not(.is-dead) .thumb .ph{overflow:hidden}
-body.previews-loading .card:not(.is-dead) .thumb .ph::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.14) 50%,transparent 70%);animation:shimmer 1.4s ease-in-out infinite}
+/* shimmer whenever a card is waiting for its content: always, not only on the first load (picture still to arrive, or post details not fetched yet) */
+.card:not(.is-dead) .thumb:has(>img,>video.still) .ph,.card:not(.is-dead) .thumb .ph.pending,body.previews-loading .card:not(.is-dead) .thumb .ph{overflow:hidden}
+.card:not(.is-dead) .thumb:has(>img,>video.still) .ph::after,.card:not(.is-dead) .thumb .ph.pending::after,body.previews-loading .card:not(.is-dead) .thumb .ph::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.14) 50%,transparent 70%);animation:shimmer 1.4s ease-in-out infinite}
 .thumb .tstrip{position:absolute;left:0;right:0;bottom:0;padding:22px 12px 9px;background:linear-gradient(to top,rgba(0,0,0,.66),transparent);color:#fff;font:500 12.5px/1.3 var(--font);display:none;pointer-events:none;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 body.info-off .card:not(.info-open) .thumb:not(.nsfw) .tstrip{display:block}
 .stats .st.busy b::after{content:"";display:inline-block;width:4px;height:4px;margin-left:4px;border-radius:50%;background:var(--muted);vertical-align:middle;animation:pulse 1s ease-in-out infinite}
@@ -492,6 +493,7 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
         </label>
         <div class="ctlrow"><span></span><button class="pill" id="reshuffle" type="button" hidden>Reshuffle</button></div>
         <label class="ctlrow"><span>Subreddit</span><select id="subsel" class="field" aria-label="Subreddit"></select></label>
+        <div class="ctlrow"><span>Layout</span><div class="srcseg" id="layoutseg" role="group" aria-label="Layout"><button class="pill" type="button" data-l="masonry" aria-pressed="true">Masonry</button><button class="pill" type="button" data-l="grid" aria-pressed="false">Grid</button></div></div>
         <label class="ctlrow"><span>Tile size</span><input id="size" type="range" min="150" max="360" step="10" value="230"></label>
         <label class="ctlrow"><span>Card info</span>
           <select id="infomode" class="field" aria-label="Card info">
@@ -959,7 +961,7 @@ function fillCard(el,p){
   const vs = dead ? [] : playSources(m), v0 = vs[0] || '';
   const gl = m && m.gl && m.gl.length > 1 ? m.gl : null;
   const stats = m && !m.miss ? ((m.s||0) > 1 ? '<span>'+fmt(m.s)+' pts</span>' : '')+((m.n||0) > 0 ? '<span>'+fmt(m.n)+' comments</span>' : '') : '';
-  const ph = '<div class="ph" style="--h:'+hue(p.sub)+'"><span>r/'+esc(p.sub)+(dead?'<br><small>media unavailable</small>':'')+'</span></div>';
+  const ph = '<div class="ph'+(!m && !dead ? ' pending' : '')+'" style="--h:'+hue(p.sub)+'"><span>r/'+esc(p.sub)+(dead?'<br><small>media unavailable</small>':'')+'</span></div>';
   el._p = p; el._gi = 0; el.classList.toggle('is-dead', dead);
   el.innerHTML =
     '<a class="thumb'+(nsfw?' nsfw':'')+'" data-open'+(v0 ? ' data-v="'+esc(v0)+'"'+(vs.length>1 ? ' data-vc="'+esc(vs.slice(1,7).join('|'))+'"' : '') : '')+(m && m.ab ? ' data-ab="'+esc(m.ab)+'"' : '')+(m && m.ha!==undefined ? ' data-ha="'+(m.ha?1:0)+'"' : '')+' href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" aria-label="Open: '+esc(titleOf(p))+'">'
@@ -1594,7 +1596,14 @@ function measureGrid(){
   const tracks = cs.gridTemplateColumns.split(' ').map(parseFloat).filter(x=>x>0);
   if(tracks.length){ cols = tracks.length; colW = tracks[0]; }
 }
+let LAYOUT = 'masonry';
+try{ if(localStorage.getItem('saved-posts-layout')==='grid') LAYOUT = 'grid'; }catch(e){}
 function layoutCard(el,p){
+  if(LAYOUT==='grid'){            // a perfect grid: every tile the same square size
+    el.style.gridRow = 'span '+Math.max(10, Math.round((colW + GAP)/(ROW+GAP)));
+    el.style.gridColumn = '';
+    return;
+  }
   const m = metaOf(p);
   const ar = m && m.w && m.h ? m.w/m.h : 0;            // width / height, 0 when unknown
   const wide = ar >= 1.6 && cols >= 3;                  // panoramic media gets a double-width tile
@@ -1765,7 +1774,7 @@ function updateSummary(){
 const touchMQ = matchMedia('(hover: none)');
 const auto = {on:false, focus:touchMQ.matches}, playing = new Set(), MAX_AUTO = 18;
 let focused = null, focusCard = null; const viewSet = new Set(), cardView = new Set();
-const cardIO = new IntersectionObserver(es=>{ for(const e of es) e.isIntersecting ? cardView.add(e.target) : cardView.delete(e.target); if(auto.focus) schedFocus(); },{threshold:[0,.25,.5,.75,1]});   // on touch screens only the media nearest the middle of the screen plays
+const cardIO = new IntersectionObserver(es=>{ for(const e of es){ if(e.isIntersecting) cardView.add(e.target); else { cardView.delete(e.target); const lt = e.target.querySelector('.thumb[data-v]'); if(lt) leftSound(lt); } } if(auto.focus) schedFocus(); },{threshold:[0,.25,.5,.75,1]});   // on touch screens only the media nearest the middle of the screen plays
 function fmtTime(x){ x = Math.max(0,Math.floor(x||0)); return Math.floor(x/60)+':'+String(x%60).padStart(2,'0'); }
 function clearPlayUI(t){
   cancelAnimationFrame(t._raf);
@@ -1786,6 +1795,10 @@ const audioUIs = new Set();
 /* A clip is audible while the pointer is on it, or in focus mode when it is the focused one, or when its own speaker button / slider was used
    (touch screens have no hover, so pressing the speaker is the way to listen to a card). */
 const isAudible = t => !!t._soundOn || (auto.focus ? (auto.on ? t===focused : !!t._hover) : !!t._hover);
+/* Sound follows the user's attention: moving on from a card whose sound was switched on mutes it, and switching sound on for one card silences any other. */
+function leftSound(t){ if(t._soundOn && !viewerOpen()){ t._soundOn = false; AUDIO.muted = true; applyAudio(); } }
+let soundT = null;
+function soundOnlyFor(t){ if(soundT && soundT!==t) soundT._soundOn = false; for(const u of audioUIs) if(u.t!==t) u.t._soundOn = false; soundT = t; }
 const viewerOpen = () => typeof VIEW!=='undefined' && VIEW.root && !VIEW.root.hidden;
 function applyAudio(){
   for(const u of audioUIs){
@@ -1887,10 +1900,10 @@ function buildControls(t, el, isGif){
   const entry = {t, el, vol, volr, st:'', aud:null};
   audioUIs.add(entry);
   setupSound(t, el, ctl, entry);
-  vol.addEventListener('click',()=>{ setMuted(!AUDIO.muted); t._soundOn = !AUDIO.muted; applyAudio(); });
+  vol.addEventListener('click',()=>{ const wasOn = !AUDIO.muted && isAudible(t); if(!wasOn) soundOnlyFor(t); setMuted(wasOn); t._soundOn = !wasOn; applyAudio(); });
   volr.addEventListener('input',()=>{
     const v = volr.value/100;
-    if(v===0) AUDIO.muted = true; else { AUDIO.muted = false; AUDIO.vol = v; saveVol(); t._soundOn = true; }
+    if(v===0) AUDIO.muted = true; else { AUDIO.muted = false; AUDIO.vol = v; saveVol(); t._soundOn = true; soundOnlyFor(t); }
     applyAudio();
   });
   applyAudio();
@@ -2002,7 +2015,7 @@ function pickFocus(){
   if(focusCard && best && focusCard!==best){ const fd = score(focusCard); if(fd!==null && bd > fd-40) best = focusCard; }
   if(best!==focusCard){ if(focusCard) focusCard.classList.remove('is-focus'); focusCard = best; if(best) best.classList.add('is-focus'); }
   const t = best ? best.querySelector('.thumb[data-v]') : null;
-  if(t!==focused){ const old = focused; focused = t; if(old) syncPlay(old); if(t) syncPlay(t); }
+  if(t!==focused){ const old = focused; focused = t; if(old){ leftSound(old); syncPlay(old); } if(t) syncPlay(t); }
 }
 const schedFocus = () => { if(pfRaf) return; pfRaf = requestAnimationFrame(()=>{ pfRaf = 0; pickFocus(); }); };
 addEventListener('scroll',schedFocus,{passive:true});
@@ -2158,6 +2171,12 @@ $('favonly').addEventListener('change',e=>{ state.fav = e.target.checked; refres
 updateFavCount();
 $('subsel').addEventListener('change',e=>{ state.sub=e.target.value; refresh(); });
 if(matchMedia('(max-width:560px)').matches) $('size').value = $('size').max;
+function paintLayout(){ document.querySelectorAll('#layoutseg .pill').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.l===LAYOUT))); document.body.classList.toggle('layout-grid', LAYOUT==='grid'); }
+document.querySelectorAll('#layoutseg .pill').forEach(b=>b.addEventListener('click',()=>{
+  LAYOUT = b.dataset.l; try{ localStorage.setItem('saved-posts-layout', LAYOUT); }catch(e){}
+  paintLayout(); relayoutAll();
+}));
+paintLayout();
 $('size').addEventListener('input',e=>{ document.documentElement.style.setProperty('--card',e.target.value+'px'); relayoutAll(); });
 
 /* ---------- live metadata from Reddit ---------- */
@@ -3288,7 +3307,7 @@ async function feedRound(){
         FEED.loading = false; $('loadText').innerHTML = '<span class="err">Reddit: '+esc(e.message||'request failed')+'. Try again in a moment.</span>'; updateMore(); return;
       }
       FEED.live = false; syncSortUI();
-      FEED.note = 'Could not read Reddit\'s hot feed from this page ('+(e instanceof TypeError ? 'blocked by the browser' : (e.message||'failed'))+'), so this is an approximation built from the archives. To get the real hot feed, run hot_relay.py (python hot_relay.py) and open http://localhost:8765.';
+      FEED.note = 'Could not read Reddit\'s hot feed from this page ('+(e instanceof TypeError ? 'blocked by the browser' : (e.message||'failed'))+'), so this is an approximation built from the archives.';
     }
   }
   const limit = Math.min(100, Math.max(4, Math.ceil(ROUND/todo.length)));
