@@ -6,6 +6,7 @@ Hosted on GitHub Pages. Accounts and storage come from Supabase (free plan). The
 ## Layout
 - `site/index.html`  the whole app (HTML, CSS, JS). `site/config.js` holds the Supabase URL and anon key (safe to publish; Row Level Security protects data).
 - `supabase/schema.sql`  table, row-level security and the `merge_posts` function. Run once in the Supabase SQL editor.
+- `supabase/functions/redgifs/index.ts`  optional Edge Function (deployed by hand, Verify JWT off): looks RedGifs clips up for the page when the browser cannot reach the RedGifs API ("Failed to fetch"). The page tries RedGifs directly first, then this helper.
 - `tools/hot_relay.py`  optional local relay that lets the page read Reddit's real hot feed (browsers cannot call Reddit directly).
 - `.github/workflows/`  `pages.yml` deploys `site/`; `keepalive.yml` pings Supabase so the free project is not paused.
 - `tests/`  Playwright checks (`merge_test.py`, `nsfw_test.py`, `panels_test.py`, `lists_test.py`, `reset_test.py`, `viewer_yt_test.py`, `wayback_test.py`, `gone_pic_test.py`, `audio_test.py`).

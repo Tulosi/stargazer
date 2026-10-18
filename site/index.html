@@ -1076,7 +1076,7 @@ const RGC = {};
 try{ const o = JSON.parse(localStorage.getItem(RGKEY)||'{}'), now = Date.now(); for(const k in o) if(o[k] && now-o[k].t < RG_TTL) RGC[k] = o[k]; }catch(e){}
 let rgT, rgSave; const saveRG = () => { clearTimeout(rgT); rgT = setTimeout(()=>{ try{ localStorage.setItem(RGKEY, JSON.stringify(RGC)); }catch(e){} },800); };
 const rgSlug = p => { const m = metaOf(p), x = RG_RE.exec((m && m.u) || ''); return x ? x[1].toLowerCase() : (m && m.g ? m.g.toLowerCase() : (m && m.rs) || ''); };   // posts that only carry RedGifs embed data have no redgifs link, so use the name from the embed
-let rgTok = null, rgBlockedUntil = 0, RG_ERR = '';
+let rgTok = null, rgBlockedUntil = 0, RG_ERR = '', rgDirectOff = 0;
 async function rgToken(force){
   if(!force && rgTok && Date.now() < rgTok.exp) return rgTok.v;
   const r = await fetch('https://api.redgifs.com/v2/auth/temporary');
@@ -1084,26 +1084,35 @@ async function rgToken(force){
   const j = await r.json(); if(!j.token) throw new Error('no token');
   rgTok = {v:j.token, exp:Date.now()+20*36e5}; return rgTok.v;
 }
-async function rgFetch(slug, retry){
-  const tok = await rgToken(!!retry);
-  const r = await fetch('https://api.redgifs.com/v2/gifs/'+slug, {headers:{Authorization:'Bearer '+tok}});
-  if(r.status===401 && !retry) return rgFetch(slug,true);
-  if(r.status===404 || r.status===410) return {gone:1};
-  if(!r.ok) throw new Error('HTTP '+r.status);
-  return rgShape((await r.json()).gif);
-}
+async function rgFetch(slug){ const o = await rgFetchMany([slug]); return o[slug]; }
 function rgShape(g){
   g = g || {}; const u = g.urls || {};
   const ha = !!g.hasAudio, v = ha ? (u.hd || u.sd) : (u.sd || u.hd); if(!v) return {gone:1};
   return {v, vh:u.hd||v, ha, th:u.poster||u.thumbnail||'', w:g.width||0, h:g.height||0};
 }
 /* Many clips are looked up in one request (the API takes a list of ids), which keeps the number of calls low enough that RedGifs doesn't start refusing them. */
-async function rgFetchMany(slugs, retry){
+async function rgDirectMany(slugs, retry){
   const tok = await rgToken(!!retry);
   const r = await fetch('https://api.redgifs.com/v2/gifs?ids='+slugs.join(','), {headers:{Authorization:'Bearer '+tok}});
-  if(r.status===401 && !retry) return rgFetchMany(slugs,true);
+  if(r.status===401 && !retry) return rgDirectMany(slugs,true);
   if(!r.ok) throw new Error('HTTP '+r.status);
-  const out = {}, list = (await r.json()).gifs || [];
+  return r.json();
+}
+async function rgFetchMany(slugs){
+  let j;
+  try{
+    if(Date.now() < rgDirectOff) throw new TypeError('direct lookups are blocked here');
+    j = await rgDirectMany(slugs);
+  }catch(e){
+    if(!(e instanceof TypeError)) throw e;
+    rgDirectOff = Date.now() + 5*60000;   // the browser would not talk to RedGifs ("Failed to fetch"): don't keep knocking
+    if(!CLOUD_ON) throw e;
+    // ask the Supabase helper function (supabase/functions/redgifs) to do the lookup instead
+    const r = await fetch(CFG.supabaseUrl.replace(/\/$/,'')+'/functions/v1/redgifs?ids='+encodeURIComponent(slugs.join(',')));
+    if(!r.ok) throw new Error('helper '+r.status);
+    j = await r.json();
+  }
+  const out = {}, list = j.gifs || [];
   for(const g of list) if(g && g.id) out[String(g.id).toLowerCase()] = rgShape(g);
   for(const sl of slugs) if(!out[sl]) out[sl] = {gone:1};
   return out;
@@ -1120,13 +1129,17 @@ function rgApply(p,res){
   const el = cardEls.get(p.id); if(el) fillCard(el,p);
   if(res.gone) updateDeadCount();
 }
+function rgWarn(){
+  if(window._rgWarned) return; window._rgWarned = 1;
+  toast('RedGifs sound lookup failed ('+RG_ERR+')'+(/^helper 404/.test(RG_ERR) ? ': the RedGifs helper has not been deployed to Supabase yet.' : ', so some clips may be silent. It will retry.'));
+}
 async function rgRun(p){
   const slug = rgSlug(p), m = metaOf(p);
   let res = RGC[slug];
   if(!res){
     if(Date.now() >= rgBlockedUntil){
       try{ res = await rgFetch(slug); RGC[slug] = Object.assign({t:Date.now()}, res); saveRG(); }
-      catch(e){ RG_ERR = (e && e.message) || String(e); if(!window._rgWarned){ window._rgWarned = 1; toast('RedGifs sound lookup failed ('+RG_ERR+'), so some clips may be silent.'); } if(e instanceof TypeError) rgBlockedUntil = Date.now() + 90000; res = null; }   // network or CORS failure: leave the API alone for a minute, and remember why (shown if sound is missing)
+      catch(e){ RG_ERR = (e && e.message) || String(e); rgWarn(); if(e instanceof TypeError) rgBlockedUntil = Date.now() + 90000; res = null; }   // network or CORS failure: leave the API alone for a minute, and remember why (shown if sound is missing)
     }
     if(!res) res = rgGuess(m);
   }
@@ -1152,7 +1165,7 @@ async function rgPump(){
           saveRG(); rgFails = 0;
         }catch(e){
           failed = true; rgFails++; RG_ERR = (e && e.message) || String(e);
-          if(!window._rgWarned){ window._rgWarned = 1; toast('RedGifs sound lookup failed ('+RG_ERR+'), so some clips may be silent. It will retry.'); }
+          rgWarn();
           rgBlockedUntil = Date.now() + Math.min(300000, 20000 * Math.pow(2, rgFails-1));   // back off: 20 s, 40 s, 80 s ... up to 5 min
           if(rgFails <= 5) rgQueue.push(...batch);   // try these again after the pause
           else batch.forEach(p=>rgBusy.delete(p.id));
