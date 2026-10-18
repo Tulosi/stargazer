@@ -1494,7 +1494,7 @@ function introHtml(){
   return '<div class="intro"><p class="nodata" role="status"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M8 4.6v4"/><path d="M8 11.3v.1"/></svg>You currently have no data source selected.</p>'
    + '<p>Stargazer is a tool designed to allow users to parse and visually display the contents of their Reddit account\u2019s \u201CSaved Post\u201D user data. This may prove useful given the native Reddit website and app will only show the latest 1000 saved items, whereas your Reddit user data is not similarly limited.</p>'
    + '<ol class="steps"><li><span class="n" aria-hidden="true">1</span><span>Request your Reddit User data here: <a href="https://www.reddit.com/settings/data-request" target="_blank" rel="noopener noreferrer">https://www.reddit.com/settings/data-request</a></span></li>'
-   + '<li><span class="n" aria-hidden="true">2</span><span>Extract the saved <code>saved_posts.csv</code> and open it via the source tab. By default everything stays local and nothing is uploaded.</span></li></ol>'
+   + '<li><span class="n" aria-hidden="true">2</span><span>Extract <code>saved_posts.csv</code> and open it via the source tab. By default everything stays local and nothing is uploaded.</span></li></ol>'
    + (CLOUD_ON ? '<p>You can, if you wish, create an account and upload the CSV to sync across devices.</p>' : '')
    + '</div>';
 }
