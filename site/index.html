@@ -388,6 +388,12 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
         <h2>Source</h2>
         <div class="srcseg"><button class="pill" id="srcCsv" type="button" aria-pressed="true">Saved CSV</button><button class="pill" id="srcSub" type="button" aria-pressed="false">Subreddit</button></div>
         <div class="grp" id="acct" hidden>
+          <div class="grp" id="acReset" hidden>
+            <strong>Choose a new password</strong>
+            <input id="acNew" class="field" type="password" placeholder="New password (8+ characters)" autocomplete="new-password" aria-label="New password">
+            <input id="acNew2" class="field" type="password" placeholder="Repeat new password" autocomplete="new-password" aria-label="Repeat new password">
+            <div class="btnrow"><button class="pill" id="acSetPw" type="button">Set new password</button><button class="pill" id="acSkipPw" type="button">Not now</button></div>
+          </div>
           <div class="grp" id="acctOut">
             <input id="acEmail" class="field" type="email" placeholder="Email" autocomplete="email" aria-label="Email">
             <input id="acPass" class="field" type="password" placeholder="Password (8+ characters)" autocomplete="current-password" aria-label="Password">
@@ -2462,11 +2468,13 @@ async function syncCloud(rec){
     return true;
   } finally { cloudBusy = false; }
 }
+let RESET_MODE = false, RETURN_ERR = '';   // RESET_MODE: arrived from a password-reset email, so ask for a new password
 function acctRender(){
   const on = CLOUD_ON;
   $('acct').hidden = !on;
   if(!on) return;
-  $('acctOut').hidden = !!SESSION; $('acctIn').hidden = !SESSION;
+  $('acReset').hidden = !(RESET_MODE && SESSION);
+  $('acctOut').hidden = !!SESSION; $('acctIn').hidden = !SESSION || (RESET_MODE && !!SESSION);
   $('acWho').textContent = SESSION ? 'Signed in as '+(SESSION.email || 'your account')+'. Your list syncs across devices.' : '';
   $('acGh').hidden = !((CFG.providers||[]).includes('github'));
   $('csvTools').classList.toggle('has-cloud', !!SESSION);
@@ -2504,6 +2512,22 @@ $('acForgot').onclick = async () => {
 };
 $('acGh').onclick = () => { location.href = SB+'/auth/v1/authorize?provider=github&redirect_to='+encodeURIComponent(location.origin+location.pathname); };
 $('acSync').onclick = async () => { acctMsg('Syncing...'); await autoSync(true); acctMsg('Synced.'); };
+async function setNewPassword(){
+  const a = $('acNew').value, b = $('acNew2').value;
+  if(a.length < 8){ acctMsg('Use at least 8 characters.','warn'); return; }
+  if(a !== b){ acctMsg('The two passwords do not match.','warn'); return; }
+  acctMsg('Saving...');
+  try{
+    const tok = await sbToken();
+    await fetch(SB+'/auth/v1/user', {method:'PUT', headers:{apikey:CFG.supabaseAnonKey, Authorization:'Bearer '+tok, 'Content-Type':'application/json'}, body:JSON.stringify({password:a})}).then(sbJson);
+    RESET_MODE = false; $('acNew').value = ''; $('acNew2').value = '';
+    acctRender(); acctMsg('Password updated. Syncing...');
+    await linkAccount(); acctMsg('Password updated. '+$('acMsg').textContent);   // keep the confirmation visible next to the sync result
+  }catch(e){ acctMsg(e.message || 'Could not change the password.','warn'); }
+}
+$('acSetPw').onclick = setNewPassword;
+['acNew','acNew2'].forEach(id=>$(id).addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); setNewPassword(); } }));
+$('acSkipPw').onclick = () => { RESET_MODE = false; $('acNew').value = ''; $('acNew2').value = ''; acctRender(); acctMsg('You are signed in. You can change your password later by using "Forgot password" after signing out.'); linkAccount(); };
 $('acOut').onclick = async () => {
   const d = await confirmDialog({title:'Sign out?', paras:['Your list stays on your account. Signing out stops syncing on this device.'], ok:'Sign out', option:'Also remove the list from this browser (for a shared computer)'});
   if(d!=='ok') return;
@@ -2521,13 +2545,21 @@ $('acOut').onclick = async () => {
 };
 /* returning from "Continue with GitHub": the tokens arrive in the address after the # */
 async function takeOAuthReturn(){
+  if(CLOUD_ON && /error_description=/.test(location.hash)){   // e.g. an expired or already-used reset link
+    const e = new URLSearchParams(location.hash.slice(1));
+    history.replaceState(null, '', location.pathname + location.search);
+    RETURN_ERR = /expired|invalid/i.test(e.get('error_description')||'') ? 'That email link has expired or was already used. Use "Forgot password" to get a new one.' : (e.get('error_description')||'Sign-in failed.').replace(/\+/g,' ');
+    return false;
+  }
   if(!CLOUD_ON || !/access_token=/.test(location.hash)) return false;
   const h = new URLSearchParams(location.hash.slice(1));
   history.replaceState(null, '', location.pathname + location.search);
   if(!h.get('access_token')) return false;
   const j = {access_token:h.get('access_token'), refresh_token:h.get('refresh_token'), expires_at:Number(h.get('expires_at')) || undefined, expires_in:Number(h.get('expires_in')) || 3600};
   try{ const u = await fetch(SB+'/auth/v1/user', {headers:{apikey:CFG.supabaseAnonKey, Authorization:'Bearer '+j.access_token}}).then(sbJson); j.user = u; }catch(e){}
-  return setSession(j);
+  const ok = setSession(j);
+  if(ok && h.get('type')==='recovery') RESET_MODE = true;
+  return ok;
 }
 async function pickCsv(forMerge){
   if(FSA){
@@ -2945,7 +2977,12 @@ $('csvReconnect').addEventListener('click',async()=>{
   await initData();
   acctRender();
   startCsvMode();
-  if(returned) linkAccount(); else if(SESSION && LIB.cur && LIB.cur.cloud) autoSync(true);
+  if(RESET_MODE || RETURN_ERR){   // show the Source panel, where the new-password form (or the problem) is
+    if(document.body.classList.contains('src-collapsed')) $('srctoggle').click();
+    if(RETURN_ERR) acctMsg(RETURN_ERR,'warn'); else acctMsg('Choose a new password for your account.');
+    if(RESET_MODE) $('acNew').focus();
+  }
+  if(returned && !RESET_MODE) linkAccount(); else if(!returned && SESSION && LIB.cur && LIB.cur.cloud) autoSync(true);
 })();
 
 </script>
