@@ -83,6 +83,9 @@ body.deck-collapsed #panel,body.src-collapsed #srcpanel{display:none}
 .pcol{display:grid;gap:12px;align-content:start;min-width:0}
 .pcol h2{margin:0 0 2px;font-size:12px;font-weight:600;color:var(--muted)}
 .grp{display:grid;gap:7px}
+.linkbtn{border:0;background:none;color:inherit;font:inherit;text-decoration:underline;cursor:pointer;padding:0 0 0 8px;opacity:.8}
+.linkbtn:hover{opacity:1}
+.linkbtn[hidden]{display:none}
 .lbl{font-size:12px;color:var(--muted)}
 .grp:has(.chips:empty){display:none}
 .ctlrow{display:grid;grid-template-columns:92px minmax(0,1fr);align-items:center;gap:10px;font-size:13px}
@@ -425,7 +428,7 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
   <div class="status">
     <div class="load" id="load" aria-live="polite">
       <span id="loadText">Waiting to load previews</span>
-      <span id="recText"></span>
+      <span id="recText"></span><button type="button" class="linkbtn" id="recStop" hidden>Stop searching</button>
       <div class="bar"><i id="loadBar"></i></div>
     </div>
     <div class="summary" id="summary"></div>
@@ -1923,7 +1926,8 @@ const NET = {stalls:0};
    (honouring Retry-After, otherwise 8s, 16s, 32s... up to 90s), and a few automatic retries. The countdown shows in the pause pill. */
 const APIH = {
   'api.pullpush.io':{gap:1600, until:0, last:0, strikes:0, name:'PullPush'},
-  'arctic-shift.photon-reddit.com':{gap:350, until:0, last:0, strikes:0, name:'Arctic Shift'}
+  'arctic-shift.photon-reddit.com':{gap:350, until:0, last:0, strikes:0, name:'Arctic Shift'},
+  'web.archive.org':{gap:700, until:0, last:0, strikes:0, name:'Wayback Machine'}
 };
 const apiHost = u => APIH[hostOf(u)] || null;
 async function apiGate(h){
@@ -2011,28 +2015,25 @@ function parseSnapshot(html,p){
   return {t:title,o:nsfw,th:thumb,m:urlType(url),u:url,n:0,s:0,a:'',c:0,rec:'Wayback',v:playableFromUrl(url)};
 }
 async function waybackRecover(p){
-  for(const host of ['old.reddit.com','www.reddit.com']){
-    let rows;
+  /* Both Reddit hosts are looked up at once, then at most two snapshots are tried, each with a short time limit. */
+  const lookup = host => timed('https://web.archive.org/cdx/search/cdx?url='+encodeURIComponent(host+'/r/'+p.sub+'/comments/'+p.id+'/')
+      +'&matchType=prefix&output=json&fl=timestamp,original&filter=statuscode:200&limit=6', 9000, 'json')
+    .then(rows=>rows.slice(1).filter(r=>{ try{ return new URL(r[1]).pathname.split('/').filter(Boolean).length <= 5; }catch(e){ return false; } }))
+    .catch(()=>[]);
+  const hits = (await Promise.all(['old.reddit.com','www.reddit.com'].map(lookup))).flat().slice(0,2);
+  for(const [ts,orig] of hits){
     try{
-      rows = await getJson('https://web.archive.org/cdx/search/cdx?url='+encodeURIComponent(host+'/r/'+p.sub+'/comments/'+p.id+'/')
-        +'&matchType=prefix&output=json&fl=timestamp,original&filter=statuscode:200&limit=8');
-    }catch(e){ continue; }
-    const hits = rows.slice(1).filter(r=>{ try{ const parts = new URL(r[1]).pathname.split('/').filter(Boolean); return parts.length <= 5; }catch(e){ return false; } }).slice(0,2);
-    for(const [ts,orig] of hits){
-      try{
-        const html = await timed('https://web.archive.org/web/'+ts+'id_/'+orig, 20000, 'text');
-        const m = parseSnapshot(html, p);
-        if(m){ m.wb = 'https://web.archive.org/web/'+ts+'/'+orig; return m; }
-      }catch(e){}
-      await sleep(400);
-    }
-    await sleep(300);
+      const html = await timed('https://web.archive.org/web/'+ts+'id_/'+orig, 12000, 'text');
+      const m = parseSnapshot(html, p);
+      if(m){ m.wb = 'https://web.archive.org/web/'+ts+'/'+orig; return m; }
+    }catch(e){}
   }
   return null;
 }
+const REC = {stop:false};
 async function recoverAll(){
   const gen = loadGen; recovering = true;
-  try{ await recoverInner(gen); } finally{ if(gen===loadGen) recovering = false; }
+  try{ await recoverInner(gen); } finally{ if(gen===loadGen) recovering = false; const rs = $('recStop'); if(rs) rs.hidden = true; }
 }
 async function recoverInner(gen){
   const now = Date.now(), recText = $('recText');
@@ -2065,17 +2066,32 @@ async function recoverInner(gen){
     todo = todo.filter(p=>!(META[p.id].rec));
     saveCache(); onMeta(POSTS.filter(p=>found.includes(p.id)));
   }
-  let i = 0; NET.stalls = 0;
-  for(const p of todo){
-    if(gen!==loadGen) return;
-    i++;
-    status('Searching Wayback Machine '+i+' / '+todo.length+'. Recovered so far: '+found.length+' of '+total);
-    if(NET.stalls >= 6){ status('The Wayback Machine is not responding, so I skipped the remaining '+(todo.length-i+1)+' posts. They will be tried again next visit.'); saveCache(); onMeta(POSTS.filter(q=>found.includes(q.id))); return; }
-    const m = await Promise.race([waybackRecover(p), sleep(45000).then(()=>null)]);
-    if(m){ META[p.id] = m; counts.Wayback = (counts.Wayback||0)+1; found.push(p.id); onMeta([p]); }
-    else META[p.id].rt = Date.now();
-    if(i%10===0) saveCache();
-    await sleep(500);
+  /* Wayback is the slow one, so: three posts at a time (requests to it are still spaced out and back off on HTTP 429), a 30 second cap per post,
+     and give up for this visit after 4 timeouts in a row, after 4 minutes, or when "Stop searching" is pressed. Posts not reached are tried next visit. */
+  NET.stalls = 0; REC.stop = false;
+  const queue = todo.slice(), t0 = Date.now(), BUDGET = 240000; let i = 0, gaveUp = '';
+  $('recStop').hidden = false;
+  const worker = async () => {
+    while(queue.length){
+      if(gen!==loadGen) return;
+      if(REC.stop){ gaveUp = 'Stopped.'; return; }
+      if(NET.stalls >= 4){ gaveUp = 'The Wayback Machine is not responding.'; return; }
+      if(Date.now()-t0 > BUDGET){ gaveUp = 'That was taking too long.'; return; }
+      const p = queue.shift(); i++;
+      status('Searching Wayback Machine '+i+' / '+todo.length+'. Recovered so far: '+found.length+' of '+total);
+      const m = await Promise.race([waybackRecover(p), sleep(30000).then(()=>null)]);
+      if(gen!==loadGen) return;
+      if(m){ META[p.id] = m; counts.Wayback = (counts.Wayback||0)+1; found.push(p.id); onMeta([p]); }
+      else META[p.id].rt = Date.now();
+      if(i%10===0) saveCache();
+    }
+  };
+  await Promise.all([worker(), worker(), worker()]);
+  $('recStop').hidden = true;
+  if(gen!==loadGen) return;
+  if(gaveUp && queue.length){
+    status(gaveUp+' Skipped the last '+queue.length+' posts; they will be tried again next visit. Recovered '+found.length+' of '+total+'.');
+    saveCache(); onMeta(POSTS.filter(q=>found.includes(q.id))); return;
   }
   saveCache();
   const parts = Object.entries(counts).map(([k,v])=>k+' '+v).join(', ');
@@ -2856,6 +2872,7 @@ $('subForm').addEventListener('submit',async e=>{
   startSubMode(r.subs);
 });
 $('moreBtn').addEventListener('click',()=>feedRound());
+$('recStop').addEventListener('click',()=>{ REC.stop = true; $('recStop').hidden = true; });
 $('csvSel').addEventListener('change',async()=>{
   const rec = LIB.list.find(r=>r.id===$('csvSel').value); if(!rec) return;
   await activate(rec); startCsvMode();
