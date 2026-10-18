@@ -1618,7 +1618,7 @@ let stT; function updateStats(){
     $('stats').hidden = !POSTS.length || MODE!=='csv';
   },120);
 }
-/* Phones: the count strip folds to one line while scrolling down and opens again on scroll up. */
+/* Phones: the count strip folds to one line while scrolling down and stays folded until the page is back at the very top. */
 (function(){
   const el = $('stats'), mq = matchMedia('(max-width:720px)'); let compact = false, lastY = scrollY, busy = false, acc = 0;
   function setCompact(on){
@@ -1639,7 +1639,7 @@ let stT; function updateStats(){
     if(y < 24){ acc = 0; setCompact(false); return; }
     if((d>0) !== (acc>0)) acc = 0;
     acc += d;
-    if(acc > 36) setCompact(true); else if(acc < -24) setCompact(false);
+    if(acc > 36) setCompact(true);   // it only opens again at the very top (above)
   },{passive:true});
   mq.addEventListener && mq.addEventListener('change',()=>{ compact = false; el.classList.remove('compact'); el.style.height = ''; });
 })();

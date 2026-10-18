@@ -25,7 +25,7 @@ with sync_playwright() as p:
     check('note shows on hover', pg.is_visible('#stats .st em') and 'Excludes filtered' in pg.inner_text('#stats .st em'))
     ev("scrollTo(0,400)"); pg.wait_for_timeout(200)
     check('strip stays on screen when scrolled', ev("document.getElementById('stats').getBoundingClientRect().top") < 120)
-    # phone: folds to one line on scroll down, opens again on scroll up
+    # phone: folds to one line on scroll down, stays folded on scroll up, opens only at the very top
     m = b.new_page(viewport={'width': 400, 'height': 700}); m.route('**/*', lambda r: r.continue_() if r.request.url.startswith('file:') else r.abort())
     m.goto(PAGE); m.wait_for_timeout(800)
     m.evaluate("""async(t)=>{ await persistRec({id:'x',name:'x.csv',text:t,handle:null,updated:Date.now()}); await activate(await idbReq('csv','readonly',s=>s.get('x'))); startCsvMode(); }""", H + rows * 1)
@@ -38,7 +38,9 @@ with sync_playwright() as p:
     check('scrolling down folds the strip to one line', m.evaluate("document.getElementById('stats').classList.contains('compact')") and h_small < h_open)
     for y in (180, 120, 60): m.evaluate("y=>scrollTo(0,y)", y); m.wait_for_timeout(120)
     m.wait_for_timeout(700)
-    check('scrolling up restores two lines', (not m.evaluate("document.getElementById('stats').classList.contains('compact')")) and abs(m.evaluate("document.getElementById('stats').offsetHeight") - h_open) < 2)
+    check('scrolling up (not yet at the top) keeps it folded', m.evaluate("document.getElementById('stats').classList.contains('compact')"))
+    m.evaluate("scrollTo(0,0)"); m.wait_for_timeout(900)
+    check('back at the very top restores two lines', (not m.evaluate("document.getElementById('stats').classList.contains('compact')")) and abs(m.evaluate("document.getElementById('stats').offsetHeight") - h_open) < 2)
     check('no page errors', not errs)
     pg.screenshot(path=os.environ.get('SHOT','/tmp/stats.png'))
     b.close()
