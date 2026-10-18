@@ -680,7 +680,14 @@ try{
   const c = JSON.parse(localStorage.getItem(CACHE_KEY)||'null');
   if(c && Date.now()-c.t < CACHE_TTL) Object.assign(META, c.d);
 }catch(e){}
-function saveCache(){ try{ const d = {}; for(const id in META) if(ROWSET.has(id)) d[id] = META[id]; localStorage.setItem(CACHE_KEY, JSON.stringify({t:Date.now(), d})); }catch(e){} }
+/* Posts saved from the Subreddit viewer are often not in any archive yet, so the details the viewer already had (video address, RedGifs name, thumbnail) are kept
+   here with no expiry, and used until an archive copy is wanted. The newest 400 are kept. */
+const LMKEY = 'saved-posts-localmeta-v1';
+let LOCALMETA = {};
+try{ LOCALMETA = JSON.parse(localStorage.getItem(LMKEY)||'{}') || {}; for(const id in LOCALMETA) if(!META[id]) META[id] = LOCALMETA[id]; }catch(e){ LOCALMETA = {}; }
+function saveLocalMeta(){ try{ const ids = Object.keys(LOCALMETA); for(const id of ids) if(META[id] && !META[id].miss) LOCALMETA[id] = META[id]; for(const id of Object.keys(LOCALMETA).slice(0,-400)) delete LOCALMETA[id]; localStorage.setItem(LMKEY, JSON.stringify(LOCALMETA)); }catch(e){} }
+function keepLocalMeta(id){ if(META[id] && !META[id].miss){ LOCALMETA[id] = META[id]; saveLocalMeta(); } }
+function saveCache(){ try{ const d = {}; for(const id in META) if(ROWSET.has(id)) d[id] = META[id]; localStorage.setItem(CACHE_KEY, JSON.stringify({t:Date.now(), d})); }catch(e){} saveLocalMeta(); }
 
 /* ---------- derived values ---------- */
 const metaOf = p => META[p.id];
@@ -3153,6 +3160,7 @@ async function toggleSave(p){
     toast('Deleted from "'+LIB.cur.name+'"');
   } else {
     ROWS.unshift({id:p.id, perma:p.perma || p.link, starred:false, t:nowT((TOMBS.get(p.id)||{}).t)}); TOMBS.delete(p.id); ROWSET.add(p.id); markDirty(p.id);
+    if(MODE!=='csv') keepLocalMeta(p.id);
     await commit(); syncSaveButtons();
     toast('Saved to "'+LIB.cur.name+'"');
   }
