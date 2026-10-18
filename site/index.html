@@ -68,13 +68,25 @@ button,select,input{font:inherit;color:inherit}
 .brand:not(:has(.logo)){font-weight:600;font-size:15px;line-height:1.2;text-decoration:none}
 .brand .logo{display:block;height:40px;width:auto;overflow:visible}
 .deck-bar{position:relative}
-.stats{display:flex;flex-wrap:wrap;gap:2px 14px;padding:6px 2px 0;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;line-height:1.5}
+.stats{display:flex;flex-wrap:wrap;gap:2px 14px;margin-left:auto;padding:0 2px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;line-height:1.5}
 .stats[hidden]{display:none}
 .stats .st{position:relative;white-space:nowrap;cursor:default;outline:none}
 .stats .st b{color:var(--ink);font-weight:600}
 .stats .st+.st::before{content:"\2022";position:absolute;left:-10px;color:var(--faint,var(--muted));opacity:.6}
 .stats .st em{display:none;position:absolute;left:0;top:calc(100% + 4px);z-index:5;font-style:normal;white-space:normal;width:max-content;max-width:min(260px,80vw);padding:6px 9px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink);box-shadow:0 6px 18px rgba(0,0,0,.35)}
 .stats .st:hover em,.stats .st:focus em{display:block}
+.stats .st:last-child em{left:auto;right:0}
+@media (max-width:720px){
+  .deck-bar{flex-wrap:wrap}
+  .stats{order:10;flex:0 0 100%;margin:6px 0 0;padding:6px 0 0;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,1fr);gap:0;text-align:center}
+  .stats[hidden]{display:none}
+  .stats .st{display:flex;flex-direction:column;align-items:center;line-height:1.2;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+  .stats .st b{font-size:17px;letter-spacing:0;text-transform:none;line-height:1.25}
+  .stats .st+.st::before{content:"";left:0;top:15%;bottom:15%;width:1px;background:var(--line);opacity:1}
+  .stats .st em{left:50%;transform:translateX(-50%);text-transform:none;letter-spacing:0;font-size:12px;text-align:left}
+  .stats .st:first-child em{left:0;transform:none}
+  .stats .st:last-child em{left:auto;right:0;transform:none}
+}
 .search{display:none}
 .deck-bar.search-open .search{display:block;position:absolute;left:0;right:46px;top:50%;transform:translateY(-50%);max-width:none;z-index:2;background:var(--bg);border-radius:999px}
 #searchbtn[aria-expanded="true"]{background:var(--sel);color:var(--sel-ink)}
@@ -83,7 +95,6 @@ button,select,input{font:inherit;color:inherit}
 .search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
 #q{width:100%;height:38px;border:0;border-radius:999px;background:var(--surface-2);padding:0 14px 0 16px;min-width:0}
 #q::placeholder{color:var(--muted)}
-#barcount{margin-left:auto;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .pill{height:36px;padding:0 15px;border:0;border-radius:999px;background:var(--surface-2);font-weight:500;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
 .pill:hover{background:var(--line)}
 .pill.primary{background:var(--sel);color:var(--sel-ink)}
@@ -96,7 +107,7 @@ button,select,input{font:inherit;color:inherit}
 .actgrid .pill:disabled{opacity:.45;cursor:default}
 #decktoggle[aria-expanded="true"]{background:var(--sel);color:var(--sel-ink)}
 #decktoggle[data-active="1"]::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--hot)}
-@media (max-width:720px){#barcount{display:none}#srctoggle{margin-left:auto}.brand .logo{height:34px}}
+@media (max-width:720px){#srctoggle{margin-left:auto}.brand .logo{height:34px}}
 
 /* ---- filter panel: floats over the grid, closed by default ---- */
 .panel{position:absolute;right:max(14px,env(safe-area-inset-right,0px));left:max(14px,env(safe-area-inset-left,0px));top:calc(100% + 8px);max-width:980px;margin-left:auto;
@@ -354,7 +365,11 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
       <label class="search" id="searchbox">
         <input id="q" type="search" placeholder="Search titles, subreddits, authors" aria-label="Search">
       </label>
-      <span id="barcount" aria-live="polite"></span>
+      <div class="stats" id="stats" hidden aria-live="off">
+        <span class="st" tabindex="0"><b id="stActive">0</b> Active<em>(Excludes filtered results)</em></span>
+        <span class="st" tabindex="0"><b id="stGot">0</b> Retrieved<em>(Total successfully retrieved from the data source)</em></span>
+        <span class="st" tabindex="0"><b id="stAll">0</b> Total<em>(The total number of items in the data source, retrievable or not)</em></span>
+      </div>
       <button class="pill" id="srctoggle" type="button" aria-expanded="false" aria-controls="srcpanel" aria-label="Source, account and sync" title="Source, account and sync" style="padding-left:10px;padding-right:10px">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="5.4" r="2.7"/><path d="M2.8 14c.4-2.7 2.5-4.3 5.2-4.3s4.8 1.6 5.2 4.3"/></svg>
       </button>
@@ -487,11 +502,6 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
           <span id="subErr" role="alert"></span>
         </form>
       </div>
-    </div>
-    <div class="stats" id="stats" hidden aria-live="off">
-      <span class="st" tabindex="0"><b id="stActive">0</b> Active<em>(Excludes filtered results)</em></span>
-      <span class="st" tabindex="0"><b id="stGot">0</b> Retrieved<em>(Total successfully retrieved from the data source)</em></span>
-      <span class="st" tabindex="0"><b id="stAll">0</b> Total<em>(The total number of items in the data source, retrievable or not)</em></span>
     </div>
   </div>
 </section>
@@ -1602,7 +1612,6 @@ let stT; function updateStats(){
 function updateSummary(){
   updateStats();
   const active = state.cats.size||state.kinds.size||state.media.size||state.sub||state.q||state.fav||state.nsfw!=='hide'||!state.hideBroken||state.range!=='all';
-  $('barcount').textContent = list.length.toLocaleString()+' of '+POSTS.length.toLocaleString();
   $('decktoggle').dataset.active = active ? '1' : '0';
   $('summary').innerHTML = active ? list.length.toLocaleString()+' of '+POSTS.length.toLocaleString()+' posts <button class="clear" id="clr" type="button">Clear filters</button>' : '';
   const c = $('clr'); if(c) c.onclick = ()=>{ state.cats.clear(); state.kinds.clear(); state.media.clear(); state.sub=''; state.q=''; state.fav=false; $('favonly').checked=false; state.showText=false; $('showtext').checked=false; if(state.range!=='all'){ setRange('all'); return; } $('q').value=''; window.markSearchBtn&&markSearchBtn(); $('subsel').value=''; setNsfw('hide'); };
