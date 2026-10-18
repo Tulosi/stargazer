@@ -68,6 +68,13 @@ button,select,input{font:inherit;color:inherit}
 .brand:not(:has(.logo)){font-weight:600;font-size:15px;line-height:1.2;text-decoration:none}
 .brand .logo{display:block;height:40px;width:auto;overflow:visible}
 .deck-bar{position:relative}
+.stats{display:flex;flex-wrap:wrap;gap:2px 14px;padding:6px 2px 0;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;line-height:1.5}
+.stats[hidden]{display:none}
+.stats .st{position:relative;white-space:nowrap;cursor:default;outline:none}
+.stats .st b{color:var(--ink);font-weight:600}
+.stats .st+.st::before{content:"\2022";position:absolute;left:-10px;color:var(--faint,var(--muted));opacity:.6}
+.stats .st em{display:none;position:absolute;left:0;top:calc(100% + 4px);z-index:5;font-style:normal;white-space:normal;width:max-content;max-width:min(260px,80vw);padding:6px 9px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink);box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.stats .st:hover em,.stats .st:focus em{display:block}
 .search{display:none}
 .deck-bar.search-open .search{display:block;position:absolute;left:0;right:46px;top:50%;transform:translateY(-50%);max-width:none;z-index:2;background:var(--bg);border-radius:999px}
 #searchbtn[aria-expanded="true"]{background:var(--sel);color:var(--sel-ink)}
@@ -480,6 +487,11 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
           <span id="subErr" role="alert"></span>
         </form>
       </div>
+    </div>
+    <div class="stats" id="stats" hidden aria-live="off">
+      <span class="st" tabindex="0"><b id="stActive">0</b> Active<em>(Excludes filtered results)</em></span>
+      <span class="st" tabindex="0"><b id="stGot">0</b> Retrieved<em>(Total successfully retrieved from the data source)</em></span>
+      <span class="st" tabindex="0"><b id="stAll">0</b> Total<em>(The total number of items in the data source, retrievable or not)</em></span>
     </div>
   </div>
 </section>
@@ -981,7 +993,7 @@ function noteFor(p){
 }
 let dcT; function updateDeadCount(){
   clearTimeout(dcT);
-  dcT = setTimeout(()=>{ let n = 0; for(const p of POSTS) if(isUnavailable(p)) n++; $('deadcount').textContent = n ? '('+n+')' : ''; },150);
+  updateStats(); dcT = setTimeout(()=>{ let n = 0; for(const p of POSTS) if(isUnavailable(p)) n++; $('deadcount').textContent = n ? '('+n+')' : ''; },150);
 }
 let rfT; function scheduleRefresh(){ clearTimeout(rfT); rfT = setTimeout(()=>refresh(true),400); }
 
@@ -1577,7 +1589,16 @@ function introHtml(){
    + (CLOUD_ON ? '<p>You can, if you wish, create an account and upload the CSV to sync across devices.</p>' : '')
    + '</div>';
 }
+let stT; function updateStats(){
+  clearTimeout(stT);
+  stT = setTimeout(()=>{
+    let got = 0; for(const p of POSTS){ const m = META[p.id]; if(m && (!m.miss || m.rec)) got++; }
+    $('stActive').textContent = list.length.toLocaleString(); $('stGot').textContent = got.toLocaleString(); $('stAll').textContent = POSTS.length.toLocaleString();
+    $('stats').hidden = !POSTS.length || MODE!=='csv';
+  },120);
+}
 function updateSummary(){
+  updateStats();
   const active = state.cats.size||state.kinds.size||state.media.size||state.sub||state.q||state.fav||state.nsfw!=='hide'||!state.hideBroken||state.range!=='all';
   $('barcount').textContent = list.length.toLocaleString()+' of '+POSTS.length.toLocaleString();
   $('decktoggle').dataset.active = active ? '1' : '0';
