@@ -1067,7 +1067,7 @@ const RGC = {};
 try{ const o = JSON.parse(localStorage.getItem(RGKEY)||'{}'), now = Date.now(); for(const k in o) if(o[k] && now-o[k].t < RG_TTL) RGC[k] = o[k]; }catch(e){}
 let rgT, rgSave; const saveRG = () => { clearTimeout(rgT); rgT = setTimeout(()=>{ try{ localStorage.setItem(RGKEY, JSON.stringify(RGC)); }catch(e){} },800); };
 const rgSlug = p => { const m = metaOf(p), x = RG_RE.exec((m && m.u) || ''); return x ? x[1].toLowerCase() : (m && m.g ? m.g.toLowerCase() : (m && m.rs) || ''); };   // posts that only carry RedGifs embed data have no redgifs link, so use the name from the embed
-let rgTok = null, rgBlocked = false;
+let rgTok = null, rgBlockedUntil = 0, RG_ERR = '';
 async function rgToken(force){
   if(!force && rgTok && Date.now() < rgTok.exp) return rgTok.v;
   const r = await fetch('https://api.redgifs.com/v2/auth/temporary');
@@ -1101,9 +1101,9 @@ async function rgRun(p){
   const slug = rgSlug(p), m = metaOf(p);
   let res = RGC[slug];
   if(!res){
-    if(!rgBlocked){
+    if(Date.now() >= rgBlockedUntil){
       try{ res = await rgFetch(slug); RGC[slug] = Object.assign({t:Date.now()}, res); saveRG(); }
-      catch(e){ if(e instanceof TypeError) rgBlocked = true; res = null; }   // network or CORS failure: stop calling the API this session
+      catch(e){ RG_ERR = (e && e.message) || String(e); if(e instanceof TypeError) rgBlockedUntil = Date.now() + 90000; res = null; }   // network or CORS failure: leave the API alone for a minute, and remember why (shown if sound is missing)
     }
     if(!res) res = rgGuess(m);
   }
@@ -1196,6 +1196,17 @@ async function openViewer(p, opts){
     return;
   }
   if(rgNeeds(p) && !rgBusy.has(p.id)){ rgBusy.add(p.id); try{ await rgRun(p); }catch(e){} if(tok!==VIEW.token) return; m = metaOf(p); }
+  if(m && !m.rgDone && !m.rgGone && rgSlug(p)){
+    /* RedGifs could not be asked for the real file (the browser blocked the lookup), so the clip we hold is Reddit's silent preview.
+       Show RedGifs' own player instead: it has sound and its own controls. */
+    const f = document.createElement('iframe');
+    f.className = 'vyt'; f.title = titleOf(p); f.allowFullscreen = true; f.referrerPolicy = 'strict-origin-when-cross-origin';
+    f.setAttribute('allow','autoplay; encrypted-media; picture-in-picture; fullscreen');
+    f.src = 'https://www.redgifs.com/ifr/'+rgSlug(p);
+    VIEW.stage.replaceChildren(f);
+    toast('RedGifs sound lookup failed'+(RG_ERR ? ' ('+RG_ERR+')' : '')+' - showing the RedGifs player.');
+    return;
+  }
   const vurl = m ? (m.vh || m.v || '') : '';
   if(vurl && !/\.gif(\?|$)/i.test(vurl)){
     const v = document.createElement('video');

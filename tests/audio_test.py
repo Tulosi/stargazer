@@ -4,6 +4,7 @@ from playwright.sync_api import sync_playwright
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.abspath(os.path.join(HERE, '..', 'site'))
 AUD = open(os.path.join(HERE, 'fixtures', 'clip_audio.webm'), 'rb').read(); SIL = open(os.path.join(HERE, 'fixtures', 'clip_silent.webm'), 'rb').read()
 bad = []
+FAIL_API = False
 def check(n, ok):
     print(('PASS ' if ok else 'FAIL ') + n)
     if not ok: bad.append(n)
@@ -15,9 +16,11 @@ def seed(id, slug, has_audio):
     return """(()=>{ const id='%s'; ROWS.push({id,perma:'https://www.reddit.com/r/gifs/comments/'+id+'/x/',starred:false,t:5}); ROWSET.add(id);
       META[id]={t:'clip',o:0,th:'',m:'gif',u:'https://www.redgifs.com/watch/%s',n:0,s:0,a:'',c:1700000000,v:'https://v.redd.it/%s/silent.mp4',w:160,h:90}; })()""" % (id, slug, id)
 def handle(r):
+    global FAIL_API
     u = r.request.url
     if u.startswith('http://127.0.0.1'): return r.continue_()
     if 'api.redgifs.com/v2/auth/temporary' in u: return r.fulfill(status=200, content_type='application/json', headers={'access-control-allow-origin': '*'}, body='{"token":"t"}')
+    if FAIL_API and 'api.redgifs.com' in u: return r.abort()
     if 'api.redgifs.com/v2/gifs/' in u:
         slug = u.rsplit('/', 1)[1]; ha = slug == 'loudone'
         body = json.dumps({'gif': {'hasAudio': ha, 'width': 160, 'height': 90, 'urls': {'sd': 'https://media.redgifs.com/%s-mobile.mp4' % slug, 'hd': 'https://media.redgifs.com/%s.mp4' % slug, 'poster': ''}}})
@@ -51,6 +54,13 @@ with sync_playwright() as p:
     pg.keyboard.press('Escape'); pg.wait_for_timeout(300)
     pg.dispatch_event('article.card[data-id="quiet2"] button.fs', 'click'); pg.wait_for_timeout(1500)
     check('full screen: no controls for a clip without sound', ev("document.querySelector('#viewer .vsound').hidden && document.querySelector('#viewer .vvol').hidden"))
+    # RedGifs lookup blocked: fall back to RedGifs' own player in full screen, and say why
+    FAIL_API = True
+    ev(seed('blocked', 'blockedone', True)); ev('startCsvMode()'); pg.wait_for_timeout(500)
+    pg.dispatch_event('article.card[data-id="blocked"] button.fs', 'click'); pg.wait_for_timeout(2000)
+    check('blocked lookup: official RedGifs player shown', ev("(document.querySelector('#viewer iframe.vyt')||{}).src")=='https://www.redgifs.com/ifr/blockedone')
+    check('blocked lookup: reason is shown', 'lookup failed' in ev("document.getElementById('toast').textContent"))
+    pg.keyboard.press('Escape'); pg.wait_for_timeout(300)
     check('no page errors', not errs)
     if errs: print(errs)
     b.close()
