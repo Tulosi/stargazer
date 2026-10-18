@@ -60,17 +60,24 @@ button,select,input{font:inherit;color:inherit}
 .deck{position:sticky;top:0;z-index:30;background:var(--glass);-webkit-backdrop-filter:saturate(1.4) blur(16px);backdrop-filter:saturate(1.4) blur(16px);border-bottom:1px solid var(--line)}
 .deck-in{position:relative;max-width:1760px;margin:0 auto;padding:10px max(14px,env(safe-area-inset-right,0px)) 10px max(14px,env(safe-area-inset-left,0px))}
 .deck-bar{display:flex;align-items:center;gap:12px}
-.brand{font-weight:600;font-size:15px;letter-spacing:-.01em;margin-right:4px}
+.brand{display:inline-flex;align-items:center;margin-right:4px;line-height:0;color:inherit}
+.brand:not(:has(.logo)){font-weight:600;font-size:15px;line-height:1.2;text-decoration:none}
+.brand .logo{display:block;height:40px;width:auto;overflow:visible}
+.deck-bar{position:relative}
+.search{display:none}
+.deck-bar.search-open .search{display:block;position:absolute;left:0;right:46px;top:50%;transform:translateY(-50%);max-width:none;z-index:2;background:var(--bg);border-radius:999px}
+#searchbtn[aria-expanded="true"]{background:var(--ink);color:var(--bg)}
+#searchbtn[data-active="1"]::after{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .search{position:relative;flex:1 1 auto;max-width:520px;min-width:0}
 .search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
-#q{width:100%;height:38px;border:0;border-radius:999px;background:var(--surface-2);padding:0 14px 0 38px;min-width:0}
+#q{width:100%;height:38px;border:0;border-radius:999px;background:var(--surface-2);padding:0 14px 0 16px;min-width:0}
 #q::placeholder{color:var(--muted)}
 #barcount{margin-left:auto;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .pill{height:36px;padding:0 15px;border:0;border-radius:999px;background:var(--surface-2);font-weight:500;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
 .pill:hover{background:var(--line)}
 #decktoggle[aria-expanded="true"]{background:var(--ink);color:var(--bg)}
 #decktoggle[data-active="1"]::after{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
-@media (max-width:720px){#barcount,.brand{display:none}#srctoggle{margin-left:auto}}
+@media (max-width:720px){#barcount{display:none}#srctoggle{margin-left:auto}.brand .logo{height:34px}}
 
 /* ---- filter panel: floats over the grid, closed by default ---- */
 .panel{position:absolute;right:max(14px,env(safe-area-inset-right,0px));left:max(14px,env(safe-area-inset-left,0px));top:calc(100% + 8px);max-width:980px;margin-left:auto;
@@ -302,9 +309,8 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
 <section class="deck" aria-label="Search and filters">
   <div class="deck-in">
     <div class="deck-bar">
-      <span class="brand">Stargazer</span>
-      <label class="search">
-        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.6"/><path d="M10.6 10.6L14 14"/></svg>
+      <a class="brand" href="./" aria-label="Stargazer" title="Stargazer"><svg class="logo" viewBox="0 0 280 70" width="140" height="35" role="img" aria-label="Stargazer" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="0.3"><stop offset="0" stop-color="#7c3aed"/><stop offset=".55" stop-color="#c026d3"/><stop offset="1" stop-color="#ec4899"/></linearGradient></defs><g fill="none" stroke="url(#logoGrad)" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round" transform="translate(10 0) translate(0 44) skewX(-14) translate(0 -44)"><path d="M34 16 C28 6 12 8 12 18 C12 30 34 28 32 40 C30 50 12 50 6 40" transform="translate(0 0)"/><path d="M20 8 L12 40 C10 47 16 48 24 42 M6 24 L26 22" transform="translate(36 0)"/><path d="M26 28 C16 22 6 32 8 40 C10 48 20 46 26 28 L22 42 C22 47 28 48 34 42" transform="translate(60 0)"/><path d="M4 44 L10 28 M8 38 C10 28 18 26 22 30" transform="translate(88 0)"/><path d="M26 28 C16 22 6 32 8 40 C10 48 20 46 26 28 L20 54 C17 64 4 62 6 54 C8 50 18 52 24 46" transform="translate(104 0)"/><path d="M26 28 C16 22 6 32 8 40 C10 48 20 46 26 28 L22 42 C22 47 28 48 34 42" transform="translate(134 0)"/><path d="M4 28 L18 27 L4 43 C10 40 18 44 18 49 C18 56 8 56 6 52" transform="translate(168 0)"/><path d="M4 38 L20 35 C22 26 10 24 6 32 C2 42 12 48 22 42" transform="translate(190 0)"/><path d="M4 44 L10 28 M8 38 C10 28 18 26 24 30" transform="translate(214 0)"/></g><path d="M14 58 C80 66 170 64 246 52" fill="none" stroke="url(#logoGrad)" stroke-width="2.8" stroke-linecap="round" opacity=".85"/><g fill="url(#logoGrad)"><path d="M252 1 Q253.98 10.02 263 12 Q253.98 13.98 252 23 Q250.02 13.98 241 12 Q250.02 10.02 252 1Z"/><path d="M224 3 Q224.9 7.1 229 8 Q224.9 8.9 224 13 Q223.1 8.9 219 8 Q223.1 7.1 224 3Z"/><path d="M96 1.5 Q96.81 5.19 100.5 6 Q96.81 6.81 96 10.5 Q95.19 6.81 91.5 6 Q95.19 5.19 96 1.5Z"/><path d="M18 54 Q18.72 57.28 22 58 Q18.72 58.72 18 62 Q17.28 58.72 14 58 Q17.28 57.28 18 54Z"/><path d="M140 5 Q140.54 7.46 143 8 Q140.54 8.54 140 11 Q139.46 8.54 137 8 Q139.46 7.46 140 5Z"/><path d="M266 34.5 Q266.63 37.37 269.5 38 Q266.63 38.63 266 41.5 Q265.37 38.63 262.5 38 Q265.37 37.37 266 34.5Z"/><path d="M70 55 Q70.54 57.46 73 58 Q70.54 58.54 70 61 Q69.46 58.54 67 58 Q69.46 57.46 70 55Z"/></g></svg></a>
+      <label class="search" id="searchbox">
         <input id="q" type="search" placeholder="Search titles, subreddits, authors" aria-label="Search">
       </label>
       <span id="barcount" aria-live="polite"></span>
@@ -316,6 +322,9 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
       </button>
       <button class="pill" id="shufflebtn" type="button" aria-label="Randomize order" title="Randomize order" style="padding-left:10px;padding-right:10px">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 4.5h2.2c3.6 0 4.6 7 8.2 7h2.6M1.5 11.5h2.2c1 0 1.7-.6 2.4-1.5M9.9 6c.6-.9 1.3-1.5 2-1.5h2.6"/><path d="M12.5 2.5l2 2-2 2M12.5 9.5l2 2-2 2"/></svg>
+      </button>
+      <button class="pill" id="searchbtn" type="button" aria-expanded="false" aria-controls="q" aria-label="Search" title="Search" style="padding-left:10px;padding-right:10px">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.6"/><path d="M10.6 10.6L14 14"/></svg>
       </button>
     </div>
 
@@ -1431,9 +1440,9 @@ function updateChips(){
 function updateSummary(){
   const active = state.cats.size||state.kinds.size||state.media.size||state.sub||state.q||state.fav||state.nsfw!=='hide'||!state.hideBroken||state.range!=='all';
   $('barcount').textContent = list.length.toLocaleString()+' of '+POSTS.length.toLocaleString();
-  $('decktoggle').dataset.active = (active||state.hideBroken) ? '1' : '0';
+  $('decktoggle').dataset.active = active ? '1' : '0';
   $('summary').innerHTML = active ? list.length.toLocaleString()+' of '+POSTS.length.toLocaleString()+' posts <button class="clear" id="clr" type="button">Clear filters</button>' : '';
-  const c = $('clr'); if(c) c.onclick = ()=>{ state.cats.clear(); state.kinds.clear(); state.media.clear(); state.sub=''; state.q=''; state.fav=false; $('favonly').checked=false; if(state.range!=='all'){ setRange('all'); return; } state.nsfw='hide'; $('q').value=''; $('nsfw').value='hide'; $('nsfwonly').checked=false; prevNsfw='hide'; $('subsel').value=''; refresh(); };
+  const c = $('clr'); if(c) c.onclick = ()=>{ state.cats.clear(); state.kinds.clear(); state.media.clear(); state.sub=''; state.q=''; state.fav=false; $('favonly').checked=false; if(state.range!=='all'){ setRange('all'); return; } state.nsfw='hide'; $('q').value=''; window.markSearchBtn&&markSearchBtn(); $('nsfw').value='hide'; $('nsfwonly').checked=false; prevNsfw='hide'; $('subsel').value=''; refresh(); };
 }
 
 /* ---------- hover and auto-play ---------- */
@@ -1707,6 +1716,17 @@ function releasePlayable(t){ t._hover = t._mouse = t._focus = false; t._inView =
   const counts = {}; POSTS.forEach(p=>counts[p.sub]=(counts[p.sub]||0)+1);
   const subs = Object.keys(counts).filter(s=>counts[s]>=3).sort((a,b)=>counts[b]-counts[a]||a.localeCompare(b));
   $('subsel').innerHTML = '<option value="">All subreddits</option>' + subs.map(s=>'<option value="'+esc(s)+'">r/'+esc(s)+' ('+counts[s]+')</option>').join('');
+})();
+(function(){
+  const bar = document.querySelector('.deck-bar'), btn = $('searchbtn'), q = $('q');
+  const mark = ()=>{ btn.dataset.active = q.value.trim() ? '1' : '0'; };
+  const setOpen = on=>{ bar.classList.toggle('search-open', on); btn.setAttribute('aria-expanded', on?'true':'false'); if(on) q.focus(); mark(); };
+  btn.addEventListener('click', ()=>setOpen(!bar.classList.contains('search-open')));
+  q.addEventListener('keydown', e=>{ if(e.key==='Escape'||e.key==='Enter'){ e.preventDefault(); setOpen(false); btn.focus(); } });
+  q.addEventListener('input', mark);
+  q.addEventListener('blur', ()=>setTimeout(()=>{ if(document.activeElement!==btn) setOpen(false); },120));
+  new MutationObserver(mark).observe(q,{attributes:true});
+  window.markSearchBtn = mark;
 })();
 let qt; $('q').addEventListener('input',e=>{ clearTimeout(qt); qt=setTimeout(()=>{ state.q=e.target.value.trim().toLowerCase(); refresh(); },180); });
 function syncSortUI(){
@@ -2622,10 +2642,13 @@ const makePost = (i,id,perma) => {
 function resetView(){
   loadGen++; loading = false; missing = 0; recovering = false;
   POSTS.length = 0; cardEls.clear(); playing.clear();
-  state.sub = ''; state.q = ''; $('q').value = '';
+  state.sub = ''; state.q = ''; $('q').value = ''; window.markSearchBtn&&markSearchBtn();
   window.scrollTo({top:0});
 }
-function setBrand(){ const b = document.querySelector('.brand'); b.textContent = MODE==='csv' ? 'Stargazer' : (FEED.label ? 'm/'+FEED.label : 'r/'+FEED.subs.map(s=>s.name).join('+')); b.title = b.textContent; }
+const BRAND_LOGO = document.querySelector('.brand').innerHTML;
+function setBrand(){ const b = document.querySelector('.brand');
+  if(MODE==='csv'){ b.innerHTML = BRAND_LOGO; b.title = 'Stargazer'; b.setAttribute('aria-label','Stargazer'); return; }
+  b.textContent = FEED.label ? 'm/'+FEED.label : 'r/'+FEED.subs.map(s=>s.name).join('+'); b.title = b.textContent; b.removeAttribute('aria-label'); }
 function setSourceUI(){
   $('srcCsv').setAttribute('aria-pressed', MODE==='csv'); $('srcSub').setAttribute('aria-pressed', MODE==='sub');
   $('csvTools').hidden = MODE!=='csv'; $('subForm').hidden = MODE!=='sub';
