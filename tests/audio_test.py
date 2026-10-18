@@ -39,6 +39,13 @@ with sync_playwright() as p:
     check('silent clip is marked as having no sound', m['q'] == 0)
     pg.hover('article.card[data-id="loud11"] .thumb'); pg.wait_for_timeout(1500)
     check('card shows toggle and slider for the clip with sound', ev("(()=>{ const c=document.querySelector('article.card[data-id=\"loud11\"] .ctl'); return !!c && c.classList.contains('has-sound') && getComputedStyle(c.querySelector('.volr')).display!=='none' && c.querySelector('.volr').getBoundingClientRect().width>20 && c.querySelector('.vol').getBoundingClientRect().width>10; })()"))
+    # touch screens: no hover, so the speaker button itself must make the card audible
+    pg.hover('article.card[data-id="loud11"] .thumb'); pg.wait_for_timeout(1000)
+    pg.click('article.card[data-id="loud11"] .ctl .vol'); pg.wait_for_timeout(300)
+    ev("(()=>{ const t=document.querySelector('article.card[data-id=\"loud11\"] .thumb'); t._hover=false; applyAudio(); })()")
+    check('card stays audible after its speaker was pressed even without hover', ev("(()=>{ const v=document.querySelector('article.card[data-id=\"loud11\"] video.clip'); return !!v && v.muted===false; })()"))
+    pg.mouse.move(5, 5); pg.wait_for_timeout(400)
+    ev("AUDIO.muted=true")
     pg.mouse.move(5, 5); pg.wait_for_timeout(300)
     pg.hover('article.card[data-id="quiet2"] .thumb'); pg.wait_for_timeout(1500)
     check('no sound controls on the silent clip', ev("(()=>{ const c=document.querySelector('article.card[data-id=\"quiet2\"] .ctl'); return !!c && !c.classList.contains('has-sound'); })()"))
