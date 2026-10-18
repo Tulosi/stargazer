@@ -81,23 +81,17 @@ button,select,input{font:inherit;color:inherit}
 .stats .st:hover em,.stats .st:focus em{display:block}
 .stats .st:last-child em{left:auto;right:0}
 @media (max-width:720px){
-  .deck-bar{flex-wrap:wrap}
-  .stats{order:10;flex:0 0 100%;margin:6px 0 0;padding:6px 0 0;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,1fr);gap:0;text-align:center}
+  /* beside the logo, right-aligned: number over label, three columns */
+  .stats{position:relative;margin-left:auto;flex:0 0 auto;padding:0;display:grid;grid-template-columns:repeat(3,auto);column-gap:0;text-align:center}
   .stats[hidden]{display:none}
-  .stats .st{display:flex;flex-direction:column;align-items:center;line-height:1.2;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
-  .stats .st b{font-size:17px;letter-spacing:0;text-transform:none;line-height:1.25}
+  .stats .st{position:static;display:flex;flex-direction:column;align-items:center;padding:0 11px;line-height:1.15;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em}
+  .stats .st:last-child{padding-right:2px}
+  .stats .st b{font-size:16px;letter-spacing:0;text-transform:none;line-height:1.2}
   .stats .lb{margin-left:0}
-  .stats .st+.st::before{content:"";left:0;top:15%;bottom:15%;width:1px;background:var(--line);opacity:1;transition:opacity .2s}
-  .stats.anim .st::before{opacity:0!important}
-  .stats .st b,.stats .lb{transform-origin:0 0;will-change:transform}
-  .stats .st em{left:50%;transform:translateX(-50%);text-transform:none;letter-spacing:0;font-size:12px;text-align:left}
-  .stats .st:first-child em{left:0;transform:none}
-  .stats .st:last-child em{left:auto;right:0;transform:none}
-  /* scrolled down: one slim line (the label sits beside its number) */
-  .stats.compact{grid-template-columns:repeat(3,auto);justify-content:center;column-gap:22px;border-top-color:transparent}
-  .stats.compact .st{flex-direction:row;align-items:baseline;gap:4px;font-size:10px}
-  .stats.compact .st b{font-size:13px;line-height:1.3}
-  .stats.compact .st+.st::before{left:-12px;top:20%;bottom:20%}
+  .stats .st+.st{border-left:1px solid var(--line)}
+  .stats .st+.st::before{display:none}
+  .stats .st em{left:auto;right:0;transform:none;text-transform:none;letter-spacing:0;font-size:12px;text-align:left}
+  .stats .st:last-child em{right:0}
 }
 .search{display:none}
 /* navigation: on wide screens the four buttons sit in the bar with labels and the search box is always there; on phones they form a bottom bar */
@@ -1725,49 +1719,12 @@ let stT; function updateStats(){
   clearTimeout(stT);
   stT = setTimeout(()=>{
     let got = 0; for(const p of POSTS){ const m = META[p.id]; if(m && (!m.miss || m.rec)) got++; }
-    $('stActive').textContent = list.length.toLocaleString(); $('stGot').textContent = got.toLocaleString(); $('stAll').textContent = POSTS.length.toLocaleString();
+    const nf = n => (n >= 10000 && matchMedia('(max-width:720px)').matches) ? (n/1000).toFixed(n >= 100000 ? 0 : 1).replace(/\.0$/,'')+'k' : n.toLocaleString();   // 12.3k on phones, where the strip is narrow
+    $('stActive').textContent = nf(list.length); $('stGot').textContent = nf(got); $('stAll').textContent = nf(POSTS.length);
     $('stats').hidden = !POSTS.length || MODE!=='csv';
     const ld = !!loading; $('stGot').parentNode.classList.toggle('busy', ld && got < POSTS.length); document.body.classList.toggle('previews-loading', ld);
   },120);
 }
-/* Phones: the count strip folds to one line while scrolling down and stays folded until the page is back at the very top.
-   The move is a FLIP animation (transforms only for the text) and the header's flow height is held constant with a matching margin,
-   so the cards below never nudge while it plays. */
-(function(){
-  const el = $('stats'), deck = document.querySelector('.deck'), mq = matchMedia('(max-width:720px)'), still = matchMedia('(prefers-reduced-motion:reduce)');
-  let compact = false, lastY = scrollY, busy = false, acc = 0, hold = 0;   // hold: extra margin that stands in for the height the folded strip gave up
-  const parts = () => [...el.querySelectorAll('.st b, .st .lb')];
-  const reset = () => { compact = false; el.classList.remove('compact','anim'); el.style.height = ''; deck.style.marginBottom = ''; hold = 0; };
-  function setCompact(on){
-    if(on===compact || busy) return;
-    if(!mq.matches || el.hidden || still.matches){ compact = on; el.classList.toggle('compact', on); deck.style.marginBottom = ''; return; }
-    busy = true;
-    const P = parts(), r0 = P.map(x=>x.getBoundingClientRect()), h0 = el.offsetHeight, m0 = hold;
-    compact = on; el.classList.toggle('compact', on);
-    const h1 = el.offsetHeight, r1 = P.map(x=>x.getBoundingClientRect());
-    const m1 = on ? m0 + (h0 - h1) : 0; hold = m1;
-    const opt = {duration:340, easing:'cubic-bezier(.22,.8,.24,1)', fill:'none'};
-    el.classList.add('anim');
-    P.forEach((x,i)=>{
-      const a = r0[i], c = r1[i], sx = c.width ? a.width/c.width : 1, sy = c.height ? a.height/c.height : 1;
-      x.animate([{transform:'translate('+(a.left-c.left)+'px,'+(a.top-c.top)+'px) scale('+sx+','+sy+')'},{transform:'none'}], opt);
-    });
-    deck.style.marginBottom = m1+'px';
-    el.animate([{height:h0+'px'},{height:h1+'px'}], opt);
-    deck.animate([{marginBottom:m0+'px'},{marginBottom:m1+'px'}], opt);
-    setTimeout(()=>{ el.classList.remove('anim'); busy = false; lastY = scrollY; acc = 0; if(!on){ deck.style.marginBottom = ''; hold = 0; } }, opt.duration+30);
-  }
-  addEventListener('scroll',()=>{
-    if(!mq.matches){ if(compact) reset(); return; }
-    const y = scrollY, d = y - lastY; lastY = y;
-    if(busy) return;
-    if(y < 24){ acc = 0; setCompact(false); return; }
-    if((d>0) !== (acc>0)) acc = 0;
-    acc += d;
-    if(acc > 36) setCompact(true);   // it only opens again at the very top (above)
-  },{passive:true});
-  mq.addEventListener && mq.addEventListener('change',reset);
-})();
 /* A refresh keeps the view: filters, sort, search and scroll position are remembered for this tab (session only, so NSFW never stays switched on in a later visit). */
 const VKEY2 = 'saved-posts-view';
 let vsT; function saveView(){ clearTimeout(vsT); vsT = setTimeout(()=>{ try{
