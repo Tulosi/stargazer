@@ -262,8 +262,8 @@ body.unblur .reveal{display:none!important}
 .star:hover,.fs:hover,.save:hover,.reveal:hover{background:rgba(12,12,14,.5);color:#fff}
 .badge{position:absolute;font:500 11px/1 var(--font);padding:5px 9px;border-radius:999px}
 .badge.playable::before{content:'\25B8\00a0'}
-.badge.media{left:8px;top:8px}
-.badge.tag{right:116px;top:8px}
+.badges{position:absolute;left:8px;top:8px;display:flex;gap:6px;align-items:center;max-width:calc(100% - 170px)}
+.badges .badge{position:static;white-space:nowrap}
 .badge.rec{right:8px;top:46px}
 .star,.fs,.save{position:absolute;top:8px;z-index:2;width:30px;height:30px;display:grid;place-items:center;border:0;border-radius:50%;padding:0;font-size:16px;line-height:1;cursor:pointer}
 .star{right:8px}
@@ -272,10 +272,13 @@ body.unblur .reveal{display:none!important}
 .nsfwb{right:116px}
 /* no full-screen button (text posts): the others close the gap */
 .card:not(:has(.fs)) .save{right:44px}
-.card:not(:has(.fs)) .nsfwb,.card:not(:has(.fs)) .badge.tag{right:80px}
+.card:not(:has(.fs)) .nsfwb{right:80px}
 .nsfwb[hidden]{display:none}
-.nsfwb[aria-pressed=true]{background:rgba(255,255,255,.78);color:#111}
-.nsfwb[aria-pressed=true]:hover{background:rgba(255,255,255,.92);color:#111}
+.nsfwb{background:rgba(12,12,14,.18);color:rgba(255,255,255,.62);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.55);-webkit-backdrop-filter:none;backdrop-filter:none}
+.nsfwb:hover{background:rgba(12,12,14,.5);color:#fff}
+.save.nsfwb[aria-pressed=true]{background:rgba(255,255,255,.92);color:#111;box-shadow:none}
+.nsfwb[aria-pressed=true]::after{content:"";position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;background:#16a34a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 8.4l2.8 2.8L12 5.6'/%3E%3C/svg%3E") center/12px no-repeat;box-shadow:0 0 0 2px rgba(255,255,255,.95)}
+.save.nsfwb[aria-pressed=true]:hover{background:#fff;color:#111}
 .fs svg{display:block}
 .gnav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:32px;height:32px;display:grid;place-items:center;border:0;border-radius:50%;padding:0;background:rgba(12,12,14,.26);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:rgba(255,255,255,.78);font-size:22px;line-height:1;cursor:pointer;opacity:0;transition:opacity .15s,background .15s}
 .gnav:hover{background:rgba(12,12,14,.6);color:#fff}
@@ -364,6 +367,7 @@ body.info-hover .card:focus-within .info,body.info-hover .card:focus-within .bad
 #viewer[hidden]{display:none}
 #viewer .vstage{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
 #viewer img,#viewer video{max-width:100%;max-height:100%;object-fit:contain}
+#viewer iframe.vyt.vrg{width:100%;height:100%;aspect-ratio:auto;max-height:none}
 #viewer iframe.vyt{border:0;background:#000;width:min(100%,calc(100vh*16/9));aspect-ratio:16/9;max-height:100%}
 #viewer .vytlink{position:absolute;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translateX(-50%);padding:10px 18px;border-radius:999px;background:rgba(255,255,255,.9);color:#111;text-decoration:none;font-weight:600;font-size:14px}
 #viewer img{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-user-drag:none;will-change:transform;transition:none}
@@ -428,9 +432,9 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
   .pill{height:42px}
   .srcseg .pill,.nsfwseg .pill{height:36px}
   .star,.fs,.save{width:40px;height:40px}
-  .fs{right:54px}.save{right:100px}.nsfwb{right:146px}.badge.tag{right:146px}
+  .fs{right:54px}.save{right:100px}.nsfwb{right:146px}
   .card:not(:has(.fs)) .save{right:54px}
-  .card:not(:has(.fs)) .nsfwb,.card:not(:has(.fs)) .badge.tag{right:100px}
+  .card:not(:has(.fs)) .nsfwb{right:100px}
 }
 
 /* ---------- List layout: short rows, card info on a blurred preview, no media controls ---------- */
@@ -461,10 +465,12 @@ body.layout-list .meta>*{flex:none}
   body.layout-list .card.btns-open .nsfwb{right:176px}
   body.layout-list .card.btns-open:not(:has(.fs)) .save{right:92px}
   body.layout-list .card.btns-open:not(:has(.fs)) .nsfwb{right:134px}
-  body.layout-list .badge.tag{top:6px;margin-top:0;right:52px}
+  body.layout-list .badges{display:contents}
+  body.layout-list .badges .badge.tag{position:absolute;top:6px;margin-top:0;right:52px;left:auto}
 }
 body.layout-list .star,body.layout-list .fs,body.layout-list .save{top:50%;margin-top:-15px}
-body.layout-list .badge.tag{top:50%;margin-top:-10px}
+body.layout-list .badges{display:contents}
+@media (min-width:721px){body.layout-list .badges .badge.tag{position:absolute;top:50%;margin-top:-10px;right:166px}}
 @media (pointer:coarse){
   body.layout-list .info{padding-right:200px}
   body.layout-list .star,body.layout-list .fs,body.layout-list .save{margin-top:-20px}
@@ -1024,14 +1030,14 @@ function fillCard(el,p){
     '<a class="thumb'+(nsfw?' nsfw':'')+'" data-open'+(v0 ? ' data-v="'+esc(v0)+'"'+(vs.length>1 ? ' data-vc="'+esc(vs.slice(1,7).join('|'))+'"' : '') : '')+(m && m.ab ? ' data-ab="'+esc(m.ab)+'"' : '')+(m && m.ha!==undefined ? ' data-ha="'+(m.ha?1:0)+'"' : '')+' href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" aria-label="Open: '+esc(titleOf(p))+'">'
     + (thumb ? ph + '<img referrerpolicy="no-referrer" alt="">' : (v0 && !/^(yt|rg):/.test(v0) ? ph + '<video class="still" muted playsinline preload="none"></video>' : ph))
     + '<span class="tstrip">'+esc(titleOf(p))+'</span>'
-    + '<span class="badge media'+(v0 ? ' playable' : '')+'">'+esc(MEDIA_LABEL[media]||media)+(gl ? ' 1/'+gl.length : '')+'</span>'
-    + (nsfw ? '<span class="badge tag">NSFW</span>' : '')
+    + '<span class="badges"><span class="badge media'+(v0 ? ' playable' : '')+'">'+esc(MEDIA_LABEL[media]||media)+(gl ? ' 1/'+gl.length : '')+'</span>'
+    + (nsfw ? '<span class="badge tag">NSFW</span>' : '') + '</span>'
     + (m && m.rec ? '<span class="badge rec" title="Rebuilt from an archive">Recovered: '+esc(m.rec)+'</span>' : '')
     + '</a>'
     + (nsfw && thumb ? '<button class="reveal" type="button">Reveal</button>' : '')
     + '<button class="star" type="button" data-id="'+esc(p.id)+'" aria-pressed="'+(FAVS.has(p.id)?'true':'false')+'" aria-label="Star this post" title="Star this post">'+(FAVS.has(p.id)?'\u2605':'\u2606')+'</button>'
     + '<button class="save" type="button" data-id="'+esc(p.id)+'" aria-pressed="'+(ROWSET.has(p.id)?'true':'false')+'" aria-label="'+(ROWSET.has(p.id)?'Remove from your CSV':'Save to your CSV')+'" title="'+(ROWSET.has(p.id)?'Remove from your CSV':'Save to your CSV')+'">'+(ROWSET.has(p.id)?BM_ON:BM_OFF)+'</button>'
-    + '<button class="save nsfwb" type="button" data-id="'+esc(p.id)+'"'+(ROWSET.has(p.id) ? '' : ' hidden')+' aria-pressed="'+(nsfw?'true':'false')+'" aria-label="'+(nsfw ? 'Remove the NSFW label' : 'Mark as NSFW')+'" title="'+(nsfw ? 'Marked NSFW: tap to remove the label' : 'Mark as NSFW')+'">'+NSFW_ICON+'</button>'
+    + '<button class="save nsfwb" type="button" data-id="'+esc(p.id)+'"'+(ROWSET.has(p.id) ? '' : ' hidden')+' aria-pressed="'+(nsfw?'true':'false')+'" aria-label="'+(nsfw ? 'Unmark as NSFW' : 'Mark as NSFW')+'" title="'+(nsfw ? 'Unmark as NSFW' : 'Mark as NSFW')+'">'+NSFW_ICON+'</button>'
     + (MEDIA_KINDS.has(media) && (thumb || v0) ? '<button class="fs" type="button" aria-label="Full screen" title="Full screen">'+FS_ICON+'</button>' : '')
     + '<button class="morebtn" type="button" aria-expanded="false" aria-label="More actions" title="More actions"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5L5.5 8l4.5 4.5"/></svg></button>'
     + '<button class="ibtn" type="button" aria-label="Show info" aria-pressed="false"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6.3"/><path d="M8 7.2v3.6"/><circle cx="8" cy="5.1" r=".6" fill="currentColor"/></svg></button>'
@@ -1485,7 +1491,7 @@ async function openViewer(p, opts){
     /* RedGifs could not be asked for the real file (the browser blocked the lookup), so the clip we hold is Reddit's silent preview.
        Show RedGifs' own player instead: it has sound and its own controls. */
     const f = document.createElement('iframe');
-    f.className = 'vyt'; f.title = titleOf(p); f.allowFullscreen = true; f.referrerPolicy = 'strict-origin-when-cross-origin';
+    f.className = 'vyt vrg'; f.title = titleOf(p); f.allowFullscreen = true; f.referrerPolicy = 'strict-origin-when-cross-origin';
     f.setAttribute('allow','autoplay; encrypted-media; picture-in-picture; fullscreen');
     f.src = 'https://www.redgifs.com/ifr/'+rgSlug(p);
     VIEW.stage.replaceChildren(f);
@@ -2006,7 +2012,7 @@ function startPlay(t){
     f.className = 'clip yt'; f.setAttribute('tabindex','-1'); f.setAttribute('allow','autoplay; encrypted-media');
     f.referrerPolicy = 'strict-origin-when-cross-origin';
     f.src = 'https://www.redgifs.com/ifr/'+encodeURIComponent(v.slice(3));
-    t.insertBefore(f, t.querySelector('.badge'));
+    t.insertBefore(f, t.querySelector('.badges'));
     return;
   }
   if(v.startsWith('yt:')){
@@ -2026,7 +2032,7 @@ function startPlay(t){
     };
     addEventListener('message',onMsg); t._ytMsg = onMsg;
     f.addEventListener('load',()=>talk({event:'listening',id:1,channel:'widget'}));
-    t.insertBefore(f, t.querySelector('.badge'));
+    t.insertBefore(f, t.querySelector('.badges'));
     return;
   }
   let el;
@@ -2044,7 +2050,7 @@ function startPlay(t){
     if(rest.length && !isGif){ t.dataset.v = rest.shift(); t.dataset.vc = rest.join('|'); el.src = t.dataset.v; el.play().catch(()=>{}); }
     else clearPlayUI(t);
   });
-  t.insertBefore(el, t.querySelector('.badge'));
+  t.insertBefore(el, t.querySelector('.badges'));
   buildControls(t, el, isGif);
 }
 function stopPlay(t){
