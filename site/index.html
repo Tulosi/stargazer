@@ -16,7 +16,7 @@
    Tokens keep their old names so existing component rules and scripts keep working. */
 :root{
   --bg:#f3f4f6; --surface:#ffffff; --surface-2:#e8e9ed; --ink:#15161a; --muted:#6a6d77; --line:#dcdee4;
-  --accent:#15161a; --accent-ink:#ffffff; --chip-on:#15161a; --warn:#b4540a;
+  --accent:#15161a; --accent-ink:#ffffff; --chip-on:#15161a; --warn:#b4540a; --alert-ink:#a24743; --alert-bg:rgba(176,74,70,.10); --alert-line:rgba(176,74,70,.38);
   --glass:rgba(243,244,246,.78);
   --shadow:0 18px 50px rgba(18,20,28,.16),0 2px 8px rgba(18,20,28,.06);
   --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%236a6d77' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
@@ -28,7 +28,7 @@
 }
 :root[data-theme="dark"]{
   --bg:#121214; --surface:#1b1b1f; --surface-2:#26262b; --ink:#ececef; --muted:#8d8f98; --line:#2f2f35;
-  --accent:#ececef; --accent-ink:#121214; --chip-on:#ececef; --warn:#f0a35e;
+  --accent:#ececef; --accent-ink:#121214; --chip-on:#ececef; --warn:#f0a35e; --alert-ink:#e49a95; --alert-bg:rgba(214,110,104,.13); --alert-line:rgba(214,110,104,.4);
   --glass:rgba(18,18,20,.78);
   --shadow:0 18px 50px rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.4);
   --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%238d8f98' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
@@ -38,7 +38,7 @@
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
     --bg:#121214; --surface:#1b1b1f; --surface-2:#26262b; --ink:#ececef; --muted:#8d8f98; --line:#2f2f35;
-    --accent:#ececef; --accent-ink:#121214; --chip-on:#ececef; --warn:#f0a35e;
+    --accent:#ececef; --accent-ink:#121214; --chip-on:#ececef; --warn:#f0a35e; --alert-ink:#e49a95; --alert-bg:rgba(214,110,104,.13); --alert-line:rgba(214,110,104,.4);
     --glass:rgba(18,18,20,.78);
     --shadow:0 18px 50px rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.4);
     --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%238d8f98' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
@@ -297,7 +297,11 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
 #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:50;background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font:500 12.5px var(--font);box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw}
 #toast.on{opacity:1}
 .intro{max-width:620px;margin:0 auto;text-align:left;color:var(--ink)}
-.intro h2{font-size:20px;font-weight:650;margin:0 0 12px;letter-spacing:-.01em}
+p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100%;margin:0 0 18px;padding:8px 16px 8px 13px;border-radius:999px;border:1px solid var(--alert-line);background:var(--alert-bg);color:var(--alert-ink);font-size:13.5px;font-weight:600;line-height:1.3}
+.nodata svg{flex:none}
+.steps{list-style:none;margin:0 0 14px;padding:0 0 0 18px;display:grid;gap:12px}
+.steps li{display:flex;gap:12px;align-items:flex-start;font-size:14px;line-height:1.55;color:var(--muted)}
+.steps .n{flex:none;width:24px;height:24px;margin-top:0;border-radius:50%;border:1.5px solid var(--ink);color:var(--ink);display:grid;place-items:center;font-size:12px;font-weight:650;line-height:1}
 .intro p{margin:0 0 12px;font-size:14px;line-height:1.55;color:var(--muted)}
 .intro a{color:var(--ink);text-decoration:underline;text-underline-offset:2px;overflow-wrap:anywhere}
 .intro code{font-size:.92em;background:var(--surface-2);padding:1px 6px;border-radius:6px}
@@ -1488,10 +1492,10 @@ function updateChips(){
   $('browseCol').hidden = !($('catChips').childElementCount || $('kindChips').childElementCount || $('mediaChips').childElementCount);   // nothing to browse until something is loaded
 }
 function introHtml(){
-  return '<div class="intro"><h2>Welcome to Stargazer</h2>'
+  return '<div class="intro"><p class="nodata" role="status"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M8 4.6v4"/><path d="M8 11.3v.1"/></svg>You currently have no data source selected.</p>'
    + '<p>Stargazer is a tool designed to allow users to parse and visually display the contents of their Reddit account\u2019s \u201CSaved Post\u201D user data. This may prove useful given the native Reddit website and app will only show the latest 1000 saved items, whereas your Reddit user data is not similarly limited.</p>'
-   + '<p>Request your Reddit User data here: <a href="https://www.reddit.com/settings/data-request" target="_blank" rel="noopener noreferrer">https://www.reddit.com/settings/data-request</a></p>'
-   + '<p>Extract the saved <code>saved_posts.csv</code> and open it via the source tab. By default everything stays local and nothing is uploaded.</p>'
+   + '<ol class="steps"><li><span class="n" aria-hidden="true">1</span><span>Request your Reddit User data here: <a href="https://www.reddit.com/settings/data-request" target="_blank" rel="noopener noreferrer">https://www.reddit.com/settings/data-request</a></span></li>'
+   + '<li><span class="n" aria-hidden="true">2</span><span>Extract the saved <code>saved_posts.csv</code> and open it via the source tab. By default everything stays local and nothing is uploaded.</span></li></ol>'
    + (CLOUD_ON ? '<p>You can, if you wish, create an account and upload the CSV to sync across devices.</p>' : '')
    + '</div>';
 }
