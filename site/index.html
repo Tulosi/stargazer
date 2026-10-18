@@ -296,6 +296,11 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
 .more{display:flex;flex-direction:column;align-items:center;gap:8px;padding:26px 0 8px;color:var(--muted);font-size:12px}
 #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:50;background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font:500 12.5px var(--font);box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw}
 #toast.on{opacity:1}
+.intro{max-width:620px;margin:0 auto;text-align:left;color:var(--ink)}
+.intro h2{font-size:20px;font-weight:650;margin:0 0 12px;letter-spacing:-.01em}
+.intro p{margin:0 0 12px;font-size:14px;line-height:1.55;color:var(--muted)}
+.intro a{color:var(--ink);text-decoration:underline;text-underline-offset:2px;overflow-wrap:anywhere}
+.intro code{font-size:.92em;background:var(--surface-2);padding:1px 6px;border-radius:6px}
 .empty{padding:90px 0;text-align:center;color:var(--muted);grid-column:1/-1;grid-row:span 12}
 #sentinel{height:1px}
 @media (max-width:560px){:root{--card:360px}}   /* phones: the largest tile size, one column */
@@ -1456,7 +1461,7 @@ function refresh(){
   measureGrid();
   list = sorted(POSTS.filter(p=>matches(p)));
   $('grid').replaceChildren(); shown = 0;
-  if(!list.length){ $('grid').innerHTML = '<div class="empty">'+(MODE==='sub' ? (FEED.loading ? 'Loading...' : 'No posts match these filters.') : (POSTS.length ? 'No saved posts match these filters.' : 'Your list is empty. Sign in to load it from your account, use Open CSV, or switch to Subreddit and save posts you like.'))+'</div>'; updateMore(); }
+  if(!list.length){ $('grid').innerHTML = '<div class="empty">'+(MODE==='sub' ? (FEED.loading ? 'Loading...' : 'No posts match these filters.') : (POSTS.length ? 'No saved posts match these filters.' : introHtml()))+'</div>'; updateMore(); }
   else renderMore();
   updateChips(); updateSummary();
 }
@@ -1481,6 +1486,14 @@ function updateChips(){
   $('kindChips').replaceChildren(...KINDS.filter(([k])=>kc[k]||state.kinds.has(k)).map(([k,l])=>chip(l,kc[k]||0,state.kinds.has(k),()=>toggle(state.kinds,k))));
   $('mediaChips').replaceChildren(...STATUS.filter(([k])=>mc[k]||state.media.has(k)).map(([k,l])=>chip(l,mc[k]||0,state.media.has(k),()=>toggle(state.media,k))));
   $('browseCol').hidden = !($('catChips').childElementCount || $('kindChips').childElementCount || $('mediaChips').childElementCount);   // nothing to browse until something is loaded
+}
+function introHtml(){
+  return '<div class="intro"><h2>Welcome to Stargazer</h2>'
+   + '<p>Stargazer is a tool designed to allow users to parse and visually display the contents of their Reddit account\u2019s \u201CSaved Post\u201D user data. This may prove useful given the native Reddit website and app will only show the latest 1000 saved items, whereas your Reddit user data is not similarly limited.</p>'
+   + '<p>Request your Reddit User data here: <a href="https://www.reddit.com/settings/data-request" target="_blank" rel="noopener noreferrer">https://www.reddit.com/settings/data-request</a></p>'
+   + '<p>Extract the saved <code>saved_posts.csv</code> and open it via the source tab. By default everything stays local and nothing is uploaded.</p>'
+   + (CLOUD_ON ? '<p>You can, if you wish, create an account and upload the CSV to sync across devices.</p>' : '')
+   + '</div>';
 }
 function updateSummary(){
   const active = state.cats.size||state.kinds.size||state.media.size||state.sub||state.q||state.fav||state.nsfw!=='hide'||!state.hideBroken||state.range!=='all';
