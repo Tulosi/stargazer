@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
-<script>try{var t=localStorage.getItem("saved-posts-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<script>try{if(!localStorage.getItem("saved-posts-theme-reset1")){localStorage.removeItem("saved-posts-theme");localStorage.setItem("saved-posts-theme-reset1","1")}var t=localStorage.getItem("saved-posts-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>   <!-- one-time reset: everyone starts on System; a choice made afterwards is kept -->
 <style>
 /* Quiet chrome, loud media. Neutral monochrome UI; the only colour on the page comes from the posts themselves.
    Tokens keep their old names so existing component rules and scripts keep working. */
