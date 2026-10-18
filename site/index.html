@@ -72,6 +72,7 @@ button,select,input{font:inherit;color:inherit}
 .stats[hidden]{display:none}
 .stats .st{position:relative;white-space:nowrap;cursor:default;outline:none}
 .stats .st b{color:var(--ink);font-weight:600}
+.stats .lb{margin-left:.3em}
 .stats .st+.st::before{content:"\2022";position:absolute;left:-10px;color:var(--faint,var(--muted));opacity:.6}
 .stats .st em{display:none;position:absolute;left:0;top:calc(100% + 4px);z-index:5;font-style:normal;white-space:normal;width:max-content;max-width:min(260px,80vw);padding:6px 9px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink);box-shadow:0 6px 18px rgba(0,0,0,.35)}
 .stats .st:hover em,.stats .st:focus em{display:block}
@@ -82,20 +83,19 @@ button,select,input{font:inherit;color:inherit}
   .stats[hidden]{display:none}
   .stats .st{display:flex;flex-direction:column;align-items:center;line-height:1.2;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
   .stats .st b{font-size:17px;letter-spacing:0;text-transform:none;line-height:1.25}
-  .stats .st+.st::before{content:"";left:0;top:15%;bottom:15%;width:1px;background:var(--line);opacity:1}
+  .stats .lb{margin-left:0}
+  .stats .st+.st::before{content:"";left:0;top:15%;bottom:15%;width:1px;background:var(--line);opacity:1;transition:opacity .2s}
+  .stats.anim .st::before{opacity:0!important}
+  .stats .st b,.stats .lb{transform-origin:0 0;will-change:transform}
   .stats .st em{left:50%;transform:translateX(-50%);text-transform:none;letter-spacing:0;font-size:12px;text-align:left}
   .stats .st:first-child em{left:0;transform:none}
   .stats .st:last-child em{left:auto;right:0;transform:none}
   /* scrolled down: one slim line (the label sits beside its number) */
-  .stats{transition:height .26s cubic-bezier(.2,.7,.2,1),margin .26s,padding .26s;overflow:visible}
-  .stats .st{transition:opacity .13s ease}
-  .stats.fading .st{opacity:0}
-  .stats.compact{grid-template-columns:repeat(3,auto);justify-content:center;column-gap:22px;margin-top:2px;padding-top:3px;border-top-color:transparent}
+  .stats.compact{grid-template-columns:repeat(3,auto);justify-content:center;column-gap:22px;border-top-color:transparent}
   .stats.compact .st{flex-direction:row;align-items:baseline;gap:4px;font-size:10px}
   .stats.compact .st b{font-size:13px;line-height:1.3}
   .stats.compact .st+.st::before{left:-12px;top:20%;bottom:20%}
 }
-@media (prefers-reduced-motion:reduce){.stats,.stats .st{transition:none!important}}
 .search{display:none}
 .deck-bar.search-open .search{display:block;position:absolute;left:0;right:46px;top:50%;transform:translateY(-50%);max-width:none;z-index:2;background:var(--bg);border-radius:999px}
 #searchbtn[aria-expanded="true"]{background:var(--sel);color:var(--sel-ink)}
@@ -375,9 +375,9 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
         <input id="q" type="search" placeholder="Search titles, subreddits, authors" aria-label="Search">
       </label>
       <div class="stats" id="stats" hidden aria-live="off">
-        <span class="st" tabindex="0"><b id="stActive">0</b> Active<em>(Excludes filtered results)</em></span>
-        <span class="st" tabindex="0"><b id="stGot">0</b> Retrieved<em>(Total successfully retrieved from the data source)</em></span>
-        <span class="st" tabindex="0"><b id="stAll">0</b> Total<em>(The total number of items in the data source, retrievable or not)</em></span>
+        <span class="st" tabindex="0"><b id="stActive">0</b><span class="lb">Active</span><em>(Excludes filtered results)</em></span>
+        <span class="st" tabindex="0"><b id="stGot">0</b><span class="lb">Retrieved</span><em>(Total successfully retrieved from the data source)</em></span>
+        <span class="st" tabindex="0"><b id="stAll">0</b><span class="lb">Total</span><em>(The total number of items in the data source, retrievable or not)</em></span>
       </div>
       <button class="pill" id="srctoggle" type="button" aria-expanded="false" aria-controls="srcpanel" aria-label="Source, account and sync" title="Source, account and sync" style="padding-left:10px;padding-right:10px">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="5.4" r="2.7"/><path d="M2.8 14c.4-2.7 2.5-4.3 5.2-4.3s4.8 1.6 5.2 4.3"/></svg>
@@ -1618,22 +1618,35 @@ let stT; function updateStats(){
     $('stats').hidden = !POSTS.length || MODE!=='csv';
   },120);
 }
-/* Phones: the count strip folds to one line while scrolling down and stays folded until the page is back at the very top. */
+/* Phones: the count strip folds to one line while scrolling down and stays folded until the page is back at the very top.
+   The move is a FLIP animation (transforms only for the text) and the header's flow height is held constant with a matching margin,
+   so the cards below never nudge while it plays. */
 (function(){
-  const el = $('stats'), mq = matchMedia('(max-width:720px)'); let compact = false, lastY = scrollY, busy = false, acc = 0;
+  const el = $('stats'), deck = document.querySelector('.deck'), mq = matchMedia('(max-width:720px)'), still = matchMedia('(prefers-reduced-motion:reduce)');
+  let compact = false, lastY = scrollY, busy = false, acc = 0, hold = 0;   // hold: extra margin that stands in for the height the folded strip gave up
+  const parts = () => [...el.querySelectorAll('.st b, .st .lb')];
+  const reset = () => { compact = false; el.classList.remove('compact','anim'); el.style.height = ''; deck.style.marginBottom = ''; hold = 0; };
   function setCompact(on){
-    if(on===compact || busy) return; busy = true; compact = on;
-    if(!mq.matches || el.hidden){ el.classList.toggle('compact', on); busy = false; return; }
-    const h0 = el.offsetHeight; el.style.height = h0+'px'; el.classList.add('fading');
-    setTimeout(()=>{
-      el.classList.toggle('compact', on);
-      el.style.height = 'auto'; const h1 = el.offsetHeight; el.style.height = h0+'px'; void el.offsetHeight;
-      el.style.height = h1+'px'; el.classList.remove('fading');
-      setTimeout(()=>{ el.style.height = ''; busy = false; lastY = scrollY; acc = 0; }, 300);
-    }, 130);
+    if(on===compact || busy) return;
+    if(!mq.matches || el.hidden || still.matches){ compact = on; el.classList.toggle('compact', on); deck.style.marginBottom = ''; return; }
+    busy = true;
+    const P = parts(), r0 = P.map(x=>x.getBoundingClientRect()), h0 = el.offsetHeight, m0 = hold;
+    compact = on; el.classList.toggle('compact', on);
+    const h1 = el.offsetHeight, r1 = P.map(x=>x.getBoundingClientRect());
+    const m1 = on ? m0 + (h0 - h1) : 0; hold = m1;
+    const opt = {duration:340, easing:'cubic-bezier(.22,.8,.24,1)', fill:'none'};
+    el.classList.add('anim');
+    P.forEach((x,i)=>{
+      const a = r0[i], c = r1[i], sx = c.width ? a.width/c.width : 1, sy = c.height ? a.height/c.height : 1;
+      x.animate([{transform:'translate('+(a.left-c.left)+'px,'+(a.top-c.top)+'px) scale('+sx+','+sy+')'},{transform:'none'}], opt);
+    });
+    deck.style.marginBottom = m1+'px';
+    el.animate([{height:h0+'px'},{height:h1+'px'}], opt);
+    deck.animate([{marginBottom:m0+'px'},{marginBottom:m1+'px'}], opt);
+    setTimeout(()=>{ el.classList.remove('anim'); busy = false; lastY = scrollY; acc = 0; if(!on){ deck.style.marginBottom = ''; hold = 0; } }, opt.duration+30);
   }
   addEventListener('scroll',()=>{
-    if(!mq.matches){ if(compact){ compact = false; el.classList.remove('compact'); el.style.height = ''; } return; }
+    if(!mq.matches){ if(compact) reset(); return; }
     const y = scrollY, d = y - lastY; lastY = y;
     if(busy) return;
     if(y < 24){ acc = 0; setCompact(false); return; }
@@ -1641,7 +1654,7 @@ let stT; function updateStats(){
     acc += d;
     if(acc > 36) setCompact(true);   // it only opens again at the very top (above)
   },{passive:true});
-  mq.addEventListener && mq.addEventListener('change',()=>{ compact = false; el.classList.remove('compact'); el.style.height = ''; });
+  mq.addEventListener && mq.addEventListener('change',reset);
 })();
 function updateSummary(){
   updateStats();
