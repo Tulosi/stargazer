@@ -238,14 +238,12 @@ body.info-hover .card:focus-within .info,body.info-hover .card:focus-within .bad
 @media (hover:none){.ctl{opacity:1;pointer-events:auto}}
 .ctl .pp,.ctl .vol{flex:none;width:26px;height:26px;border:0;border-radius:50%;padding:0;display:grid;place-items:center;background:rgba(255,255,255,.2);color:#fff;font-size:11px;line-height:1;cursor:pointer}
 .ctl .pp:hover,.ctl .vol:hover{background:rgba(255,255,255,.34)}
-.ctl .vol svg{display:block}
-.volwrap{display:none;position:relative;flex:none;margin-left:2px}
+.ctl .vol svg,.ctl .pp svg{display:block}
+.volwrap{display:none;position:relative;flex:none;margin-left:2px;align-items:center;gap:5px}
 .ctl.has-sound .volwrap{display:flex}
-.volfly{position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);width:32px;height:92px;display:none;
-  background:rgba(12,12,14,.78);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-radius:16px}
-.volfly::after{content:"";position:absolute;left:0;right:0;top:100%;height:8px}
-.volwrap:hover .volfly,.volwrap:focus-within .volfly{display:block}
-.volr{position:absolute;left:50%;top:50%;width:66px;height:18px;margin:0;transform:translate(-50%,-50%) rotate(-90deg);accent-color:#fff;cursor:pointer}
+.volwrap .vol{order:0}
+.volfly{order:1;display:block;width:54px;height:18px;position:relative}
+.volr{display:block;width:54px;height:18px;margin:0;accent-color:#fff;cursor:pointer}
 .ctl .seek{flex:1;min-width:30px;height:14px;margin:0;accent-color:#fff;cursor:pointer}
 .ctl .time{flex:none;font:400 10.5px var(--font);font-variant-numeric:tabular-nums;color:rgba(255,255,255,.9);white-space:nowrap}
 @container (max-width:230px){.ctl .time{display:none}}
@@ -264,7 +262,8 @@ body.info-hover .card:focus-within .info,body.info-hover .card:focus-within .bad
 #viewer .vclose{position:absolute;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));z-index:2;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:16px;line-height:1;cursor:pointer;display:grid;place-items:center}
 #viewer .vclose:hover,#viewer .vsound:hover{background:rgba(255,255,255,.3)}
 #viewer .vsound{position:absolute;top:max(12px,env(safe-area-inset-top));right:calc(max(12px,env(safe-area-inset-right)) + 50px);z-index:2;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;cursor:pointer;display:grid;place-items:center}
-#viewer .vsound[hidden]{display:none}
+#viewer .vsound[hidden],#viewer .vvol[hidden]{display:none}
+#viewer .vvol{position:absolute;top:calc(max(12px,env(safe-area-inset-top)) + 11px);right:calc(max(12px,env(safe-area-inset-right)) + 98px);z-index:2;width:96px;height:18px;margin:0;accent-color:#fff;cursor:pointer}
 #viewer :focus-visible{outline-color:#fff}
 body.viewing{overflow:hidden}
 #viewer .vnav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:48px;height:48px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:30px;line-height:1;cursor:pointer;display:grid;place-items:center}
@@ -466,7 +465,7 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
   <div id="sentinel"></div>
 </div>
 
-<div id="viewer" role="dialog" aria-modal="true" aria-label="Media viewer" hidden><button class="vnav vprev" type="button" aria-label="Previous image" hidden>&#8249;</button><button class="vnav vnext" type="button" aria-label="Next image" hidden>&#8250;</button><span class="vcount" hidden></span><button class="vsound" type="button" aria-label="Unmute" hidden></button><button class="vclose" type="button" aria-label="Close">&#10005;</button><div class="vstage"></div></div>
+<div id="viewer" role="dialog" aria-modal="true" aria-label="Media viewer" hidden><button class="vnav vprev" type="button" aria-label="Previous image" hidden>&#8249;</button><button class="vnav vnext" type="button" aria-label="Next image" hidden>&#8250;</button><span class="vcount" hidden></span><input class="vvol" type="range" min="0" max="100" step="1" value="0" aria-label="Volume" hidden><button class="vsound" type="button" aria-label="Unmute" hidden></button><button class="vclose" type="button" aria-label="Close">&#10005;</button><div class="vstage"></div></div>
 <dialog id="confirm"><form method="dialog"><h3 id="cTitle"></h3><div id="cBody"></div><label id="cOptWrap" class="toggle" hidden><span id="cOptLbl"></span><input type="checkbox" id="cOpt"></label><div class="btnrow" style="justify-content:flex-end;margin-top:18px"><button class="pill" id="cExtra" value="extra" hidden></button><button class="pill" value="cancel" autofocus>Cancel</button><button class="pill danger" id="cOk" value="ok"></button></div></form></dialog>
 <div id="pausebar" role="status" aria-live="polite" hidden><span class="pdot"></span><span id="pauseTxt"></span><button type="button" id="pauseSkip" title="Retry now">Retry now</button></div>
 <div id="toast" role="status" aria-live="polite"></div>
@@ -1087,12 +1086,13 @@ async function rgFetch(slug, retry){
   return {v, vh:u.hd||v, ha, th:u.poster||u.thumbnail||'', w:g.width||0, h:g.height||0};
 }
 /* If the API can't be reached from the browser, fall back to the file names Reddit's own embed data reveals. */
-const rgGuess = m => m.g ? {v:'https://media.redgifs.com/'+m.g+'-mobile.mp4', vh:'https://media.redgifs.com/'+m.g+'.mp4', th:'', w:0, h:0} : null;
-const rgNeeds = p => { const m = metaOf(p); return !!(m && !m.v && !m.rgGone && m.m!=='removed' && rgSlug(p)); };
+const rgGuess = m => m.g ? {v:'https://media.redgifs.com/'+m.g+'.mp4', th:'', w:0, h:0} : null;   // the full file is the one that carries sound; the -mobile one is silent
+/* Reddit's own copy of a RedGifs clip is a silent preview, so a RedGifs post is always looked up on RedGifs (once) to get the real file with its sound. */
+const rgNeeds = p => { const m = metaOf(p); return !!(m && !m.rgDone && !m.rgGone && m.m!=='removed' && rgSlug(p)); };
 function rgApply(p,res){
   const m = metaOf(p); if(!m) return;
   if(res.gone) m.rgGone = 1;
-  else { m.v = res.v; if(res.ha!==undefined) m.ha = res.ha ? 1 : 0; if(res.vh && res.vh!==res.v) m.vh = res.vh; if(!m.th && res.th) m.th = res.th; if(res.w && res.h){ m.w = res.w; m.h = res.h; } }
+  else { m.v = res.v; if(res.ha!==undefined){ m.rgDone = 1; } if(res.ha!==undefined) m.ha = res.ha ? 1 : 0; if(res.vh && res.vh!==res.v) m.vh = res.vh; if(!m.th && res.th) m.th = res.th; if(res.w && res.h){ m.w = res.w; m.h = res.h; } }
   clearTimeout(rgSave); rgSave = setTimeout(saveCache,1500);
   const el = cardEls.get(p.id); if(el) fillCard(el,p);
   if(res.gone) updateDeadCount();
@@ -1151,7 +1151,7 @@ function closeViewer(){
   }
   VIEW.root.querySelectorAll('.vnav,.vcount').forEach(x=>x.hidden = true);
   if(VIEW.aud){ VIEW.aud.pause(); VIEW.aud.removeAttribute('src'); VIEW.aud = null; }
-  VIEW.root.querySelector('.vsound').hidden = true;
+  VIEW.root.querySelector('.vsound').hidden = true; VIEW.root.querySelector('.vvol').hidden = true;
   VIEW.stage.querySelectorAll('video').forEach(v=>{ v.pause(); v.removeAttribute('src'); try{ v.load(); }catch(e){} });
   VIEW.stage.replaceChildren();
   VIEW.root.hidden = true; document.body.classList.remove('viewing');
@@ -1200,26 +1200,38 @@ async function openViewer(p, opts){
   if(vurl && !/\.gif(\?|$)/i.test(vurl)){
     const v = document.createElement('video');
     v.controls = true; v.loop = true; v.playsInline = true; v.preload = 'auto'; v.src = vurl;
-    v.muted = AUDIO.muted; v.volume = AUDIO.vol;
+    /* Opening a clip full screen is a deliberate tap, so it starts with sound on (the browser may still refuse, see play() below). */
+    if(AUDIO.vol < 0.05) AUDIO.vol = 0.6;
+    AUDIO.muted = false; v.muted = false; v.volume = AUDIO.vol; applyAudio();
     v.addEventListener('volumechange',()=>{ if(VIEW.root.hidden) return; AUDIO.muted = v.muted; if(v.volume>0 && v.volume!==AUDIO.vol){ AUDIO.vol = v.volume; saveVol(); } applyAudio(); });
     if(thumbSrc) v.poster = thumbSrc;
     v.addEventListener('loadedmetadata',()=>{ if(opts.t){ try{ v.currentTime = opts.t; }catch(e){} } });
     v.addEventListener('error',()=>{ if(tok===VIEW.token && !thumbSrc){ toast('Could not load this video.'); closeViewer(); } });
     VIEW.stage.replaceChildren(v);
-    const sb = VIEW.root.querySelector('.vsound'); sb.hidden = true;
+    const sb = VIEW.root.querySelector('.vsound'), vr = VIEW.root.querySelector('.vvol'); sb.hidden = true; vr.hidden = true;
+    const paintSb = () => { sb.innerHTML = v.muted ? SPK_OFF : SPK_ON; sb.setAttribute('aria-label', v.muted ? 'Unmute' : 'Mute'); vr.value = v.muted ? 0 : Math.round(v.volume*100); };
+    const showSnd = () => { if(tok!==VIEW.token) return; sb.hidden = false; vr.hidden = false; paintSb(); };   // only for clips that really have sound
+    v.addEventListener('volumechange',paintSb);
+    sb.onclick = () => { v.muted = !v.muted; if(!v.muted && v.volume < 0.05) v.volume = 0.6; };
+    vr.oninput = () => { const x = vr.value/100; if(x===0) v.muted = true; else { v.muted = false; v.volume = x; } };
     if(m && m.ab){
       // Reddit video: sound comes from a separate file, kept in step with the picture
       const cands = [m.ab+'/DASH_AUDIO_128.mp4', m.ab+'/DASH_AUDIO_64.mp4', m.ab+'/DASH_audio.mp4'];
       const a = document.createElement('audio'); a.preload = 'auto'; a.loop = true; let ci = 0; a.src = cands[0];
-      const paintSb = () => { sb.innerHTML = v.muted ? SPK_OFF : SPK_ON; sb.setAttribute('aria-label', v.muted ? 'Unmute' : 'Mute'); };
-      a.addEventListener('error',()=>{ if(++ci < cands.length) a.src = cands[ci]; else { sb.hidden = true; VIEW.aud = null; } });
-      a.addEventListener('loadedmetadata',()=>{ sb.hidden = false; paintSb(); });
+      a.addEventListener('error',()=>{ if(++ci < cands.length) a.src = cands[ci]; else { sb.hidden = true; vr.hidden = true; VIEW.aud = null; } });
+      a.addEventListener('loadedmetadata',showSnd);
       const drive = () => { a.volume = v.volume; a.muted = v.muted; if(!v.paused && !v.muted && a.paused){ try{ a.currentTime = v.currentTime; }catch(e){} a.play().catch(()=>{ a.muted = true; }); } if(v.muted || v.paused) a.pause(); };
       v.addEventListener('volumechange',drive); v.addEventListener('play',drive); v.addEventListener('pause',()=>a.pause());
       v.addEventListener('seeked',()=>{ if(!a.paused){ try{ a.currentTime = v.currentTime; }catch(e){} } });
       v.addEventListener('timeupdate',()=>{ if(!a.paused && Math.abs(a.currentTime - v.currentTime) > 0.35){ try{ a.currentTime = v.currentTime; }catch(e){} } });
-      sb.onclick = () => { v.muted = !v.muted; if(!v.muted && v.volume < 0.05) v.volume = 0.6; paintSb(); };
       VIEW.aud = a;
+    } else if(m && m.ha===1) showSnd();
+    else if(!(m && m.ha===0)){
+      // unknown: ask the browser whether the file has an audio track once it has started
+      let tries = 0; const iv = setInterval(()=>{
+        if(tok!==VIEW.token || VIEW.root.hidden){ clearInterval(iv); return; }
+        if(v.readyState >= 2 && hasAudioTrack(v)){ showSnd(); clearInterval(iv); } else if(++tries > 40) clearInterval(iv);
+      },400);
     }
     v.play().catch(()=>{ v.muted = true; v.play().catch(()=>{}); });   // blocked with sound? play silently instead
     return;
@@ -1519,6 +1531,13 @@ function applyAudio(){
     u.volr.value = AUDIO.muted ? 0 : Math.round(AUDIO.vol*100);
   }
 }
+function hasAudioTrack(el){
+  if(el.mozHasAudio === true) return true;
+  if(el.audioTracks && el.audioTracks.length > 0) return true;
+  if(el.webkitAudioDecodedByteCount > 0) return true;
+  try{ const cs = (el.captureStream || el.mozCaptureStream); if(cs && cs.call(el).getAudioTracks().length > 0) return true; }catch(e){}
+  return false;
+}
 /* The sound control only appears once we know this clip has sound. */
 function setupSound(t, el, ctl, entry){
   const show = () => ctl.classList.add('has-sound');
@@ -1536,32 +1555,28 @@ function setupSound(t, el, ctl, entry){
   if(ha==='1'){ show(); return; }
   if(ha==='0') return;
   // unknown source: ask the browser whether the file carries an audio track
-  const has = () => {
-    if(el.mozHasAudio === true) return true;
-    if(el.audioTracks && el.audioTracks.length > 0) return true;
-    if(el.webkitAudioDecodedByteCount > 0) return true;
-    try{ const cs = (el.captureStream || el.mozCaptureStream); if(cs && cs.call(el).getAudioTracks().length > 0) return true; }catch(e){}
-    return false;
-  };
+  const has = () => hasAudioTrack(el);
   let tries = 0;
   const iv = setInterval(()=>{
     if(!ctl.isConnected){ clearInterval(iv); return; }
     if(el.readyState >= 2 && has()){ show(); clearInterval(iv); }
-    else if(++tries > 14) clearInterval(iv);
+    else if(++tries > 40) clearInterval(iv);
   },400);
 }
 function setMuted(m){ AUDIO.muted = m; if(!m && AUDIO.vol < 0.05){ AUDIO.vol = 0.6; saveVol(); } applyAudio(); }
+const PP_PAUSE = '<svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><rect x="3.5" y="2.5" width="3" height="11" rx=".8"/><rect x="9.5" y="2.5" width="3" height="11" rx=".8"/></svg>';
+const PP_PLAY = '<svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M4.5 2.7v10.6a.6.6 0 00.92.5l8.3-5.3a.6.6 0 000-1L5.42 2.2a.6.6 0 00-.92.5z"/></svg>';
 function buildControls(t, el, isGif){
   const card = t.closest('.card'); if(!card) return;
   card.querySelectorAll('.ctl,.cprog').forEach(n=>n.remove());
   const ctl = document.createElement('div'); ctl.className = 'ctl';
-  ctl.innerHTML = '<button class="pp" type="button" aria-label="Pause">\u23F8</button>'
+  ctl.innerHTML = '<button class="pp" type="button" aria-label="Pause">'+PP_PAUSE+'</button>'
     + (isGif ? '' : '<input class="seek" type="range" min="0" max="1000" step="1" value="0" aria-label="Seek"><span class="time">0:00</span><span class="volwrap"><span class="volfly"><input class="volr" type="range" min="0" max="100" step="1" value="0" aria-label="Volume"></span><button class="vol" type="button" aria-label="Unmute"></button></span>');
   const pp = ctl.querySelector('.pp');
   card.classList.add('playing'); card.appendChild(ctl);
   const paint = () => {
     const paused = isGif ? !!t._frozen : (el.paused && t._userPaused);
-    pp.textContent = paused ? '\u25B6' : '\u23F8'; pp.setAttribute('aria-label', paused ? 'Play' : 'Pause');
+    pp.innerHTML = paused ? PP_PLAY : PP_PAUSE; pp.setAttribute('aria-label', paused ? 'Play' : 'Pause');
     ctl.classList.toggle('paused', paused);
   };
   if(isGif){
