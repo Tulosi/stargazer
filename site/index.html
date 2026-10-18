@@ -1816,6 +1816,8 @@ function pickFocus(){
   };
   let best = null, bd = Infinity;
   for(const c of cardView){ const d = score(c); if(d!==null && d<bd){ bd = d; best = c; } }
+  /* At the very top of the feed the first card counts as in focus when it is on screen, even if it is short and a taller neighbour sits nearer the middle. */
+  if(scrollY < 120){ const first = $('grid').firstElementChild; if(first && first.classList.contains('card') && cardView.has(first)){ const r = first.getBoundingClientRect(); if(Math.min(r.bottom,bottom) - Math.max(r.top,top) > Math.min(r.height,40)*0.5){ best = first; bd = 0; } } }
   // stick with the current tile unless another is clearly more central, so nothing flickers
   if(focusCard && best && focusCard!==best){ const fd = score(focusCard); if(fd!==null && bd > fd-40) best = focusCard; }
   if(best!==focusCard){ if(focusCard) focusCard.classList.remove('is-focus'); focusCard = best; if(best) best.classList.add('is-focus'); }
@@ -2306,8 +2308,8 @@ async function recoverInner(gen){
 function onMeta(chunk){
   updateDeadCount();
   const dependsOnMeta = state.media.size || state.kinds.size || state.nsfw!=='hide' || !state.showText || state.q || state.sort!=='saved' || state.hideBroken || state.range!=='all';
+  for(const p of chunk){ const el = cardEls.get(p.id); if(el) fillCard(el,p); }   // cards built before their preview data arrived need filling, even when the list is about to be re-filtered (refresh reuses cached cards as they are)
   if(dependsOnMeta){ refresh(); return; }
-  for(const p of chunk){ const el = cardEls.get(p.id); if(el) fillCard(el,p); }
   updateChips();
 }
 
