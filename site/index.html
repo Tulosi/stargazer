@@ -278,6 +278,7 @@ body.unblur .reveal{display:none!important}
 @media (hover:none){.gnav{opacity:1}}
 .star:hover,.fs:hover,.save:hover{background:rgba(12,12,14,.78)}
 .star[aria-pressed=true]{color:#fff}
+.star{font-size:21px}
 .save[aria-pressed=true]{color:#fff}
 .reveal{position:absolute;left:8px;top:40px;z-index:2;display:none;border:0;border-radius:999px;padding:5px 10px;font:500 11px var(--font);cursor:pointer}
 @media (hover:none){.thumb.nsfw ~ .reveal{display:block}}
@@ -753,7 +754,7 @@ function sorted(arr){
 function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 const WB_TS = '20230601';
 const wbImg = u => 'https://web.archive.org/web/'+WB_TS+'im_/'+u;
-const NSFW_ICON = '<svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="12" height="8.5" rx="1.6"/><path d="M5.8 5V3.8c0-.4.3-.8.8-.8h2.8c.5 0 .8.4.8.8V5"/><path d="M6.6 7.7l2.8 2.8M9.4 7.7l-2.8 2.8"/></svg>';
+const NSFW_ICON = '<svg viewBox="0 0 16 16" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="12" height="8.5" rx="1.6"/><path d="M5.8 5V3.8c0-.4.3-.8.8-.8h2.8c.5 0 .8.4.8.8V5"/><path d="M6.6 7.7l2.8 2.8M9.4 7.7l-2.8 2.8"/></svg>';
 const FS_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>';
 function imgCandidates(p){
   const m = metaOf(p), prim = [], arch = [];
