@@ -413,6 +413,8 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
 .more{display:flex;flex-direction:column;align-items:center;gap:8px;padding:26px 0 8px;color:var(--muted);font-size:12px}
 #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:50;background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font:500 12.5px var(--font);box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw}
 #toast.on{opacity:1}
+#toast.act.on{pointer-events:auto}
+#toast .tact{margin-left:12px;background:none;border:0;color:inherit;font:700 12.5px var(--font);text-decoration:underline;cursor:pointer;padding:2px 0}
 .intro{max-width:620px;margin:0 auto;text-align:left;color:var(--ink)}
 p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100%;margin:0 0 18px;padding:8px 16px 8px 13px;border-radius:999px;border:1px solid var(--alert-line);background:var(--alert-bg);color:var(--alert-ink);font-size:13.5px;font-weight:600;line-height:1.3}
 .nodata svg{flex:none}
@@ -442,6 +444,8 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
 
 /* ---------- List layout: short rows, card info on a blurred preview, no media controls ---------- */
 .layouthint{margin:-2px 0 4px;font-size:12px;color:var(--muted)}
+body.layout-list #sizerow{display:none}
+@media (max-width:560px){#sizerow{display:none}}
 body.layout-list .grid{grid-template-columns:repeat(auto-fill,minmax(min(460px,100%),1fr))}
 body.layout-list .thumb img,body.layout-list .thumb .still{filter:blur(16px) brightness(.72);transform:scale(1.25)}
 body.layout-list .thumb.nsfw img,body.layout-list .thumb.nsfw .still{filter:blur(22px) brightness(.55)}
@@ -549,7 +553,7 @@ body.layout-list .badges{display:contents}
         <label class="ctlrow"><span>Subreddit</span><select id="subsel" class="field" aria-label="Subreddit"></select></label>
         <div class="ctlrow"><span>Layout</span><div class="srcseg" id="layoutseg" role="group" aria-label="Layout"><button class="pill" type="button" data-l="masonry" aria-pressed="true" title="Best for media">Masonry</button><button class="pill" type="button" data-l="grid" aria-pressed="false" title="Equal square tiles in strict rows">Grid</button><button class="pill" type="button" data-l="list" aria-pressed="false" title="Best for text posts">List</button></div></div>
         <p class="hint layouthint" id="layouthint" role="status"></p>
-        <label class="ctlrow"><span>Tile size</span><input id="size" type="range" min="150" max="360" step="10" value="230"></label>
+        <label class="ctlrow" id="sizerow"><span>Tile size</span><input id="size" type="range" min="150" max="360" step="10" value="230"></label>
         <label class="ctlrow"><span>Card info</span>
           <select id="infomode" class="field" aria-label="Card info">
             <option value="show">Always visible</option>
@@ -1270,7 +1274,16 @@ function applyTarget(p,r){
   updateDeadCount();
   if(r.dead && state.hideBroken) scheduleRefresh();
 }
-let toastT; function toast(msg){ const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove('on'),4000); }
+let toastT;
+function toast(msg, action, ms){
+  const t = $('toast'); t.textContent = msg; t.classList.toggle('act', !!action);
+  if(action){
+    const b = document.createElement('button'); b.type='button'; b.className='tact'; b.textContent = action.label;
+    b.onclick = ()=>{ t.classList.remove('on','act'); clearTimeout(toastT); action.fn(); };
+    t.appendChild(b);
+  }
+  t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove('on','act'), ms || (action ? 8000 : 4000));
+}
 
 // Check a card's real link shortly after the pointer settles on it, so the click can go straight to a live copy.
 let hoverT, hoverCard = null;
@@ -1666,7 +1679,7 @@ function measureGrid(){
   if(tracks.length){ cols = tracks.length; colW = tracks[0]; }
 }
 let LAYOUT = 'masonry';
-const LAYOUTS = {masonry:'Best for media: tiles follow the shape of each picture or clip.', grid:'Every card the same size, in strict rows.', list:'Best for text posts: short rows with the card info always shown and a blurred preview behind.'};
+const LAYOUTS = {masonry:'Best for media.', grid:'Equal squares.', list:'Best for text posts.'};
 try{ const sv = localStorage.getItem('saved-posts-layout'); if(sv && LAYOUTS[sv]) LAYOUT = sv; }catch(e){}
 function layoutCard(el,p){
   if(LAYOUT==='list'){            // short horizontal tiles, just tall enough for the card info
@@ -1836,8 +1849,8 @@ function updateSummary(){
   updateStats(); saveView();
   const active = state.cats.size||state.kinds.size||state.media.size||state.sub||state.q||state.fav||state.nsfw!=='hide'||!state.hideBroken||state.range!=='all';
   const hidden = MODE==='csv' ? Math.max(0, POSTS.length - list.length) : 0;
-  /* How many separate rules are narrowing the list right now: the defaults count too, since they hide posts a newcomer may not expect. */
-  const n = hidden ? (state.nsfw==='hide' || state.nsfw==='only' ? 1 : 0) + (state.showText ? 0 : 1) + (state.hideBroken ? 1 : 0) + (state.cats.size?1:0) + (state.kinds.size?1:0) + (state.media.size?1:0) + (state.sub?1:0) + (state.q?1:0) + (state.fav?1:0) + (state.range!=='all'?1:0) : 0;
+  /* Count only settings the user changed from the defaults (the hiding defaults are explained by the "hidden by filters" line). */
+  const n = (state.nsfw!=='hide'?1:0) + (state.showText?1:0) + (state.hideBroken?0:1) + (state.cats.size?1:0) + (state.kinds.size?1:0) + (state.media.size?1:0) + (state.sub?1:0) + (state.q?1:0) + (state.fav?1:0) + (state.range!=='all'?1:0);
   const dt = $('decktoggle'); if(n) dt.dataset.n = String(n); else delete dt.dataset.n;
   dt.dataset.active = active ? '1' : '0';
   $('summary').innerHTML = hidden ? '<b>'+hidden.toLocaleString()+'</b> hidden by filters <button class="clear" id="rvw" type="button">Review</button>'+(active ? ' <button class="clear" id="clr" type="button">Clear filters</button>' : '')
@@ -2418,7 +2431,9 @@ async function loadAll(){
     onMeta(chunk);
     await sleep(500);
   }
-  setProgress(missing ? 'Previews loaded ('+(total-missing).toLocaleString()+' of '+total.toLocaleString()+'). '+missing+' not in the archives yet, showing titles only.' : '');
+  setProgress(missing ? missing.toLocaleString()+' preview'+(missing===1?'':'s')+' not available yet <button class="clear" id="rtry" type="button">Retry</button>' : '');
+  $('loadText').title = missing ? 'Previews loaded ('+(total-missing).toLocaleString()+' of '+total.toLocaleString()+'). '+missing+' are not in the archives yet (usually very recent saves), so they show titles only.' : '';
+  const rt = $('rtry'); if(rt) rt.onclick = ()=>{ rt.disabled = true; rt.textContent = 'Retrying...'; loadAll(); };
   loading = false;
   metaReady();
   await recoverAll();
@@ -3227,20 +3242,22 @@ async function toggleNsfw(p){
   const el = cardEls.get(p.id); if(el) fillCard(el, p);
   refresh(true);
   await commit();
-  toast(want ? 'Marked NSFW' : 'Marked not NSFW');
+  toast(want ? 'Marked NSFW' : 'Marked not NSFW', {label:'Undo', fn:()=>toggleNsfw(p)});
 }
 async function toggleSave(p){
   if(ROWSET.has(p.id)){
-    const r = await confirmDialog({
-      title:'Delete this post from your CSV?',
-      paras:['"'+titleOf(p)+'" will be removed from "'+LIB.cur.name+'".',
-             'This is permanent and cannot be undone. It only edits the CSV; your saved posts on Reddit are not changed.'],
-      ok:'Delete permanently'});
-    if(r!=='ok') return;
+    const old = ROWS.find(x=>x.id===p.id) || {id:p.id, perma:p.perma||p.link, starred:false};
+    const keep = {id:old.id, perma:old.perma, starred:!!old.starred};
     deleteRows([p.id]);
     await commit();
     if(MODE==='csv') removePosts([p.id]); else syncSaveButtons();
-    toast('Deleted from "'+LIB.cur.name+'"');
+    toast('Deleted from "'+LIB.cur.name+'"', {label:'Undo', fn:async ()=>{
+      ROWS.unshift({id:keep.id, perma:keep.perma, starred:keep.starred, t:nowT((TOMBS.get(keep.id)||{}).t)});
+      TOMBS.delete(keep.id); ROWSET.add(keep.id); if(keep.starred) FAVS.add(keep.id); markDirty(keep.id);
+      await commit();
+      if(MODE==='csv') startCsvMode(); else syncSaveButtons();
+      toast('Restored');
+    }});
   } else {
     ROWS.unshift({id:p.id, perma:p.perma || p.link, starred:false, t:nowT((TOMBS.get(p.id)||{}).t)}); TOMBS.delete(p.id); ROWSET.add(p.id); markDirty(p.id);
     if(MODE!=='csv') keepLocalMeta(p.id);

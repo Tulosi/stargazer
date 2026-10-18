@@ -21,7 +21,7 @@ with sync_playwright() as p:
     check('retrieved excludes items the archives could not return', pg.inner_text('#stGot') == '25')
     check('active excludes filtered results (text posts hidden by default)', int(pg.inner_text('#stActive')) < 40)
     check('hidden-by-filters note explains the gap', ev("document.getElementById('summary').textContent.includes('hidden by filters')") )
-    check('Filters button carries a count of active rules', ev("document.getElementById('decktoggle').dataset.n") not in (None, '0'))
+    check('Filters badge ignores the defaults', ev("document.getElementById('decktoggle').dataset.n") in (None, '0'))
     check('card shows a title strip when card info is off', ev("(()=>{ document.body.classList.add('info-off'); document.body.classList.remove('info-hover'); const t=document.querySelector('#grid .card .thumb .tstrip'); return !!t && getComputedStyle(t).display==='block'; })()"))
     pg.keyboard.press('Escape'); pg.wait_for_timeout(100)
     pg.click('#rvw'); pg.wait_for_timeout(250)
