@@ -148,6 +148,10 @@ body.unblur .reveal{display:none!important}
 .star{right:8px}
 .fs{right:44px}
 .save{right:80px}
+.nsfwb{right:116px}
+.nsfwb[hidden]{display:none}
+.nsfwb[aria-pressed=true]{background:rgba(255,255,255,.78);color:#111}
+.nsfwb[aria-pressed=true]:hover{background:rgba(255,255,255,.92);color:#111}
 .fs svg{display:block}
 .gnav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:32px;height:32px;display:grid;place-items:center;border:0;border-radius:50%;padding:0;background:rgba(12,12,14,.26);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:rgba(255,255,255,.78);font-size:22px;line-height:1;cursor:pointer;opacity:0;transition:opacity .15s,background .15s}
 .gnav:hover{background:rgba(12,12,14,.6);color:#fff}
@@ -558,6 +562,7 @@ function sorted(arr){
 function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 const WB_TS = '20230601';
 const wbImg = u => 'https://web.archive.org/web/'+WB_TS+'im_/'+u;
+const NSFW_ICON = '<svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="12" height="8.5" rx="1.6"/><path d="M5.8 5V3.8c0-.4.3-.8.8-.8h2.8c.5 0 .8.4.8.8V5"/><path d="M6.6 7.7l2.8 2.8M9.4 7.7l-2.8 2.8"/></svg>';
 const FS_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>';
 function imgCandidates(p){
   const m = metaOf(p), prim = [], arch = [];
@@ -757,6 +762,7 @@ function fillCard(el,p){
     + (nsfw && thumb ? '<button class="reveal" type="button">Reveal</button>' : '')
     + '<button class="star" type="button" data-id="'+esc(p.id)+'" aria-pressed="'+(FAVS.has(p.id)?'true':'false')+'" aria-label="Star this post" title="Star this post">'+(FAVS.has(p.id)?'\u2605':'\u2606')+'</button>'
     + '<button class="save" type="button" data-id="'+esc(p.id)+'" aria-pressed="'+(ROWSET.has(p.id)?'true':'false')+'" aria-label="'+(ROWSET.has(p.id)?'Remove from your CSV':'Save to your CSV')+'" title="'+(ROWSET.has(p.id)?'Remove from your CSV':'Save to your CSV')+'">'+(ROWSET.has(p.id)?BM_ON:BM_OFF)+'</button>'
+    + '<button class="save nsfwb" type="button" data-id="'+esc(p.id)+'"'+(ROWSET.has(p.id) ? '' : ' hidden')+' aria-pressed="'+(nsfw?'true':'false')+'" aria-label="'+(nsfw ? 'Remove the NSFW label' : 'Mark as NSFW')+'" title="'+(nsfw ? 'Marked NSFW: tap to remove the label' : 'Mark as NSFW')+'">'+NSFW_ICON+'</button>'
     + (MEDIA_KINDS.has(media) && (thumb || v0) ? '<button class="fs" type="button" aria-label="Full screen" title="Full screen">'+FS_ICON+'</button>' : '')
     + '<button class="ibtn" type="button" aria-label="Show info" aria-pressed="false"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6.3"/><path d="M8 7.2v3.6"/><circle cx="8" cy="5.1" r=".6" fill="currentColor"/></svg></button>'
     + (gl ? '<button class="gnav gprev" type="button" aria-label="Previous image">&#8249;</button><button class="gnav gnext" type="button" aria-label="Next image">&#8250;</button>' : '')
@@ -765,8 +771,7 @@ function fillCard(el,p){
     + '<div class="meta"><button class="sub" type="button" data-sub="'+esc(p.sub)+'">r/'+esc(p.sub)+'</button>'+stats
     + (note ? '<span class="note'+(dead?' dead':'')+'">'+esc(note)+'</span>' : '')+'</div>'
     + '<div class="actions"><a class="btn primary" data-open href="'+esc(href)+'" target="_blank" rel="noopener noreferrer">Open source</a>'
-    + '<a class="btn" href="'+esc(recHref(p))+'" target="_blank" rel="noopener noreferrer">Comments</a>'
-    + '<button class="btn nsfwbtn" type="button"'+(ROWSET.has(p.id) ? '' : ' hidden')+' aria-pressed="'+(nsfw?'true':'false')+'" title="Override the automatic NSFW label for this saved post">'+(nsfw ? 'Not NSFW' : 'Mark NSFW')+'</button></div>'
+    + '<a class="btn" href="'+esc(recHref(p))+'" target="_blank" rel="noopener noreferrer">Comments</a></div>'
     + (removed ? '<div class="arch"><span>Archives:</span><a href="'+esc('https://web.archive.org/web/'+WB_TS+'/https://old.reddit.com/r/'+p.sub+'/comments/'+p.id+'/')+'" target="_blank" rel="noopener noreferrer">Wayback</a>'
         + '<a href="'+esc('https://arctic-shift.photon-reddit.com/api/posts/ids?ids='+p.id)+'" target="_blank" rel="noopener noreferrer">Arctic Shift</a></div>' : '')
     + '</div>';
@@ -1300,7 +1305,7 @@ function showGallery(card,p,m){
 $('grid').addEventListener('click',e=>{
   const ib = e.target.closest('button.ibtn');
   if(ib){ const c = ib.closest('.card'), on = !c.classList.contains('info-open'); c.classList.toggle('info-open', on); ib.setAttribute('aria-pressed', on?'true':'false'); ib.setAttribute('aria-label', on?'Hide info':'Show info'); return; }
-  const nb = e.target.closest('button.nsfwbtn');
+  const nb = e.target.closest('button.nsfwb');
   if(nb){ const card = nb.closest('.card'); if(card && card._p) toggleNsfw(card._p); return; }
   const sv = e.target.closest('button.save');
   if(sv){ const card = sv.closest('.card'); if(card && card._p) toggleSave(card._p); return; }
@@ -2541,11 +2546,11 @@ function removePosts(ids){
 }
 function syncSaveButtons(){
   for(const el of cardEls.values()){
-    const b = el.querySelector('button.save'); if(!b) continue;
+    const b = el.querySelector('button.save:not(.nsfwb)'); if(!b) continue;
     const on = ROWSET.has(b.dataset.id);
     b.setAttribute('aria-pressed', on?'true':'false'); b.innerHTML = on ? BM_ON : BM_OFF;
     b.setAttribute('aria-label', on ? 'Remove from your CSV' : 'Save to your CSV'); b.title = b.getAttribute('aria-label');
-    const nbn = el.querySelector('button.nsfwbtn'); if(nbn) nbn.hidden = !on;
+    const nbn = el.querySelector('button.nsfwb'); if(nbn) nbn.hidden = !on;
   }
 }
 /* Deleting leaves a tombstone, so merging with an older copy of the file can never bring the post back. */

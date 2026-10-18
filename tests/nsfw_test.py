@@ -15,8 +15,8 @@ with sync_playwright() as p:
     pg.route('**/*', lambda r: r.continue_() if r.request.url.startswith('file:') else r.abort())
     pg.goto(PAGE); pg.wait_for_timeout(1200); ev = pg.evaluate
     pg.click('#decktoggle'); ev(SEED); pg.select_option('#nsfw', 'blur'); pg.wait_for_timeout(500)
-    btn = lambda i: ev("document.querySelector('article.card[data-id=\"%s\"] .nsfwbtn').textContent" % i)
-    click = lambda i: (pg.dispatch_event('article.card[data-id="%s"] .nsfwbtn' % i, 'click'), pg.wait_for_timeout(500))
+    btn = lambda i: 'Not NSFW' if ev("document.querySelector('article.card[data-id=\"%s\"] .nsfwb').getAttribute('aria-pressed')" % i) == 'true' else 'Mark NSFW'
+    click = lambda i: (pg.dispatch_event('article.card[data-id="%s"] .nsfwb' % i, 'click'), pg.wait_for_timeout(500))
     perma = lambda i: ev("ROWS.find(r=>r.id==='%s').perma" % i)
     check('buttons start as Mark NSFW / Not NSFW', btn('aaaa11') == 'Mark NSFW' and btn('bbbb22') == 'Not NSFW')
     click('aaaa11')
@@ -34,7 +34,7 @@ with sync_playwright() as p:
     check('and back to automatic', perma('bbbb22') == 'https://www.reddit.com/r/pics/comments/bbbb22/hello/')
     check('newer edit beats older copy in a merge', ev("""(()=>{ const a=csvToRows('id,permalink,starred,updated,deleted\\r\\naaaa11,x?nsfw=1,,50,\\r\\n'), b=csvToRows('id,permalink,starred,updated,deleted\\r\\naaaa11,x,,10,\\r\\n'); return mergeSets(b,a).rows[0].perma==='x?nsfw=1'; })()"""))
     ev("deleteRows(['aaaa11']); syncSaveButtons()")
-    check('button hidden once unsaved', ev("document.querySelector('article.card[data-id=\"aaaa11\"] .nsfwbtn').hidden"))
+    check('button hidden once unsaved', ev("document.querySelector('article.card[data-id=\"aaaa11\"] .nsfwb').hidden"))
     check('no page errors', not errs)
     b.close()
 raise SystemExit(1 if bad else 0)
