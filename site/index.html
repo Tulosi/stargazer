@@ -82,6 +82,9 @@ body.deck-collapsed #panel,body.src-collapsed #srcpanel{display:none}
 @media (max-width:880px){.panel{grid-template-columns:1fr;gap:22px;padding:18px}}
 .pcol{display:grid;gap:12px;align-content:start;min-width:0}
 .pcol[hidden]{display:none}
+.kindbadge{display:inline-flex;align-items:center;gap:6px;width:fit-content;max-width:100%;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.kindbadge[data-k=account]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.kindbadge svg{flex:none}
 @media (min-width:881px){#panel:has(#browseCol[hidden]){grid-template-columns:1fr 1fr;max-width:640px}}
 .pcol h2{margin:0 0 2px;font-size:12px;font-weight:600;color:var(--muted)}
 .grp{display:grid;gap:7px}
@@ -385,9 +388,8 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
 
     <div class="panel" id="srcpanel" role="region" aria-label="Source and account">
       <div class="pcol">
-        <h2>Source</h2>
-        <div class="srcseg"><button class="pill" id="srcCsv" type="button" aria-pressed="true">Saved CSV</button><button class="pill" id="srcSub" type="button" aria-pressed="false">Subreddit</button></div>
         <div class="grp" id="acct" hidden>
+          <h2>Account</h2>
           <div class="grp" id="acReset" hidden>
             <strong>Choose a new password</strong>
             <input id="acNew" class="field" type="password" placeholder="New password (8+ characters)" autocomplete="new-password" aria-label="New password">
@@ -410,12 +412,16 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
           </div>
           <span id="acMsg"></span>
         </div>
+        <h2>Source</h2>
+        <div class="srcseg"><button class="pill" id="srcCsv" type="button" aria-pressed="true">Saved CSV</button><button class="pill" id="srcSub" type="button" aria-pressed="false">Subreddit</button></div>
         <div class="grp" id="csvTools">
           <select id="csvSel" class="field" aria-label="CSV file"></select>
+          <span class="kindbadge" id="csvKind" data-k="local" role="status"></span>
           <div class="btnrow">
             <button class="pill" id="csvOpen" type="button" title="Open a CSV and keep it linked for saving">Open CSV</button>
             <button class="pill" id="csvMerge" type="button" title="Add posts from another CSV">Merge CSV</button>
             <button class="pill" id="csvExport" type="button">Export CSV</button>
+            <button class="pill" id="csvCloud" type="button" hidden></button>
             <button class="pill" id="csvPrune" type="button" title="Delete removed, not-found and broken posts from the CSV">Delete missing/broken</button>
             <button class="pill" id="csvSync" type="button" title="Re-read the linked file and merge changes made on another device" hidden>Sync now</button>
             <button class="pill" id="csvReconnect" type="button" hidden>Reconnect file</button>
@@ -2270,18 +2276,31 @@ function csvStatus(msg, kind){
   const el = $('csvStatus'); el.textContent = msg; el.dataset.kind = kind || '';
   clearTimeout(statusT); if(kind!=='warn') statusT = setTimeout(()=>{ if(el.textContent===msg) csvInfo(); }, 6000);
 }
+const KIND_ICON = {account:'<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.6 12.2h6.2a2.6 2.6 0 0 0 .5-5.15A3.7 3.7 0 0 0 4.2 6.3a2.95 2.95 0 0 0 .4 5.9z"/></svg>', local:'<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="12" height="8.5" rx="1.5"/><path d="M5.5 14h5M8 11.5V14"/></svg>'};
+const isCloudList = r => !!(r && r.cloud && SESSION);
+const kindLabel = r => isCloudList(r) ? 'Account' : 'Local';
 function csvInfo(){
   const r = LIB.cur; if(!r) return;
+  const cloud = isCloudList(r);
   const where = r.handle ? (r.synced ? 'linked to a file on disk; changes are written to it' : 'linked file not connected; changes are kept in this browser only') : 'stored in this browser';
-  $('csvStatus').textContent = ROWS.length.toLocaleString()+' saved posts in "'+r.name+'" ('+where+').'+(r.cloud && SESSION ? ' Synced with your account.' : '');
+  $('csvStatus').textContent = ROWS.length.toLocaleString()+' saved posts in "'+r.name+'" ('+where+').'+(cloud ? ' Synced with your account.' : '');
   $('csvStatus').dataset.kind = r.handle && !r.synced ? 'warn' : '';
+  /* Two kinds of list: an Account list is kept in your account and follows you to every device; a Local list stays on this device (in the browser, or in a file you linked). */
+  const kb = $('csvKind'); kb.dataset.k = cloud ? 'account' : 'local';
+  kb.innerHTML = KIND_ICON[cloud ? 'account' : 'local'] + '<span>' + (cloud ? 'Account list: synced across your devices' + (r.handle ? ' and written to a file' : '')
+    : 'Local list: ' + (r.handle ? (r.synced ? 'written to a file on this device' : 'linked file not connected') : 'this browser only')) + '</span>';
   $('csvReconnect').hidden = !(r.handle && !r.synced);
-  $('csvSync').hidden = !((r.handle && r.synced) || (r.cloud && SESSION));
+  $('csvSync').hidden = !(r.handle && r.synced);   // the account's own Sync now button sits in the Account block
+  const cb = $('csvCloud');
+  cb.hidden = !(CLOUD_ON && SESSION);
+  cb.textContent = cloud ? 'Stop syncing' : 'Sync with account';
+  cb.title = cloud ? 'Keep this list on this device only. Your account keeps its own copy.' : 'Merge this list into your account and keep it in step across devices';
+  const opts = $('csvSel').options; for(let i=0;i<opts.length;i++){ const x = (LIB.cur && LIB.cur.id===opts[i].value) ? LIB.cur : LIB.list.find(q=>q.id===opts[i].value); if(x) opts[i].textContent = kindLabel(x)+' \u00b7 '+x.name; }
 }
 async function renderLibrary(){
   LIB.list = await libAll();
   const sel = $('csvSel');
-  sel.innerHTML = LIB.list.map(r=>'<option value="'+esc(r.id)+'">'+esc(r.name)+'</option>').join('');
+  sel.innerHTML = LIB.list.map(r=>'<option value="'+esc(r.id)+'">'+esc(kindLabel(r)+' \u00b7 '+r.name)+'</option>').join('');
   if(LIB.cur) sel.value = LIB.cur.id;
   csvInfo();
 }
@@ -2472,12 +2491,13 @@ let RESET_MODE = false, RETURN_ERR = '';   // RESET_MODE: arrived from a passwor
 function acctRender(){
   const on = CLOUD_ON;
   $('acct').hidden = !on;
-  if(!on) return;
+  if(!on){ csvInfo(); return; }
   $('acReset').hidden = !(RESET_MODE && SESSION);
   $('acctOut').hidden = !!SESSION; $('acctIn').hidden = !SESSION || (RESET_MODE && !!SESSION);
-  $('acWho').textContent = SESSION ? 'Signed in as '+(SESSION.email || 'your account')+'. Your list syncs across devices.' : '';
+  $('acWho').textContent = SESSION ? 'Signed in as '+(SESSION.email || 'your account')+'. Lists marked Account sync across your devices; Local lists stay on this one.' : '';
   $('acGh').hidden = !((CFG.providers||[]).includes('github'));
   $('csvTools').classList.toggle('has-cloud', !!SESSION);
+  csvInfo();
 }
 async function linkAccount(){
   const rec = LIB.cur; if(!rec || !SESSION) return;
@@ -2962,6 +2982,19 @@ $('csvMerge').addEventListener('click',async()=>{
   csvStatus('Merged "'+r.name+'": '+rep.added.length.toLocaleString()+' added'+(rep.removedHere.length?', '+rep.removedHere.length+' removed':'')+(rep.skippedDeleted.length ? (restore ? ', '+rep.skippedDeleted.length+' restored' : ', '+rep.skippedDeleted.length+' kept deleted') : '')+'.');
 });
 $('csvExport').addEventListener('click',()=>{ download(/\.csv$/i.test(LIB.cur.name) ? LIB.cur.name : LIB.cur.name+'.csv', rowsToCsv(ROWS, TOMBS)); csvStatus('Exported '+ROWS.length.toLocaleString()+' posts'+(TOMBS.size ? ' and '+TOMBS.size.toLocaleString()+' deletion records' : '')+'.'); });
+$('csvCloud').addEventListener('click',async()=>{
+  const rec = LIB.cur; if(!rec || !SESSION) return;
+  if(isCloudList(rec)){
+    const d = await confirmDialog({title:'Stop syncing "'+rec.name+'"?', paras:['This list becomes a Local list: it stays on this device and changes here are no longer uploaded. Your account keeps its own copy, and you can sync again later.'], ok:'Stop syncing'});
+    if(d!=='ok') return;
+    rec.cloud = false; rec.cloudCursor = null; rec.dirty = [];
+    await persistRec(rec); csvInfo(); acctMsg('"'+rec.name+'" is now a Local list.');
+  } else {
+    const d = await confirmDialog({title:'Sync "'+rec.name+'" with your account?', paras:['Its posts are merged into your account list (duplicates are skipped and posts you deleted stay deleted). Afterwards it stays in step across your devices.'], ok:'Sync with account'});
+    if(d!=='ok') return;
+    await linkAccount(); csvInfo();
+  }
+});
 $('csvPrune').addEventListener('click',()=>pruneBroken());
 $('csvSync').addEventListener('click',async()=>{ await autoSync(true); csvStatus('Synced with "'+LIB.cur.name+'".'); });
 $('csvReconnect').addEventListener('click',async()=>{
