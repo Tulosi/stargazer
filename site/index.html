@@ -427,6 +427,22 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
   .star,.fs,.save{width:40px;height:40px}
   .fs{right:54px}.save{right:100px}.nsfwb{right:146px}.badge.tag{right:146px}
 }
+
+/* ---------- List layout: short rows, card info on a blurred preview, no media controls ---------- */
+.layouthint{margin:-2px 0 4px;font-size:12px;color:var(--muted)}
+body.layout-list .grid{grid-template-columns:repeat(auto-fill,minmax(min(460px,100%),1fr))}
+body.layout-list .thumb img,body.layout-list .thumb .still{filter:blur(16px) brightness(.72);transform:scale(1.25)}
+body.layout-list .thumb.nsfw img,body.layout-list .thumb.nsfw .still{filter:blur(22px) brightness(.55)}
+body.layout-list .thumb iframe.clip,body.layout-list .ctl,body.layout-list .cprog,body.layout-list .actions,body.layout-list .arch,body.layout-list .ibtn,body.layout-list .reveal,body.layout-list .gnav,body.layout-list .badge.media,body.layout-list .badge.rec,body.layout-list .ph span{display:none!important}
+body.layout-list .info{top:0;display:flex;flex-direction:column;justify-content:center;padding:6px 160px 6px 14px;background:rgba(0,0,0,.34)}
+body.layout-list .card.info-open .info{padding-right:160px}
+body.layout-list .tstrip{display:none!important}
+body.layout-list .star,body.layout-list .fs,body.layout-list .save{top:50%;margin-top:-15px}
+body.layout-list .badge.tag{top:50%;margin-top:-10px}
+@media (pointer:coarse){
+  body.layout-list .info{padding-right:200px}
+  body.layout-list .star,body.layout-list .fs,body.layout-list .save{margin-top:-20px}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
 #pausebar{position:fixed;left:50%;bottom:64px;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:10px;padding:9px 10px 9px 14px;border-radius:999px;background:var(--panel,#1c1c1f);color:var(--text,#eee);border:1px solid var(--line,rgba(128,128,128,.35));box-shadow:0 6px 24px rgba(0,0,0,.35);font-size:13px;max-width:calc(100vw - 24px)}
@@ -496,7 +512,8 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
         </label>
         <div class="ctlrow"><span></span><button class="pill" id="reshuffle" type="button" hidden>Reshuffle</button></div>
         <label class="ctlrow"><span>Subreddit</span><select id="subsel" class="field" aria-label="Subreddit"></select></label>
-        <div class="ctlrow"><span>Layout</span><div class="srcseg" id="layoutseg" role="group" aria-label="Layout"><button class="pill" type="button" data-l="masonry" aria-pressed="true">Masonry</button><button class="pill" type="button" data-l="grid" aria-pressed="false">Grid</button></div></div>
+        <div class="ctlrow"><span>Layout</span><div class="srcseg" id="layoutseg" role="group" aria-label="Layout"><button class="pill" type="button" data-l="masonry" aria-pressed="true" title="Best for media">Masonry</button><button class="pill" type="button" data-l="grid" aria-pressed="false" title="Equal square tiles in strict rows">Grid</button><button class="pill" type="button" data-l="list" aria-pressed="false" title="Best for text posts">List</button></div></div>
+        <p class="hint layouthint" id="layouthint" role="status"></p>
         <label class="ctlrow"><span>Tile size</span><input id="size" type="range" min="150" max="360" step="10" value="230"></label>
         <label class="ctlrow"><span>Card info</span>
           <select id="infomode" class="field" aria-label="Card info">
@@ -1613,8 +1630,13 @@ function measureGrid(){
   if(tracks.length){ cols = tracks.length; colW = tracks[0]; }
 }
 let LAYOUT = 'masonry';
-try{ if(localStorage.getItem('saved-posts-layout')==='grid') LAYOUT = 'grid'; }catch(e){}
+const LAYOUTS = {masonry:'Best for media: tiles follow the shape of each picture or clip.', grid:'Every card the same size, in strict rows.', list:'Best for text posts: short rows with the card info always shown and a blurred preview behind.'};
+try{ const sv = localStorage.getItem('saved-posts-layout'); if(sv && LAYOUTS[sv]) LAYOUT = sv; }catch(e){}
 function layoutCard(el,p){
+  if(LAYOUT==='list'){            // short horizontal tiles, just tall enough for the card info
+    el.style.gridRow = 'span 8'; el.style.gridColumn = '';
+    return;
+  }
   if(LAYOUT==='grid'){            // a perfect grid: every tile the same square size
     el.style.gridRow = 'span '+Math.max(10, Math.round((colW + GAP)/(ROW+GAP)));
     el.style.gridColumn = '';
@@ -2006,7 +2028,8 @@ function syncPlay(t){
   for(const x of [...viewSet]) if(!x.isConnected) viewSet.delete(x);
   if(focused && !focused.isConnected) focused = null;
   let want, tracked;
-  if(auto.focus){ want = auto.on ? t===focused : !!t._hover; tracked = auto.on && t===focused; }
+  if(LAYOUT==='list'){ want = false; tracked = false; }   // List rows are static: a blurred preview, no playback
+  else if(auto.focus){ want = auto.on ? t===focused : !!t._hover; tracked = auto.on && t===focused; }
   else { want = t._hover || (auto.on && t._inView && !/^(yt|rg):/.test(t.dataset.v||'') && (playing.has(t) || playing.size < MAX_AUTO)); tracked = !t._hover || (auto.on && t._inView); }
   if(want){ startPlay(t); if(tracked) playing.add(t); }
   else { stopPlay(t); playing.delete(t); }
@@ -2168,14 +2191,19 @@ $('nsfwseg').addEventListener('click',e=>{ const b = e.target.closest('.pill'); 
   });
 })();
 (function(){
-  const sel = $('infomode'), KEY = 'saved-posts-infomode';
+  /* Card info is remembered per layout: List shows it by default (its rows exist to carry it); the others keep hover on desktop and a hidden (i) button on touch. */
+  const sel = $('infomode'), KEY = 'saved-posts-infomode', KEY_LIST = 'saved-posts-infomode-list';
   const apply = v => { document.body.classList.toggle('info-hover', v==='hover'); document.body.classList.toggle('info-off', v==='off'); sel.value = v; };
-  const dflt = matchMedia('(hover: none)').matches ? 'off' : 'hover';   // desktop: info on hover; touch: hidden behind an (i) button
-  let v = dflt;
-  try{ v = localStorage.getItem(KEY) || dflt; }catch(e){}
-  if(!['show','hover','off'].includes(v)) v = dflt;
-  apply(v);
-  sel.addEventListener('change',()=>{ apply(sel.value); try{ localStorage.setItem(KEY, sel.value); }catch(e){} });
+  const isList = () => typeof LAYOUT!=='undefined' && LAYOUT==='list';
+  const key = () => isList() ? KEY_LIST : KEY;
+  const dflt = () => isList() ? 'show' : (matchMedia('(hover: none)').matches ? 'off' : 'hover');
+  window.applyInfoMode = () => {
+    let v = dflt(); try{ v = localStorage.getItem(key()) || v; }catch(e){}
+    if(!['show','hover','off'].includes(v)) v = dflt();
+    apply(v);
+  };
+  window.applyInfoMode();
+  sel.addEventListener('change',()=>{ apply(sel.value); try{ localStorage.setItem(key(), sel.value); }catch(e){} });
 })();
 (function(){
   const box = $('hidebroken'), KEY = 'saved-posts-hidebroken';
@@ -2195,7 +2223,7 @@ $('favonly').addEventListener('change',e=>{ state.fav = e.target.checked; refres
 updateFavCount();
 $('subsel').addEventListener('change',e=>{ state.sub=e.target.value; refresh(); });
 if(matchMedia('(max-width:560px)').matches) $('size').value = $('size').max;
-function paintLayout(){ document.querySelectorAll('#layoutseg .pill').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.l===LAYOUT))); document.body.classList.toggle('layout-grid', LAYOUT==='grid'); }
+function paintLayout(){ document.querySelectorAll('#layoutseg .pill').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.l===LAYOUT))); document.body.classList.toggle('layout-grid', LAYOUT==='grid'); document.body.classList.toggle('layout-list', LAYOUT==='list'); const h = $('layouthint'); if(h) h.textContent = LAYOUTS[LAYOUT]; if(window.applyInfoMode) window.applyInfoMode(); }
 document.querySelectorAll('#layoutseg .pill').forEach(b=>b.addEventListener('click',()=>{
   LAYOUT = b.dataset.l; try{ localStorage.setItem('saved-posts-layout', LAYOUT); }catch(e){}
   paintLayout(); relayoutAll();
