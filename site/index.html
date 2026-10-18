@@ -953,7 +953,7 @@ function startImg(img, attempt){
 }
 /* No thumbnail but a video file: show its first frame as the still. */
 function startStill(v, done){
-  const p = v._p, list = (v._cands||[]).filter(u=>!u.startsWith('yt:')).slice(0,4); let i = 0, ended = false;
+  const p = v._p, list = (v._cands||[]).filter(u=>!/^(yt|rg):/.test(u)).slice(0,4); let i = 0, ended = false;
   const end = () => { if(!ended){ ended = true; done(); } };
   const tryNext = () => {
     if(i>=list.length){ v.remove(); markImgFail(p); end(); return; }
@@ -979,7 +979,7 @@ function fillCard(el,p){
   el._p = p; el._gi = 0; el.classList.toggle('is-dead', dead);
   el.innerHTML =
     '<a class="thumb'+(nsfw?' nsfw':'')+'" data-open'+(v0 ? ' data-v="'+esc(v0)+'"'+(vs.length>1 ? ' data-vc="'+esc(vs.slice(1,7).join('|'))+'"' : '') : '')+(m && m.ab ? ' data-ab="'+esc(m.ab)+'"' : '')+(m && m.ha!==undefined ? ' data-ha="'+(m.ha?1:0)+'"' : '')+' href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" aria-label="Open: '+esc(titleOf(p))+'">'
-    + (thumb ? ph + '<img referrerpolicy="no-referrer" alt="">' : (v0 && !v0.startsWith('yt:') ? ph + '<video class="still" muted playsinline preload="none"></video>' : ph))
+    + (thumb ? ph + '<img referrerpolicy="no-referrer" alt="">' : (v0 && !/^(yt|rg):/.test(v0) ? ph + '<video class="still" muted playsinline preload="none"></video>' : ph))
     + '<span class="tstrip">'+esc(titleOf(p))+'</span>'
     + '<span class="badge media'+(v0 ? ' playable' : '')+'">'+esc(MEDIA_LABEL[media]||media)+(gl ? ' 1/'+gl.length : '')+'</span>'
     + (nsfw ? '<span class="badge tag">NSFW</span>' : '')
@@ -1025,6 +1025,8 @@ const YT_PLAY = /^https?:$/.test(location.protocol);
 function playSources(m){
   if(!m) return [];
   if(m.yt && YT_PLAY) return ['yt:'+m.yt];
+  /* A RedGifs post whose real file could not be looked up (the browser blocks the lookup and Reddit's data does not name the file): play RedGifs' own embed on hover, as the full-screen view does. */
+  if(YT_PLAY && !m.rgDone && !m.rgGone && !m.g && !/\.(mp4|webm)(\?|$)/i.test(m.v||'')){ const x = RG_RE.exec(m.u||''), sl = x ? x[1].toLowerCase() : (m.rs||''); if(sl) return ['rg:'+sl]; }
   const out = [];
   if(m.v) out.push(m.v);
   if(m.rb) for(const q of ['720','480','360','240','1080']){ const u = m.rb+'/DASH_'+q+'.mp4'; if(!out.includes(u)) out.push(u); }
@@ -1948,6 +1950,14 @@ function startPlay(t){
   const v = t.dataset.v;
   if(!v || t._playing) return;
   t._playing = true; t._userPaused = false;
+  if(v.startsWith('rg:')){
+    const f = document.createElement('iframe');
+    f.className = 'clip yt'; f.setAttribute('tabindex','-1'); f.setAttribute('allow','autoplay; encrypted-media');
+    f.referrerPolicy = 'strict-origin-when-cross-origin';
+    f.src = 'https://www.redgifs.com/ifr/'+encodeURIComponent(v.slice(3));
+    t.insertBefore(f, t.querySelector('.badge'));
+    return;
+  }
   if(v.startsWith('yt:')){
     const id = v.slice(3), f = document.createElement('iframe');
     f.className = 'clip yt'; f.setAttribute('tabindex','-1'); f.setAttribute('allow','autoplay; encrypted-media; picture-in-picture');
@@ -1997,7 +2007,7 @@ function syncPlay(t){
   if(focused && !focused.isConnected) focused = null;
   let want, tracked;
   if(auto.focus){ want = auto.on ? t===focused : !!t._hover; tracked = auto.on && t===focused; }
-  else { want = t._hover || (auto.on && t._inView && !(t.dataset.v||'').startsWith('yt:') && (playing.has(t) || playing.size < MAX_AUTO)); tracked = !t._hover || (auto.on && t._inView); }
+  else { want = t._hover || (auto.on && t._inView && !/^(yt|rg):/.test(t.dataset.v||'') && (playing.has(t) || playing.size < MAX_AUTO)); tracked = !t._hover || (auto.on && t._inView); }
   if(want){ startPlay(t); if(tracked) playing.add(t); }
   else { stopPlay(t); playing.delete(t); }
   applyAudio();
