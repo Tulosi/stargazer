@@ -1255,6 +1255,7 @@ function closeViewer(){
   VIEW.stage.querySelectorAll('video').forEach(v=>{ v.pause(); v.removeAttribute('src'); try{ v.load(); }catch(e){} });
   VIEW.stage.replaceChildren();
   VIEW.root.hidden = true; document.body.classList.remove('viewing');
+  applyAudio();
   if(fsEl()){ try{ (document.exitFullscreen || document.webkitExitFullscreen).call(document); }catch(e){} }
   VIEW.fs = false;
   if(VIEW.opener && VIEW.opener.isConnected) try{ VIEW.opener.focus({preventScroll:true}); }catch(e){}
@@ -1268,6 +1269,7 @@ async function openViewer(p, opts){
   VIEW.opener = document.activeElement;
   VIEW.stage.replaceChildren();
   VIEW.root.hidden = false; document.body.classList.add('viewing');
+  applyAudio();   // silence the card behind the viewer
   VIEW.root.querySelector('.vclose').focus({preventScroll:true});
   // real full screen where the browser allows it; otherwise this still fills the whole window
   const rq = VIEW.root.requestFullscreen || VIEW.root.webkitRequestFullscreen;
@@ -1631,10 +1633,11 @@ const audioUIs = new Set();
 /* A clip is audible while the pointer is on it, or in focus mode when it is the focused one, or when its own speaker button / slider was used
    (touch screens have no hover, so pressing the speaker is the way to listen to a card). */
 const isAudible = t => !!t._soundOn || (auto.focus ? (auto.on ? t===focused : !!t._hover) : !!t._hover);
+const viewerOpen = () => typeof VIEW!=='undefined' && VIEW.root && !VIEW.root.hidden;
 function applyAudio(){
   for(const u of audioUIs){
     if(!u.el.isConnected){ if(u.aud) u.aud.pause(); audioUIs.delete(u); continue; }
-    const quiet = AUDIO.muted || !isAudible(u.t);
+    const quiet = AUDIO.muted || !isAudible(u.t) || (viewerOpen() && !VIEW.root.contains(u.el));   // while the full screen viewer is open it is the only thing that makes sound
     if(u.aud){
       // Reddit video: the picture is silent, the sound is a separate file kept in step with it
       const a = u.aud;

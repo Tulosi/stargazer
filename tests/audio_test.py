@@ -63,7 +63,12 @@ with sync_playwright() as p:
     pg.hover('article.card[data-id="quiet2"] .thumb'); pg.wait_for_timeout(1500)
     check('no sound controls on the silent clip', ev("(()=>{ const c=document.querySelector('article.card[data-id=\"quiet2\"] .ctl'); return !!c && !c.classList.contains('has-sound'); })()"))
     check('pause button is an svg icon, not an emoji glyph', ev("!!document.querySelector('article.card[data-id=\"quiet2\"] .ctl .pp svg') && !/[\\u23F8\\u25B6]/.test(document.querySelector('article.card[data-id=\"quiet2\"] .ctl .pp').textContent)"))
-    pg.mouse.move(5, 5); pg.wait_for_timeout(300)
+    pg.mouse.move(5, 5); pg.wait_for_timeout(300); pg.hover('article.card[data-id="loud11"] .thumb'); pg.wait_for_timeout(2200)   # pointer stays on the card, as when pressing its full screen button
+    ev("(()=>{ const t=document.querySelector('article.card[data-id=\"loud11\"] .thumb'); t._soundOn=true; AUDIO.muted=false; applyAudio(); })()")
+    check('card is audible before opening full screen', ev("(()=>{ const v=document.querySelector('article.card[data-id=\"loud11\"] video.clip'); return !!v && v.muted===false; })()"))
+    ev("(()=>{ window._cv=document.querySelector('article.card[data-id=\"loud11\"] video.clip'); const p=POSTS.find(x=>x.id==='loud11'); openViewer(p); })()"); pg.wait_for_timeout(300)
+    check('full screen open: the card behind it is silenced', ev("(()=>{ const v=window._cv; return !!v && (v.muted===true || v.paused); })()"))
+    ev("(()=>{ closeViewer(); const t=document.querySelector('article.card[data-id=\"loud11\"] .thumb'); t._soundOn=false; AUDIO.muted=true; applyAudio(); })()"); pg.wait_for_timeout(200)
     pg.dispatch_event('article.card[data-id="loud11"] button.fs', 'click'); pg.wait_for_timeout(1500)
     check('full screen: video opens muted', ev("(()=>{ const v=document.querySelector('#viewer video'); return !!v && v.muted===true && /loudone\\.mp4/.test(v.src); })()"))
     check('full screen: global mute untouched', ev('AUDIO.muted') is True)
