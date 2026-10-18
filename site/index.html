@@ -74,7 +74,7 @@ button,select,input{font:inherit;color:inherit}
 .stats{display:flex;flex-wrap:wrap;gap:2px 14px;margin-left:auto;padding:0 2px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;line-height:1.5}
 .stats[hidden]{display:none}
 .stats .st{position:relative;white-space:nowrap;cursor:default;outline:none}
-.stats .st b{color:var(--ink);font-weight:600}
+.stats .st b{color:color-mix(in srgb,var(--ink) 62%,var(--muted));font-weight:500}
 .stats .lb{margin-left:.3em}
 .stats .st+.st::before{content:"\2022";position:absolute;left:-10px;color:var(--faint,var(--muted));opacity:.6}
 .stats .st em{display:none;position:absolute;left:0;top:calc(100% + 4px);z-index:5;font-style:normal;white-space:normal;width:max-content;max-width:min(260px,80vw);padding:6px 9px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink);box-shadow:0 6px 18px rgba(0,0,0,.35)}
@@ -84,9 +84,9 @@ button,select,input{font:inherit;color:inherit}
   /* beside the logo, right-aligned: number over label, three columns */
   .stats{position:relative;margin-left:auto;flex:0 0 auto;padding:0;display:grid;grid-template-columns:repeat(3,auto);column-gap:0;text-align:center}
   .stats[hidden]{display:none}
-  .stats .st{position:static;display:flex;flex-direction:column;align-items:center;padding:0 11px;line-height:1.15;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em}
+  .stats .st{position:static;display:flex;flex-direction:column;align-items:center;padding:0 11px;line-height:1.15;font-size:9px;text-transform:uppercase;letter-spacing:.05em;opacity:.85}
   .stats .st:last-child{padding-right:2px}
-  .stats .st b{font-size:16px;letter-spacing:0;text-transform:none;line-height:1.2}
+  .stats .st b{font-size:13px;letter-spacing:0;text-transform:none;line-height:1.2}
   .stats .lb{margin-left:0}
   .stats .st+.st{border-left:1px solid var(--line)}
   .stats .st+.st::before{display:none}
@@ -240,7 +240,7 @@ body.previews-loading .card:not(.is-dead) .thumb .ph{overflow:hidden}
 body.previews-loading .card:not(.is-dead) .thumb .ph::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.14) 50%,transparent 70%);animation:shimmer 1.4s ease-in-out infinite}
 .thumb .tstrip{position:absolute;left:0;right:0;bottom:0;padding:22px 12px 9px;background:linear-gradient(to top,rgba(0,0,0,.66),transparent);color:#fff;font:500 12.5px/1.3 var(--font);display:none;pointer-events:none;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 body.info-off .card:not(.info-open) .thumb:not(.nsfw) .tstrip{display:block}
-.stats .st.busy b::after{content:"";display:inline-block;width:5px;height:5px;margin-left:5px;border-radius:50%;background:var(--sel);vertical-align:middle;animation:pulse 1s ease-in-out infinite}
+.stats .st.busy b::after{content:"";display:inline-block;width:4px;height:4px;margin-left:4px;border-radius:50%;background:var(--muted);vertical-align:middle;animation:pulse 1s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}
 body.previews-loading #loadText{color:var(--ink);font-weight:500}
 .load .bar{height:3px}
@@ -2109,7 +2109,7 @@ $('nsfwseg').addEventListener('click',e=>{ const b = e.target.closest('.pill'); 
     if(body.classList.contains('deck-collapsed') && body.classList.contains('src-collapsed')) return;
     if(!e.isTrusted) return;   // the page's own programmatic clicks (such as a download link) are not a tap outside
     const t = e.target; if(!t || !t.closest || !t.isConnected) return;
-    if(t.closest('#panel,#srcpanel,#navbtns,dialog,#confirm')) return;
+    if(t.closest('#panel,#srcpanel,#navbtns,dialog,#confirm,#rvw')) return;
     apply(null);
   });
   document.addEventListener('keydown',e=>{
