@@ -14,7 +14,8 @@ SEED = """(()=>{ const id='%s'; ROWS.push({id,perma:'https://www.reddit.com/r/pi
   META[id]={t:'post '+id,o:0,th:'https://i.redd.it/a.jpg',m:'image',u:'https://i.redd.it/a.jpg',n:0,s:0,a:'',c:1700000000,v:'',w:640,h:360}; })()"""
 with sync_playwright() as p:
     b = p.chromium.launch(); pg = b.new_page(viewport={'width': 1000, 'height': 700}); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
-    pg.route('**/*', lambda r: r.continue_() if r.request.url.startswith('http://127.0.0.1') else r.abort())
+    PNG = bytes.fromhex('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360f8cfc0f01f0005000201a0b3a5d70000000049454e44ae426082')
+    pg.route('**/*', lambda r: r.continue_() if r.request.url.startswith('http://127.0.0.1') else (r.fulfill(status=200, content_type='image/png', body=PNG) if 'redd.it' in r.request.url else r.abort()))
     pg.goto('http://127.0.0.1:%d/index.html' % port); pg.wait_for_timeout(1000); ev = pg.evaluate
     ev(SEED % ('aaa01', 'true', 'true')); ev(SEED % ('bbb02', 'false', 'false'))
     ev('state.hideBroken=false; state.nsfw="show"'); ev('startCsvMode()'); pg.wait_for_timeout(1200)
@@ -36,6 +37,67 @@ with sync_playwright() as p:
     pg.wait_for_timeout(300)
     check('tile size hidden in List', not ev("document.getElementById('sizerow').offsetParent"))
     check('layout hint is short', len(ev("document.getElementById('layouthint').textContent")) < 30)
+    # theme lives in Source now
+    check('Theme moved out of Filters into Source', ev("!!document.querySelector('#srcpanel #theme') && !document.querySelector('#panel #theme')"))
+    # RedGifs help appears only after a problem
+    check('RedGifs help hidden when fine', ev("document.getElementById('advRgHelp').hidden"))
+    ev("RG_ERR='Failed to fetch'; updateAdvRg()")
+    check('RedGifs help shows after an error', ev("!document.getElementById('advRgHelp').hidden"))
+    # stats note opens on tap
+    ev("document.getElementById('stats').hidden=false")
+    pg.dispatch_event('.stats .st', 'click'); pg.wait_for_timeout(100)
+    check('tapping a count opens its note', ev("document.querySelector('.stats .st').classList.contains('open')"))
+    pg.dispatch_event('body', 'click'); pg.wait_for_timeout(100)
+    check('tapping elsewhere closes it', not ev("document.querySelector('.stats .st').classList.contains('open')"))
+    # back to top
+    check('back-to-top hidden near the top', ev("document.getElementById('totop').hidden"))
+    ev("document.body.style.minHeight='6000px'; window.scrollTo(0,3000)"); pg.wait_for_timeout(400)
+    check('back-to-top shows after a long scroll', ev("!document.getElementById('totop').hidden"))
+    pg.dispatch_event('#totop', 'click'); pg.wait_for_timeout(1200)
+    check('back-to-top returns to the top', ev('scrollY') < 5)
+    # list rows carry a date (wide screens)
+    check('list rows carry a date', ev("[...document.querySelectorAll('body.layout-list .meta .dt')].some(e=>e.offsetParent && e.textContent.length>5)"))
+    # pending card actions
+    ev("(()=>{ const id='pend01'; ROWS.push({id,perma:'https://www.reddit.com/r/pics/comments/'+id+'/x/',starred:false,t:5}); ROWSET.add(id); delete META[id]; })()")
+    ev('startCsvMode()'); pg.wait_for_timeout(600)
+    check('not-loaded card offers Open on Reddit and Retry', ev("(()=>{ const c=document.querySelector('article.card[data-id=pend01]'); return !!c && !!c.querySelector('.retry1') && /Open on Reddit/.test(c.textContent); })()"))
+    # layout remembered per list
+    ev("setListLayout(LIB.cur.id,'grid'); LAYOUT='masonry'; applyListLayout()")
+    check('layout remembered per list', ev("LAYOUT")=='grid')
+    # viewer: previous / next post
+    ev("document.body.style.minHeight=''; state.fav=false; state.showText=true; state.hideBroken=false; state.nsfw='show'; refresh(true)"); pg.wait_for_timeout(400)
+    ids = ev("list.filter(viewable).map(p=>p.id)")
+    check('at least two viewable posts', len(ids) >= 2)
+    if len(ids) >= 2:
+        ev('VIEW.root.requestFullscreen = () => Promise.reject(new Error("no full screen in tests")); 0')   # headless has no real full screen
+        ev("openViewer(list.filter(viewable)[0])"); pg.wait_for_timeout(500)
+        check('first post: previous disabled, next enabled', ev("document.querySelector('#viewer .vpp').disabled") and not ev("document.querySelector('#viewer .vpn').disabled"))
+        pg.keyboard.press('ArrowDown'); pg.wait_for_timeout(500)
+        check('Down arrow shows the next post', ev("VIEW.cur.id") == ids[1])
+        pg.dispatch_event('#viewer .vpp', 'click'); pg.wait_for_timeout(500)
+        check('Previous button goes back', ev("VIEW.cur.id") == ids[0])
+        pg.keyboard.press('Escape'); pg.wait_for_timeout(300)
+    # bulk selection
+    ev("document.body.style.minHeight=''; window.scrollTo(0,0)")
+    check('Select button visible with a list open', ev("!document.getElementById('selbtn').hidden"))
+    pg.dispatch_event('#selbtn', 'click'); pg.wait_for_timeout(200)
+    check('selection bar appears', ev("!document.getElementById('selbar').hidden && document.body.classList.contains('selecting')"))
+    pg.dispatch_event('#selbar [data-a=all]', 'click'); pg.wait_for_timeout(200)
+    nsel = ev("SEL.ids.size"); check('Select all picks every listed post', nsel == ev("list.length") and nsel >= 2)
+    pg.dispatch_event('#selbar [data-a=nsfw]', 'click'); pg.wait_for_timeout(700)
+    check('bulk Mark NSFW marks them all', ev("list.every(p=>isNsfw(p))") and ev("ROWS.every(r=>/nsfw=1/.test(r.perma))"))
+    pg.dispatch_event('#selbar [data-a=sfw]', 'click'); pg.wait_for_timeout(700)
+    check('bulk Unmark clears them', ev("list.every(p=>!isNsfw(p))"))
+    pg.dispatch_event('#selbar [data-a=star]', 'click'); pg.wait_for_timeout(500)
+    check('bulk Star stars them', ev("list.every(p=>FAVS.has(p.id))"))
+    cnt = ev("ROWS.length")
+    pg.dispatch_event('#selbar [data-a=del]', 'click'); pg.wait_for_timeout(400)
+    pg.dispatch_event('#cOk', 'click'); pg.wait_for_timeout(900)
+    check('bulk delete removes them after one confirm', ev("ROWS.length") == 0 and cnt >= 2)
+    pg.dispatch_event('#toast .tact', 'click'); pg.wait_for_timeout(1500)
+    check('Undo brings them all back', ev("ROWS.length") == cnt)
+    if ev("document.body.classList.contains('selecting')"): pg.dispatch_event('#selbtn', 'click'); pg.wait_for_timeout(200)
+    check('Cancel leaves selection mode', ev("!document.body.classList.contains('selecting')"))
     check('no page errors', not errs)
     b.close()
 srv.shutdown()

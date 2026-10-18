@@ -80,13 +80,13 @@ button,select,input{font:inherit;color:inherit}
 .stats .lb{margin-left:.3em}
 .stats .st+.st::before{content:"\2022";position:absolute;left:-10px;color:var(--faint,var(--muted));opacity:.6}
 .stats .st em{display:none;position:absolute;left:0;top:calc(100% + 4px);z-index:5;font-style:normal;white-space:normal;width:max-content;max-width:min(260px,80vw);padding:6px 9px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink);box-shadow:0 6px 18px rgba(0,0,0,.35)}
-.stats .st:hover em,.stats .st:focus em{display:block}
+.stats .st:hover em,.stats .st:focus em,.stats .st.open em{display:block}
 .stats .st:last-child em{left:auto;right:0}
 @media (max-width:720px){
   /* beside the logo, right-aligned: number over label, three columns */
   .stats{position:relative;margin-left:auto;flex:0 0 auto;padding:0;display:grid;grid-template-columns:repeat(3,auto);column-gap:0;text-align:center}
   .stats[hidden]{display:none}
-  .stats .st{position:static;display:flex;flex-direction:column;align-items:center;padding:0 11px;line-height:1.15;font-size:9px;text-transform:uppercase;letter-spacing:.05em;opacity:.85}
+  .stats .st{position:static;display:flex;flex-direction:column;align-items:center;padding:0 11px;line-height:1.15;font-size:9px;text-transform:uppercase;letter-spacing:.05em}
   .stats .st:last-child{padding-right:2px}
   .stats .st b{font-size:13px;letter-spacing:0;text-transform:none;line-height:1.2}
   .stats .lb{margin-left:0}
@@ -202,7 +202,7 @@ input[type=range]{width:100%;accent-color:var(--sel);margin:0}
 .chip small{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
 .chip:hover{background:var(--line)}
 .chip[aria-pressed=true]{background:var(--chip-on);color:var(--accent-ink)}
-.chip[aria-pressed=true] small{color:inherit;opacity:.65}
+.chip[aria-pressed=true] small{color:inherit;opacity:.85}
 .toggle{display:flex;align-items:center;gap:6px;min-height:32px;cursor:pointer;user-select:none;font-size:13px}
 .toggle span{color:var(--muted);font-variant-numeric:tabular-nums}
 .toggle input{appearance:none;-webkit-appearance:none;order:2;margin:0 0 0 auto;flex:none;width:34px;height:20px;border-radius:999px;background:var(--line);position:relative;cursor:pointer;transition:background .15s}
@@ -237,7 +237,7 @@ input[type=range]{width:100%;accent-color:var(--sel);margin:0}
 .thumb iframe.clip{position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none;background:#000}
 .thumb .ph{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:12px;
   background:hsl(var(--h) var(--ph-s) var(--ph-l));color:var(--ink);font:500 13px/1.25 var(--font);overflow-wrap:anywhere;transition:opacity .15s}
-.thumb .ph span{opacity:.7}
+.thumb .ph span{opacity:.88}
 @keyframes shimmer{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
 /* shimmer whenever a card is waiting for its content: always, not only on the first load (picture still to arrive, or post details not fetched yet) */
 .card:not(.is-dead) .thumb:has(>img,>video.still) .ph,.card:not(.is-dead) .thumb .ph.pending,body.previews-loading .card:not(.is-dead) .thumb .ph{overflow:hidden}
@@ -249,7 +249,7 @@ body.info-off .card:not(.info-open) .thumb:not(.nsfw) .tstrip{display:block}
 body.previews-loading #loadText{color:var(--ink);font-weight:500}
 .load .bar{height:3px}
 
-.ph small{font-size:11px;opacity:.75}
+.ph small{font-size:11px;opacity:.9}
 .thumb .clip{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:var(--surface-2);transition:filter .18s,transform .18s}
 .thumb.nsfw img,.thumb.nsfw .still,.thumb.nsfw .clip{filter:blur(22px);transform:scale(1.12)}
 .card:hover .thumb.nsfw img,.card:hover .thumb.nsfw .still,.card:hover .thumb.nsfw .clip,.thumb.nsfw:focus-visible img,.thumb.nsfw:focus-visible .still,.thumb.nsfw:focus-visible .clip,.thumb.nsfw.show img,.thumb.nsfw.show .still,.thumb.nsfw.show .clip{filter:none;transform:none}
@@ -274,7 +274,7 @@ body.unblur .reveal{display:none!important}
 .card:not(:has(.fs)) .save{right:44px}
 .card:not(:has(.fs)) .nsfwb{right:80px}
 .nsfwb[hidden]{display:none}
-.nsfwb{background:rgba(12,12,14,.18);color:rgba(255,255,255,.62);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.55);-webkit-backdrop-filter:none;backdrop-filter:none}
+.nsfwb{background:rgba(12,12,14,.18);color:rgba(255,255,255,.88);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.75);-webkit-backdrop-filter:none;backdrop-filter:none}
 .nsfwb:hover{background:rgba(12,12,14,.5);color:#fff}
 .save.nsfwb[aria-pressed=true]{background:rgba(12,12,14,.26);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#fff;box-shadow:none}
 .nsfwb[aria-pressed=true]::after{content:"";position:absolute;top:-1px;right:-8px;width:15px;height:15px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 8.6l2.9 2.9L12.2 5.4' stroke='black' stroke-opacity='.55' stroke-width='4.4'/%3E%3Cpath d='M4 8.6l2.9 2.9L12.2 5.4' stroke='white' stroke-width='2.6'/%3E%3C/svg%3E") center/100% 100% no-repeat}   /* on: a bare check (dark halo keeps it readable on any picture) */
@@ -382,11 +382,15 @@ body.info-hover .card:focus-within .info,body.info-hover .card:focus-within .bad
 #viewer .vvol{position:absolute;top:calc(max(12px,env(safe-area-inset-top)) + 11px);right:calc(max(12px,env(safe-area-inset-right)) + 98px);z-index:2;width:96px;height:18px;margin:0;accent-color:#fff;cursor:pointer}
 #viewer :focus-visible{outline-color:#fff}
 body.viewing{overflow:hidden}
+#viewer .vposts{position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2;display:flex;gap:8px}
+#viewer .vpost{border:0;border-radius:999px;padding:8px 14px;background:rgba(255,255,255,.16);color:#fff;font:500 13px var(--font);cursor:pointer;white-space:nowrap}
+#viewer .vpost:disabled{opacity:.35;cursor:default}
+#viewer .vpost:hover:not(:disabled){background:rgba(255,255,255,.28)}
 #viewer .vnav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:48px;height:48px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:30px;line-height:1;cursor:pointer;display:grid;place-items:center}
 #viewer .vnav:hover{background:rgba(255,255,255,.3)}
 #viewer .vprev{left:max(12px,env(safe-area-inset-left))}
 #viewer .vnext{right:max(12px,env(safe-area-inset-right))}
-#viewer .vcount{position:absolute;bottom:max(14px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:2;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.16);color:#fff;font-size:12.5px;font-variant-numeric:tabular-nums}
+#viewer .vcount{position:absolute;bottom:calc(62px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:2;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.16);color:#fff;font-size:12.5px;font-variant-numeric:tabular-nums}
 dialog#confirm{border:0;border-radius:18px;padding:24px;max-width:440px;width:calc(100% - 32px);background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
 dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 #confirm h3{margin:0 0 10px;font-size:17px;font-weight:600}
@@ -414,6 +418,26 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
 #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:50;background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font:500 12.5px var(--font);box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw}
 #toast.on{opacity:1}
 #toast.act.on{pointer-events:auto}
+.selbtn{margin-left:10px}
+#selbar{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:60;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 8px;max-width:calc(100vw - 24px);padding:10px 12px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+#selbar[hidden]{display:none}
+#selbar b{font-weight:600;font-size:13px;margin-right:4px}
+#selbar .pill.danger{color:var(--alert-ink);border-color:var(--alert-line)}
+@media (max-width:720px){
+  #selbar{left:0;right:0;bottom:0;transform:none;max-width:none;border-radius:16px 16px 0 0;border-width:1px 0 0;padding:10px 8px calc(10px + env(safe-area-inset-bottom,0px));gap:5px}
+  #selbar b{flex:1 0 100%;text-align:center;margin:0 0 2px}
+  #selbar .pill{padding:7px 8px;font-size:12.5px}
+  body.selecting #totop{bottom:130px}
+}
+body.selecting .card{cursor:pointer}
+body.selecting .card.sel{outline:3px solid var(--sel);outline-offset:-3px}
+body.selecting .card::before{content:"";position:absolute;top:8px;left:8px;z-index:6;width:22px;height:22px;border-radius:50%;background:rgba(12,12,14,.45);box-shadow:inset 0 0 0 2px #fff;pointer-events:none}
+body.selecting .card.sel::before{background:var(--sel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.8 8.4l2.7 2.7 5.7-6'/%3E%3C/svg%3E") center/16px no-repeat}
+body.selecting{padding-bottom:120px}
+body.selecting #totop{bottom:90px}
+#totop{position:fixed;right:16px;bottom:20px;z-index:40;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);display:grid;place-items:center;cursor:pointer;box-shadow:var(--shadow)}
+#totop[hidden]{display:none}
+@media (max-width:720px){#totop{bottom:calc(84px + env(safe-area-inset-bottom,0px));right:12px}}
 #toast .tact{margin-left:12px;background:none;border:0;color:inherit;font:700 12.5px var(--font);text-decoration:underline;cursor:pointer;padding:2px 0}
 .intro{max-width:620px;margin:0 auto;text-align:left;color:var(--ink)}
 p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100%;margin:0 0 18px;padding:8px 16px 8px 13px;border-radius:999px;border:1px solid var(--alert-line);background:var(--alert-bg);color:var(--alert-ink);font-size:13.5px;font-weight:600;line-height:1.3}
@@ -456,6 +480,8 @@ body.layout-list .tstrip{display:none!important}
 body.layout-list .title{padding-bottom:1px;line-height:1.35}
 body.layout-list .meta{display:flex;flex-wrap:nowrap;gap:0 10px;overflow:hidden;white-space:nowrap}
 body.layout-list .meta>*{flex:none}
+.meta .dt{display:none}
+@media (min-width:721px){body.layout-list .meta .dt{display:inline}}
 .morebtn{display:none}
 @media (max-width:720px){
   /* phones: the card actions fold into one button so the title keeps its room */
@@ -561,13 +587,6 @@ body.layout-list .badges{display:contents}
             <option value="off">Hidden</option>
           </select>
         </label>
-        <label class="ctlrow"><span>Theme</span>
-          <select id="theme" class="field" aria-label="Theme">
-            <option value="system">System</option>
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
-          </select>
-        </label>
       </div>
 
       <div class="pcol">
@@ -654,10 +673,20 @@ body.layout-list .badges{display:contents}
           </div>
           <span id="acMsg"></span>
         </details>
+        <div class="grp" id="appearBox"><h2>Appearance</h2>
+        <label class="ctlrow"><span>Theme</span>
+          <select id="theme" class="field" aria-label="Theme">
+            <option value="system">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </label>
+        </div>
         <details class="grp acctbox" id="advBox">
           <summary><h2>Advanced</h2></summary>
           <span id="advRg" class="hint">RedGifs sound: no problems so far.</span>
           <button class="pill" id="advRgRetry" type="button">Retry sound lookups</button>
+          <div class="hint rghelp" id="advRgHelp" hidden><b>Fix RedGifs playback.</b> Your browser is blocking RedGifs, so clips play without sound or controls. Deploy the small helper in your own Supabase project and the page will use it automatically: <a href="https://github.com/Tulosi/stargazer/tree/main/supabase/functions/redgifs" target="_blank" rel="noopener noreferrer">setup steps</a>.</div>
           <span class="hint">If your browser blocks RedGifs, an optional helper function in your own Supabase project can fetch the clips for this page (see supabase/functions/redgifs in the project).</span>
         </details>
       </div>
@@ -673,15 +702,26 @@ body.layout-list .badges{display:contents}
       <div class="bar"><i id="loadBar"></i></div>
     </div>
     <div class="summary" id="summary"></div>
+    <button class="clear selbtn" id="selbtn" type="button" hidden>Select</button>
   </div>
   <main class="grid" id="grid"></main>
   <div class="more" id="moreWrap" hidden><span id="moreNote"></span><button class="pill" id="moreBtn" type="button">Load next 100</button></div>
   <div id="sentinel"></div>
 </div>
 
-<div id="viewer" role="dialog" aria-modal="true" aria-label="Media viewer" hidden><button class="vnav vprev" type="button" aria-label="Previous image" hidden>&#8249;</button><button class="vnav vnext" type="button" aria-label="Next image" hidden>&#8250;</button><span class="vcount" hidden></span><input class="vvol" type="range" min="0" max="100" step="1" value="0" aria-label="Volume" hidden><button class="vsound" type="button" aria-label="Unmute" hidden></button><button class="vclose" type="button" aria-label="Close">&#10005;</button><div class="vstage"></div></div>
+<div id="viewer" role="dialog" aria-modal="true" aria-label="Media viewer" hidden><button class="vnav vprev" type="button" aria-label="Previous image" hidden>&#8249;</button><button class="vnav vnext" type="button" aria-label="Next image" hidden>&#8250;</button><span class="vcount" hidden></span><div class="vposts"><button class="vpost vpp" type="button" aria-label="Previous post" title="Previous post (Up arrow)">&#8249; Previous post</button><button class="vpost vpn" type="button" aria-label="Next post" title="Next post (Down arrow)">Next post &#8250;</button></div><input class="vvol" type="range" min="0" max="100" step="1" value="0" aria-label="Volume" hidden><button class="vsound" type="button" aria-label="Unmute" hidden></button><button class="vclose" type="button" aria-label="Close">&#10005;</button><div class="vstage"></div></div>
 <dialog id="confirm"><form method="dialog"><h3 id="cTitle"></h3><div id="cBody"></div><label id="cOptWrap" class="toggle" hidden><span id="cOptLbl"></span><input type="checkbox" id="cOpt"></label><div class="btnrow" style="justify-content:flex-end;margin-top:18px"><button class="pill" id="cExtra" value="extra" hidden></button><button class="pill" value="cancel" autofocus>Cancel</button><button class="pill danger" id="cOk" value="ok"></button></div></form></dialog>
 <div id="pausebar" role="status" aria-live="polite" hidden><span class="pdot"></span><span id="pauseTxt"></span><button type="button" id="pauseSkip" title="Retry now">Retry now</button></div>
+<button id="totop" type="button" aria-label="Back to top" title="Back to top" hidden><svg viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 10L8 5.5l4.5 4.5"/></svg></button>
+<div id="selbar" role="toolbar" aria-label="Selected posts" hidden>
+  <b id="selcount">0 selected</b>
+  <button type="button" class="pill" data-a="star">Star</button>
+  <button type="button" class="pill" data-a="nsfw" title="Mark selected as NSFW">NSFW</button>
+  <button type="button" class="pill" data-a="sfw" title="Unmark selected as NSFW">Not NSFW</button>
+  <button type="button" class="pill danger" data-a="del">Delete</button>
+  <button type="button" class="pill" data-a="all" title="Select every listed post">All</button>
+  <button type="button" class="pill" data-a="done">Done</button>
+</div>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -864,6 +904,7 @@ function buildCard(p){
   const el = document.createElement('article');
   el.className = 'card';
   el.dataset.id = p.id;
+  if(typeof SEL!=='undefined' && SEL.on && SEL.ids.has(p.id)) el.classList.add('sel');
   fillCard(el,p);
   cardIO.observe(el);
   return el;
@@ -1052,9 +1093,12 @@ function fillCard(el,p){
     + '<div class="info">'
     + '<h3 class="title"><a data-open href="'+esc(href)+'" target="_blank" rel="noopener noreferrer">'+esc(titleOf(p))+'</a></h3>'
     + '<div class="meta"><button class="sub" type="button" data-sub="'+esc(p.sub)+'">r/'+esc(p.sub)+'</button>'+stats
+    + (m && m.c ? '<span class="dt">'+new Date(m.c*1000).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'})+'</span>' : '')
     + (note ? '<span class="note'+(dead?' dead':'')+'">'+esc(note)+'</span>' : '')+'</div>'
     + '<div class="actions"><a class="btn primary" data-open href="'+esc(href)+'" target="_blank" rel="noopener noreferrer">Open source</a>'
-    + '<a class="btn" href="'+esc(recHref(p))+'" target="_blank" rel="noopener noreferrer">Comments</a></div>'
+    + '<a class="btn" href="'+esc(recHref(p))+'" target="_blank" rel="noopener noreferrer">Comments</a>'
+    + (!m && !dead ? '<a class="btn" href="https://www.reddit.com/comments/'+esc(p.id)+'" target="_blank" rel="noopener noreferrer">Open on Reddit</a><button class="btn retry1" type="button" data-id="'+esc(p.id)+'">Retry this one</button>' : '')
+    + '</div>'
     + (removed ? '<div class="arch"><span>Archives:</span><a href="'+esc('https://web.archive.org/web/'+WB_TS+'/https://old.reddit.com/r/'+p.sub+'/comments/'+p.id+'/')+'" target="_blank" rel="noopener noreferrer">Wayback</a>'
         + '<a href="'+esc('https://arctic-shift.photon-reddit.com/api/posts/ids?ids='+p.id)+'" target="_blank" rel="noopener noreferrer">Arctic Shift</a></div>' : '')
     + '</div>';
@@ -1359,6 +1403,7 @@ function rgApply(p,res){
 }
 function updateAdvRg(){
   const el = $('advRg'); if(!el) return;
+  const hp = $('advRgHelp'); if(hp) hp.hidden = !RG_ERR;
   el.textContent = RG_ERR ? 'RedGifs sound: last problem was "'+RG_ERR+'". Some clips may play without sound.' : 'RedGifs sound: no problems so far.';
 }
 function rgWarn(){
@@ -1442,6 +1487,27 @@ function viewerGallery(i){
   im.src = urls[0];
   VIEW.root.querySelector('.vcount').textContent = (g.i+1)+' / '+n;
 }
+/* Previous / next post, in the order of the gallery behind (only posts that have something to show full screen). */
+const viewable = p => MEDIA_KINDS.has(mediaOf(p)) && !!(imgCandidates(p)[0] || playSources(metaOf(p))[0]);
+function neighbour(d){
+  const i = list.indexOf(VIEW.cur); if(i<0) return null;
+  for(let j=i+d; j>=0 && j<list.length; j+=d) if(viewable(list[j])) return list[j];
+  return null;
+}
+function updatePostNav(){ const a = VIEW.root.querySelector('.vpp'), b = VIEW.root.querySelector('.vpn'); a.disabled = !neighbour(-1); b.disabled = !neighbour(1); }
+function viewerPost(d){
+  if(VIEW.root.hidden || !VIEW.cur) return;
+  const n = neighbour(d); if(!n) return;
+  VIEW.token++;
+  if(VIEW.gal){ const g = VIEW.gal, card = cardEls.get(g.p.id); if(card){ card._gi = g.i; showGallery(card, g.p, g.m); } VIEW.gal = null; }
+  VIEW.root.querySelectorAll('.vnav,.vcount').forEach(x=>x.hidden = true);
+  if(VIEW.aud){ VIEW.aud.pause(); VIEW.aud.removeAttribute('src'); VIEW.aud = null; }
+  VIEW.root.querySelector('.vsound').hidden = true; VIEW.root.querySelector('.vvol').hidden = true;
+  VIEW.stage.querySelectorAll('video').forEach(v=>{ v.pause(); v.removeAttribute('src'); try{ v.load(); }catch(e){} });
+  VIEW.stage.replaceChildren();
+  zReset(); zApply();
+  openViewer(n, {keep:true});
+}
 const viewerStep = d => { if(VIEW.gal && !VIEW.root.hidden) viewerGallery(VIEW.gal.i + d); };
 addEventListener('popstate',()=>{ if(!VIEW.root.hidden){ VIEW.popping = true; try{ closeViewer(); }finally{ VIEW.popping = false; } } });
 function closeViewer(){
@@ -1470,7 +1536,8 @@ async function openViewer(p, opts){
   const thumbImg = card && card.querySelector('.thumb img');
   const thumbSrc = thumbImg ? (thumbImg.currentSrc || thumbImg.src) : '';
   const mkImg = url => { const im = new Image(); im.referrerPolicy = 'no-referrer'; im.alt = titleOf(p); im.src = url; return im; };
-  VIEW.opener = document.activeElement;
+  if(!opts.keep) VIEW.opener = document.activeElement;
+  VIEW.cur = p; updatePostNav();
   VIEW.stage.replaceChildren();
   VIEW.root.hidden = false; document.body.classList.add('viewing');
   applyAudio();
@@ -1478,7 +1545,7 @@ async function openViewer(p, opts){
   VIEW.root.querySelector('.vclose').focus({preventScroll:true});
   // real full screen where the browser allows it; otherwise this still fills the whole window
   const rq = VIEW.root.requestFullscreen || VIEW.root.webkitRequestFullscreen;
-  if(rq){ try{ const r = rq.call(VIEW.root); VIEW.fs = true; if(r && r.catch) r.catch(()=>{ VIEW.fs = false; }); }catch(e){ VIEW.fs = false; } }
+  if(rq && !fsEl()){ try{ const r = rq.call(VIEW.root); VIEW.fs = true; if(r && r.catch) r.catch(()=>{ VIEW.fs = false; }); }catch(e){ VIEW.fs = false; } }
   if(m && m.gl && m.gl.length > 1){
     VIEW.gal = {p, m, i:(card && card._gi) || 0};
     VIEW.root.querySelectorAll('.vnav,.vcount').forEach(x=>x.hidden = false);
@@ -1592,7 +1659,11 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){ e.preventDefault(); closeViewer(); }
   else if(e.key==='ArrowLeft' && VIEW.gal){ e.preventDefault(); viewerStep(-1); }
   else if(e.key==='ArrowRight' && VIEW.gal){ e.preventDefault(); viewerStep(1); }
+  else if(e.key==='ArrowUp' || e.key==='PageUp' || (e.key==='ArrowLeft' && !VIEW.gal)){ e.preventDefault(); viewerPost(-1); }
+  else if(e.key==='ArrowDown' || e.key==='PageDown' || (e.key==='ArrowRight' && !VIEW.gal)){ e.preventDefault(); viewerPost(1); }
 });
+VIEW.root.querySelector('.vpp').addEventListener('click',e=>{ e.stopPropagation(); viewerPost(-1); });
+VIEW.root.querySelector('.vpn').addEventListener('click',e=>{ e.stopPropagation(); viewerPost(1); });
 VIEW.root.querySelector('.vprev').addEventListener('click',e=>{ e.stopPropagation(); viewerStep(-1); });
 VIEW.root.querySelector('.vnext').addEventListener('click',e=>{ e.stopPropagation(); viewerStep(1); });
 /* Pinch to zoom, drag to pan, double-tap (or double-click) to toggle zoom, mouse wheel to zoom. Swipe between gallery images only while not zoomed. */
@@ -1644,6 +1715,7 @@ new MutationObserver(()=>{ zReset(); }).observe(VIEW.stage,{childList:true});
     const dx = x - sx;
     if(ZOOM.s===1 && !ZOOM.moved && VIEW.gal && Math.abs(dx) > 50){ viewerStep(dx<0 ? 1 : -1); return; }   // swipe to the next image
     const dy = y - sy;
+    if(ZOOM.s===1 && !ZOOM.moved && !VIEW.gal && Math.abs(dx) > 70 && Math.abs(dy) < 60){ viewerPost(dx<0 ? 1 : -1); return; }   // swipe to the next post
     if(ZOOM.s===1 && !ZOOM.moved && dy > 90 && dy > Math.abs(dx)*1.6){ closeViewer(); return; }   // swipe down to close
     if(!ZOOM.moved){   // a tap; two quick taps toggle zoom
       const now = Date.now();
@@ -1763,6 +1835,17 @@ $('grid').addEventListener('click',e=>{
     if(state.fav) refresh(); else updateSummary();
     return;
   }
+  const rt1 = e.target.closest('button.retry1');
+  if(rt1){
+    const id = rt1.dataset.id, p = POSTS.find(x=>x.id===id); if(!p) return;
+    rt1.disabled = true; rt1.textContent = 'Looking...';
+    fetchBatch([id]).then(data=>{
+      const d = data.find(x=>x.id===id);
+      if(d && !badTitle(d.title)){ META[id] = slim(d); saveCache(); onMeta([p]); toast('Found it'); }
+      else { rt1.disabled = false; rt1.textContent = 'Retry this one'; toast('Still not in the archives. Very recent saves can take a few days.'); }
+    }).catch(()=>{ rt1.disabled = false; rt1.textContent = 'Retry this one'; toast('Could not reach the archives. Try again in a moment.'); });
+    return;
+  }
   const s = e.target.closest('button.sub');
   if(s){ state.sub = s.dataset.sub; $('subsel').value = state.sub; refresh(); window.scrollTo({top:0}); return; }
   const r = e.target.closest('button.reveal');
@@ -1851,6 +1934,7 @@ function updateSummary(){
   const hidden = MODE==='csv' ? Math.max(0, POSTS.length - list.length) : 0;
   /* Count only settings the user changed from the defaults (the hiding defaults are explained by the "hidden by filters" line). */
   const n = (state.nsfw!=='hide'?1:0) + (state.showText?1:0) + (state.hideBroken?0:1) + (state.cats.size?1:0) + (state.kinds.size?1:0) + (state.media.size?1:0) + (state.sub?1:0) + (state.q?1:0) + (state.fav?1:0) + (state.range!=='all'?1:0);
+  const sb = $('selbtn'); if(sb){ const ok = MODE==='csv' && POSTS.length > 0; sb.hidden = !ok; if(!ok && SEL.on) selMode(false); }
   const dt = $('decktoggle'); if(n) dt.dataset.n = String(n); else delete dt.dataset.n;
   dt.dataset.active = active ? '1' : '0';
   $('summary').innerHTML = hidden ? '<b>'+hidden.toLocaleString()+'</b> hidden by filters <button class="clear" id="rvw" type="button">Review</button>'+(active ? ' <button class="clear" id="clr" type="button">Clear filters</button>' : '')
@@ -1858,6 +1942,61 @@ function updateSummary(){
   const rv = $('rvw'); if(rv) rv.onclick = () => $('decktoggle').click();   // a toggle: opens the Filters panel, or closes it if it is already open
   const c = $('clr'); if(c) c.onclick = ()=>{ state.cats.clear(); state.kinds.clear(); state.media.clear(); state.sub=''; state.q=''; state.fav=false; $('favonly').checked=false; state.showText=false; $('showtext').checked=false; if(state.range!=='all'){ setRange('all'); return; } $('q').value=''; window.markSearchBtn&&markSearchBtn(); $('subsel').value=''; setNsfw('hide'); };
 }
+
+/* ---------- bulk selection ---------- */
+const SEL = {on:false, ids:new Set()};
+function selPaint(){
+  document.querySelectorAll('.card.sel').forEach(c=>{ if(!SEL.ids.has(c.dataset.id)) c.classList.remove('sel'); });
+  SEL.ids.forEach(id=>{ const c = cardEls.get(id); if(c) c.classList.add('sel'); });
+  $('selcount').textContent = SEL.ids.size.toLocaleString()+' selected';
+  document.querySelectorAll('#selbar [data-a]').forEach(b=>{ if(['star','nsfw','sfw','del'].includes(b.dataset.a)) b.disabled = !SEL.ids.size; });
+}
+function selMode(on){
+  SEL.on = on; if(!on) SEL.ids.clear();
+  document.body.classList.toggle('selecting', on); $('selbar').hidden = !on;
+  $('selbtn').textContent = on ? 'Cancel' : 'Select';
+  selPaint();
+}
+async function selAct(a){
+  const ps = POSTS.filter(p=>SEL.ids.has(p.id)), n = ps.length;
+  if(a==='done'){ selMode(false); return; }
+  if(a==='all'){ list.forEach(p=>SEL.ids.add(p.id)); selPaint(); return; }
+  if(!n) return;
+  if(a==='star'){ ps.forEach(p=>{ const r = ROWS.find(x=>x.id===p.id); if(r){ r.starred = true; r.t = nowT(r.t); FAVS.add(p.id); markDirty(p.id); } }); updateFavCount(); refresh(true); await commit(); toast('Starred '+n+(n===1?' post':' posts')); return; }
+  if(a==='nsfw' || a==='sfw'){ ps.forEach(p=>markNsfw(p, a==='nsfw')); refresh(true); await commit(); toast((a==='nsfw' ? 'Marked ' : 'Unmarked ')+n+(n===1?' post':' posts')+' as NSFW'); return; }
+  if(a==='del'){
+    const keeps = ps.filter(p=>ROWSET.has(p.id)).map(p=>{ const r = ROWS.find(x=>x.id===p.id) || {}; return {id:p.id, perma:r.perma||p.perma||p.link, starred:!!r.starred}; });
+    const r = await confirmDialog({title:'Delete '+keeps.length+(keeps.length===1?' post':' posts')+' from your CSV?', paras:['They will be removed from "'+LIB.cur.name+'". You can undo this right after.'], ok:'Delete'});
+    if(r!=='ok') return;
+    deleteRows(keeps.map(k=>k.id)); await commit(); SEL.ids.clear();
+    if(MODE==='csv') removePosts(keeps.map(k=>k.id)); else syncSaveButtons();
+    selPaint();
+    toast('Deleted '+keeps.length+(keeps.length===1?' post':' posts'), {label:'Undo', fn:()=>restoreRows(keeps)});
+  }
+}
+$('selbtn').addEventListener('click',()=>selMode(!SEL.on));
+$('selbar').addEventListener('click',e=>{ const b = e.target.closest('[data-a]'); if(b) selAct(b.dataset.a); });
+$('grid').addEventListener('click',e=>{
+  if(!SEL.on) return;
+  const c = e.target.closest('.card'); if(!c || !c._p) return;
+  e.preventDefault(); e.stopPropagation();
+  const id = c._p.id; if(SEL.ids.has(id)) SEL.ids.delete(id); else SEL.ids.add(id);
+  selPaint();
+}, true);
+document.addEventListener('keydown',e=>{ if(e.key==='Escape' && SEL.on && VIEW.root.hidden && !document.querySelector('dialog[open],.dlg:not([hidden])')) selMode(false); });
+
+/* ---------- back to top ---------- */
+(function(){
+  const b = $('totop'); let on = false;
+  const upd = ()=>{ const w = scrollY > innerHeight*1.5; if(w!==on){ on = w; b.hidden = !w; } };
+  addEventListener('scroll', upd, {passive:true}); upd();
+  b.onclick = ()=>window.scrollTo({top:0, behavior:'smooth'});
+  const br = document.querySelector('.brand');
+  if(br) br.addEventListener('click', e=>{ if(scrollY > 120){ e.preventDefault(); window.scrollTo({top:0, behavior:'smooth'}); } });
+  /* touch screens cannot hover: tap a count to read what it means */
+  document.querySelectorAll('.stats .st').forEach(st=>st.addEventListener('click', e=>{ e.stopPropagation(); const was = st.classList.contains('open'); document.querySelectorAll('.stats .st.open').forEach(x=>x.classList.remove('open')); if(!was) st.classList.add('open'); }));
+  document.addEventListener('click', ()=>document.querySelectorAll('.stats .st.open').forEach(x=>x.classList.remove('open')));
+})();
 
 /* ---------- hover and auto-play ---------- */
 const touchMQ = matchMedia('(hover: none)');
@@ -2274,9 +2413,17 @@ $('favonly').addEventListener('change',e=>{ state.fav = e.target.checked; refres
 updateFavCount();
 $('subsel').addEventListener('change',e=>{ state.sub=e.target.value; refresh(); });
 if(matchMedia('(max-width:560px)').matches) $('size').value = $('size').max;
+/* The layout is remembered per list (a list of text posts suits List, a list of clips suits Masonry); the global choice is the default for lists without one. */
+function listLayouts(){ try{ return JSON.parse(localStorage.getItem('saved-posts-layouts')||'{}') || {}; }catch(e){ return {}; } }
+function setListLayout(id, l){ if(id==null) return; const m = listLayouts(); m[id] = l; try{ localStorage.setItem('saved-posts-layouts', JSON.stringify(m)); }catch(e){} }
+function applyListLayout(){
+  if(!LIB.cur) return; const l = listLayouts()[LIB.cur.id];
+  if(l && LAYOUTS[l] && l!==LAYOUT){ LAYOUT = l; paintLayout(); }
+}
 function paintLayout(){ document.querySelectorAll('#layoutseg .pill').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.l===LAYOUT))); document.body.classList.toggle('layout-grid', LAYOUT==='grid'); document.body.classList.toggle('layout-list', LAYOUT==='list'); const h = $('layouthint'); if(h) h.textContent = LAYOUTS[LAYOUT]; if(window.applyInfoMode) window.applyInfoMode(); document.querySelectorAll('.card.btns-open').forEach(c=>{ c.classList.remove('btns-open'); const b = c.querySelector('.morebtn'); if(b) b.setAttribute('aria-expanded','false'); }); }
 document.querySelectorAll('#layoutseg .pill').forEach(b=>b.addEventListener('click',()=>{
   LAYOUT = b.dataset.l; try{ localStorage.setItem('saved-posts-layout', LAYOUT); }catch(e){}
+  if(LIB.cur) setListLayout(LIB.cur.id, LAYOUT);
   paintLayout(); relayoutAll();
 }));
 paintLayout();
@@ -2843,7 +2990,7 @@ async function activate(rec){
       else rec.synced = false;
     }catch(e){ rec.synced = false; }
   }
-  LIB.cur = rec;
+  LIB.cur = rec; applyListLayout();
   const {rows, tombs} = csvToRows(rec.text);
   ROWS.length = 0; ROWSET.clear(); TOMBS.clear();
   rows.forEach(r=>{ ROWS.push(r); ROWSET.add(r.id); });
@@ -3232,17 +3379,33 @@ function deleteRows(ids){
   ids.forEach(id=>{ ROWSET.delete(id); FAVS.delete(id); });
   markDirty(...ids);
 }
-async function toggleNsfw(p){
-  const r = ROWS.find(x=>x.id===p.id); if(!r) return;
-  const want = !isNsfw(p), base = baseNsfw(p);
+/* Sets the automatic-guess override for one saved post (no commit; callers commit once). Returns false when the post is not in the list. */
+function markNsfw(p, want){
+  const r = ROWS.find(x=>x.id===p.id); if(!r) return false;
+  const base = baseNsfw(p);
   let perma = (r.perma || p.link).replace(/[?&]nsfw=[01]/, '');
   if(perma.includes('&') && !perma.includes('?')) perma = perma.replace('&','?');
   if(want !== base) perma += (perma.includes('?') ? '&' : '?') + 'nsfw=' + (want ? '1' : '0');   // only store a mark when it differs from the automatic guess
   r.perma = perma; r.t = nowT(r.t); markDirty(p.id); p.perma = perma;
   const el = cardEls.get(p.id); if(el) fillCard(el, p);
+  return true;
+}
+async function toggleNsfw(p){
+  const want = !isNsfw(p);
+  if(!markNsfw(p, want)) return;
   refresh(true);
   await commit();
   toast(want ? 'Marked NSFW' : 'Marked not NSFW', {label:'Undo', fn:()=>toggleNsfw(p)});
+}
+/* Puts deleted rows back (newer stamp than the tombstone, so the restore wins on every device). */
+async function restoreRows(keeps){
+  keeps.forEach(k=>{
+    ROWS.unshift({id:k.id, perma:k.perma, starred:k.starred, t:nowT((TOMBS.get(k.id)||{}).t)});
+    TOMBS.delete(k.id); ROWSET.add(k.id); if(k.starred) FAVS.add(k.id); markDirty(k.id);
+  });
+  await commit();
+  if(MODE==='csv') startCsvMode(); else syncSaveButtons();
+  toast('Restored '+keeps.length+(keeps.length===1?' post':' posts'));
 }
 async function toggleSave(p){
   if(ROWSET.has(p.id)){
@@ -3251,13 +3414,7 @@ async function toggleSave(p){
     deleteRows([p.id]);
     await commit();
     if(MODE==='csv') removePosts([p.id]); else syncSaveButtons();
-    toast('Deleted from "'+LIB.cur.name+'"', {label:'Undo', fn:async ()=>{
-      ROWS.unshift({id:keep.id, perma:keep.perma, starred:keep.starred, t:nowT((TOMBS.get(keep.id)||{}).t)});
-      TOMBS.delete(keep.id); ROWSET.add(keep.id); if(keep.starred) FAVS.add(keep.id); markDirty(keep.id);
-      await commit();
-      if(MODE==='csv') startCsvMode(); else syncSaveButtons();
-      toast('Restored');
-    }});
+    toast('Deleted from "'+LIB.cur.name+'"', {label:'Undo', fn:()=>restoreRows([keep])});
   } else {
     ROWS.unshift({id:p.id, perma:p.perma || p.link, starred:false, t:nowT((TOMBS.get(p.id)||{}).t)}); TOMBS.delete(p.id); ROWSET.add(p.id); markDirty(p.id);
     if(MODE!=='csv') keepLocalMeta(p.id);
