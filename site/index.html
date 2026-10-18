@@ -2725,18 +2725,20 @@ $('acSetPw').onclick = setNewPassword;
 ['acNew','acNew2'].forEach(id=>$(id).addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); setNewPassword(); } }));
 $('acSkipPw').onclick = () => { RESET_MODE = false; $('acNew').value = ''; $('acNew2').value = ''; acctRender(); acctMsg('You are signed in. You can change your password later by using "Forgot password" after signing out.'); linkAccount(); };
 $('acOut').onclick = async () => {
-  const d = await confirmDialog({title:'Sign out?', paras:['Your list stays on your account. Signing out stops syncing on this device.'], ok:'Sign out', option:'Also remove the list from this browser (for a shared computer)'});
+  const d = await confirmDialog({title:'Sign out?', paras:['Your list stays safe in your account. Signing out also removes the account list, and its saved copy, from this browser. Sign in again to bring it back.'], ok:'Sign out'});
   if(d!=='ok') return;
-  const wipe = $('cOpt').checked;
+  const rec = LIB.cur, wasCloud = !!(rec && rec.cloud);
+  if(wasCloud){ try{ await commitChain; await syncCloud(rec); }catch(e){} }   // best effort: push anything this device changed before leaving
   try{ if(SESSION) await fetch(SB+'/auth/v1/logout', {method:'POST', headers:{apikey:CFG.supabaseAnonKey, Authorization:'Bearer '+SESSION.access_token}}); }catch(e){}
   SESSION = null; saveSession();
-  const rec = LIB.cur;
-  if(rec){ rec.cloud = false; rec.cloudCursor = null; rec.dirty = []; }
-  if(wipe && rec){
-    rec.text = 'id,permalink,starred,updated,deleted\r\n'; rec.handle = null; rec.cloudUser = null;
-    for(const k of ['saved-posts-meta-v7','saved-posts-health-v1','saved-posts-imgfail-v2','saved-posts-favs']){ try{ localStorage.removeItem(k); }catch(e){} }
-    await persistRec(rec); await activate(rec); startCsvMode();
-  } else if(rec) await persistRec(rec);
+  /* Account lists are cleared from this browser; a Local list is not tied to the account and stays. */
+  for(const r of await libAll()){ if(r.cloud && LIB.db){ try{ await idbReq('csv','readwrite',s=>s.delete(r.id)); }catch(e){} } }
+  if(wasCloud){
+    for(const k of ['saved-posts-meta-v7','saved-posts-health-v1','saved-posts-imgfail-v2','saved-posts-favs','saved-posts-csv-fallback']){ try{ localStorage.removeItem(k); }catch(e){} }
+    for(const k in META) delete META[k];
+    await activate({id:'builtin', name:'My saved posts', text:'id,permalink,starred,updated,deleted\r\n', handle:null, updated:Date.now()});   // nothing loaded, rather than rolling over to another cached list
+    await persistRec(LIB.cur); startCsvMode();
+  }
   acctRender(); acctMsg('Signed out.'); csvInfo();
 };
 /* returning from "Continue with GitHub": the tokens arrive in the address after the # */
