@@ -280,6 +280,7 @@ body.unblur .reveal{display:none!important}
 .nsfwb[aria-pressed=true]::after{content:"";position:absolute;top:-1px;right:-8px;width:15px;height:15px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 8.6l2.9 2.9L12.2 5.4' stroke='black' stroke-opacity='.55' stroke-width='4.4'/%3E%3Cpath d='M4 8.6l2.9 2.9L12.2 5.4' stroke='white' stroke-width='2.6'/%3E%3C/svg%3E") center/100% 100% no-repeat}   /* on: a bare check (dark halo keeps it readable on any picture) */
 .save.nsfwb[aria-pressed=true]:hover::after{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.6 4.6l6.8 6.8M11.4 4.6l-6.8 6.8' stroke='black' stroke-opacity='.55' stroke-width='4.4'/%3E%3Cpath d='M4.6 4.6l6.8 6.8M11.4 4.6l-6.8 6.8' stroke='white' stroke-width='2.6'/%3E%3C/svg%3E")}   /* hovering an active mark turns the check into an X: clicking removes it */
 .nsfwb[aria-pressed=false]::after{content:"";position:absolute;top:-1px;right:-8px;width:15px;height:15px;opacity:.85;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5.4 6.4C5.5 5 6.6 4.1 8 4.1s2.6.9 2.6 2.3c0 1.1-.8 1.6-1.5 2.1-.5.4-.9.8-.9 1.6' stroke='black' stroke-opacity='.5' stroke-width='4.2'/%3E%3Ccircle cx='8' cy='11.9' r='1.9' fill='black' fill-opacity='.5' stroke='none'/%3E%3Cpath d='M5.4 6.4C5.5 5 6.6 4.1 8 4.1s2.6.9 2.6 2.3c0 1.1-.8 1.6-1.5 2.1-.5.4-.9.8-.9 1.6' stroke='white' stroke-width='2.2'/%3E%3Ccircle cx='8' cy='11.9' r='1.15' fill='white' stroke='none'/%3E%3C/svg%3E") center/100% 100% no-repeat}   /* off: a bare question mark */
+.save.nsfwb[aria-pressed=false]:hover::after{opacity:1;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 8.6l2.9 2.9L12.2 5.4' stroke='black' stroke-opacity='.55' stroke-width='4.4'/%3E%3Cpath d='M4 8.6l2.9 2.9L12.2 5.4' stroke='white' stroke-width='2.6'/%3E%3C/svg%3E")}   /* hovering an unmarked card previews the check: clicking marks it */
 .save.nsfwb[aria-pressed=true]:hover{background:rgba(12,12,14,.78);color:#fff}
 .fs svg{display:block}
 .gnav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:32px;height:32px;display:grid;place-items:center;border:0;border-radius:50%;padding:0;background:rgba(12,12,14,.26);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:rgba(255,255,255,.78);font-size:22px;line-height:1;cursor:pointer;opacity:0;transition:opacity .15s,background .15s}
@@ -2369,7 +2370,10 @@ let loading = false, missing = 0;
 async function loadAll(){
   if(loading) return; loading = true;
   const gen = loadGen;
-  const todo = POSTS.filter(p=>!META[p.id]);
+  /* RedGifs posts saved from the Subreddit viewer may not carry the clip's exact file name (its capitals matter), which is what lets the card play the real file with the native controls.
+     The archive copy usually has it, so ask once a day for the ones still missing it. */
+  const regrab = new Set(POSTS.filter(p=>{ const m = META[p.id]; return m && !m.miss && !m.g && !m.rgDone && !m.rgGone && rgSlug(p) && !(m.gTry && Date.now()-m.gTry < 864e5); }).map(p=>p.id));
+  const todo = POSTS.filter(p=>!META[p.id] || regrab.has(p.id));
   POSTS.filter(p=>p.del && !META[p.id]).forEach(p=>META[p.id]={t:'',o:0,th:'',m:'removed',u:'',n:0,s:0,a:'',c:0,miss:1});
   const queue = todo.filter(p=>!p.del);
   const total = POSTS.length; let done = total-queue.length;
@@ -2404,10 +2408,11 @@ async function loadAll(){
     for(const d of data){
       got.add(d.id);
       /* archive copy has no usable title -> treat as removed so the recovery pass can try other sources */
+      if(regrab.has(d.id) && META[d.id]){ const old = META[d.id], fresh = badTitle(d.title) ? null : slim(d); old.gTry = Date.now(); if(fresh && fresh.g) old.g = fresh.g; if(fresh && !old.th && fresh.th) old.th = fresh.th; continue; }
       META[d.id] = badTitle(d.title) ? {t:'',o:d.over_18?1:0,th:'',m:'removed',u:'',n:0,s:0,a:'',c:0,miss:1} : slim(d);
     }
     /* Not in any archive yet (usually very recent saves): leave as "Not loaded" with the CSV title, retried next visit. */
-    for(const p of chunk) if(!got.has(p.id)) missing++;
+    for(const p of chunk){ if(got.has(p.id)) continue; if(regrab.has(p.id) && META[p.id]) META[p.id].gTry = Date.now(); else missing++; }
     done += chunk.length; saveCache();
     setProgress('Loading previews '+done.toLocaleString()+' / '+total.toLocaleString());
     onMeta(chunk);
