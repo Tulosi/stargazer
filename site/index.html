@@ -1154,7 +1154,8 @@ async function rgPump(){
           else batch.forEach(p=>rgBusy.delete(p.id));
         }
       }
-      if(!failed || rgFails > 5) for(const p of batch){ const res = RGC[rgSlug(p)] || rgGuess(metaOf(p) || {}); if(res) rgApply(p,res); }
+      // Even when the lookup failed, use the file name Reddit's own embed data gives (it still has sound); a retry may upgrade it later.
+      for(const p of batch){ const res = RGC[rgSlug(p)] || rgGuess(metaOf(p) || {}); if(res) rgApply(p,res); }
       await new Promise(r=>setTimeout(r, 1200));
     }
   } finally { rgRunning = false; }
