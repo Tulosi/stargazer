@@ -70,7 +70,7 @@ button,select,input{font:inherit;color:inherit}
 .pill:hover{background:var(--line)}
 #decktoggle[aria-expanded="true"]{background:var(--ink);color:var(--bg)}
 #decktoggle[data-active="1"]::after{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
-@media (max-width:720px){#barcount,.brand{display:none}#decktoggle{margin-left:auto}}
+@media (max-width:720px){#barcount,.brand{display:none}#srctoggle{margin-left:auto}}
 
 /* ---- filter panel: floats over the grid, closed by default ---- */
 .panel{position:absolute;right:max(14px,env(safe-area-inset-right,0px));left:max(14px,env(safe-area-inset-left,0px));top:calc(100% + 8px);max-width:980px;margin-left:auto;
@@ -308,12 +308,11 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
         <input id="q" type="search" placeholder="Search titles, subreddits, authors" aria-label="Search">
       </label>
       <span id="barcount" aria-live="polite"></span>
-      <button class="pill" id="decktoggle" type="button" aria-expanded="false" aria-controls="panel">
-        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 4.5h7M12 4.5h2M2 11.5h2M7 11.5h7"/><circle cx="10.5" cy="4.5" r="1.6"/><circle cx="5.5" cy="11.5" r="1.6"/></svg>
-        Filters
-      </button>
       <button class="pill" id="srctoggle" type="button" aria-expanded="false" aria-controls="srcpanel" aria-label="Source, account and sync" title="Source, account and sync" style="padding-left:10px;padding-right:10px">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="5.4" r="2.7"/><path d="M2.8 14c.4-2.7 2.5-4.3 5.2-4.3s4.8 1.6 5.2 4.3"/></svg>
+      </button>
+      <button class="pill" id="decktoggle" type="button" aria-expanded="false" aria-controls="panel" aria-label="Filters" title="Filters" style="padding-left:10px;padding-right:10px">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 4.5h7M12 4.5h2M2 11.5h2M7 11.5h7"/><circle cx="10.5" cy="4.5" r="1.6"/><circle cx="5.5" cy="11.5" r="1.6"/></svg>
       </button>
       <button class="pill" id="shufflebtn" type="button" aria-label="Randomize order" title="Randomize order" style="padding-left:10px;padding-right:10px">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 4.5h2.2c3.6 0 4.6 7 8.2 7h2.6M1.5 11.5h2.2c1 0 1.7-.6 2.4-1.5M9.9 6c.6-.9 1.3-1.5 2-1.5h2.6"/><path d="M12.5 2.5l2 2-2 2M12.5 9.5l2 2-2 2"/></svg>
