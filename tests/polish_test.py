@@ -21,8 +21,8 @@ with sync_playwright() as p:
     on = 'article.card[data-id=nsfw01]'; off = 'article.card[data-id=safe01]'
     check('on: tooltip says Unmark as NSFW', ev("document.querySelector('%s .nsfwb').title" % on) == 'Unmark as NSFW')
     check('off: tooltip says Mark as NSFW', ev("document.querySelector('%s .nsfwb').title" % off) == 'Mark as NSFW')
-    check('on: check badge present (white disc, check knocked out)', ev("getComputedStyle(document.querySelector('%s .nsfwb'),'::after').backgroundColor" % on) == 'rgb(255, 255, 255)' and ev("getComputedStyle(document.querySelector('%s .nsfwb'),'::after').maskImage || getComputedStyle(document.querySelector('%s .nsfwb'),'::after').webkitMaskImage" % (on, on)) not in ('none', '', None))
-    check('off: question-mark badge present', ev("getComputedStyle(document.querySelector('%s .nsfwb'),'::after').content" % off) not in ('none', 'normal') and ev("getComputedStyle(document.querySelector('%s .nsfwb'),'::after').maskImage || getComputedStyle(document.querySelector('%s .nsfwb'),'::after').webkitMaskImage" % (off, off)) not in ('none', '', None))
+    check('on: bare check mark present', 'url' in ev("getComputedStyle(document.querySelector('%s .nsfwb'),'::after').backgroundImage" % on))
+    check('off: bare question mark present', 'url' in ev("getComputedStyle(document.querySelector('%s .nsfwb'),'::after').backgroundImage" % off))
     check('on: button is see-through like the others, glyph white', 'rgba(12, 12, 14, 0.26)' == ev("getComputedStyle(document.querySelector('%s .nsfwb')).backgroundColor" % on) and ev("getComputedStyle(document.querySelector('%s .nsfwb')).color" % on) == 'rgb(255, 255, 255)')
     check('off and on look different', ev("getComputedStyle(document.querySelector('%s .nsfwb')).backgroundColor" % on) != ev("getComputedStyle(document.querySelector('%s .nsfwb')).backgroundColor" % off))
     ev("document.querySelectorAll('.card').forEach(c=>c.classList.add('is-focus'))")
