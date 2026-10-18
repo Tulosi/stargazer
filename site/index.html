@@ -437,6 +437,25 @@ body.layout-list .thumb iframe.clip,body.layout-list .ctl,body.layout-list .cpro
 body.layout-list .info{top:0;display:flex;flex-direction:column;justify-content:center;padding:6px 160px 6px 14px;background:rgba(0,0,0,.34)}
 body.layout-list .card.info-open .info{padding-right:160px}
 body.layout-list .tstrip{display:none!important}
+body.layout-list .title{padding-bottom:1px;line-height:1.35}
+body.layout-list .meta{display:flex;flex-wrap:nowrap;gap:0 10px;overflow:hidden;white-space:nowrap}
+body.layout-list .meta>*{flex:none}
+.morebtn{display:none}
+@media (max-width:720px){
+  /* phones: the card actions fold into one button so the title keeps its room */
+  body.layout-list .morebtn{display:grid;place-items:center;position:absolute;right:8px;top:50%;margin-top:-18px;z-index:5;width:36px;height:36px;border:0;border-radius:50%;padding:0;background:rgba(12,12,14,.3);color:rgba(255,255,255,.92);cursor:pointer}
+  body.layout-list .morebtn svg{transition:transform .18s}
+  body.layout-list .card.btns-open .morebtn svg{transform:rotate(180deg)}
+  body.layout-list .info,body.layout-list .card.info-open .info{padding-right:56px}
+  body.layout-list .card.btns-open .info{padding-right:230px}
+  body.layout-list .card:not(.btns-open) .star,body.layout-list .card:not(.btns-open) .fs,body.layout-list .card:not(.btns-open) .save{display:none}
+  body.layout-list .card.btns-open .star,body.layout-list .card.btns-open .fs,body.layout-list .card.btns-open .save{opacity:1!important;pointer-events:auto!important;width:36px;height:36px;margin-top:-18px}
+  body.layout-list .card.btns-open .star{right:50px}
+  body.layout-list .card.btns-open .fs{right:92px}
+  body.layout-list .card.btns-open .save{right:134px}
+  body.layout-list .card.btns-open .nsfwb{right:176px}
+  body.layout-list .badge.tag{top:6px;margin-top:0;right:52px}
+}
 body.layout-list .star,body.layout-list .fs,body.layout-list .save{top:50%;margin-top:-15px}
 body.layout-list .badge.tag{top:50%;margin-top:-10px}
 @media (pointer:coarse){
@@ -1007,6 +1026,7 @@ function fillCard(el,p){
     + '<button class="save" type="button" data-id="'+esc(p.id)+'" aria-pressed="'+(ROWSET.has(p.id)?'true':'false')+'" aria-label="'+(ROWSET.has(p.id)?'Remove from your CSV':'Save to your CSV')+'" title="'+(ROWSET.has(p.id)?'Remove from your CSV':'Save to your CSV')+'">'+(ROWSET.has(p.id)?BM_ON:BM_OFF)+'</button>'
     + '<button class="save nsfwb" type="button" data-id="'+esc(p.id)+'"'+(ROWSET.has(p.id) ? '' : ' hidden')+' aria-pressed="'+(nsfw?'true':'false')+'" aria-label="'+(nsfw ? 'Remove the NSFW label' : 'Mark as NSFW')+'" title="'+(nsfw ? 'Marked NSFW: tap to remove the label' : 'Mark as NSFW')+'">'+NSFW_ICON+'</button>'
     + (MEDIA_KINDS.has(media) && (thumb || v0) ? '<button class="fs" type="button" aria-label="Full screen" title="Full screen">'+FS_ICON+'</button>' : '')
+    + '<button class="morebtn" type="button" aria-expanded="false" aria-label="More actions" title="More actions"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5L5.5 8l4.5 4.5"/></svg></button>'
     + '<button class="ibtn" type="button" aria-label="Show info" aria-pressed="false"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6.3"/><path d="M8 7.2v3.6"/><circle cx="8" cy="5.1" r=".6" fill="currentColor"/></svg></button>'
     + (gl ? '<button class="gnav gprev" type="button" aria-label="Previous image">&#8249;</button><button class="gnav gnext" type="button" aria-label="Next image">&#8250;</button>' : '')
     + '<div class="info">'
@@ -1634,7 +1654,7 @@ const LAYOUTS = {masonry:'Best for media: tiles follow the shape of each picture
 try{ const sv = localStorage.getItem('saved-posts-layout'); if(sv && LAYOUTS[sv]) LAYOUT = sv; }catch(e){}
 function layoutCard(el,p){
   if(LAYOUT==='list'){            // short horizontal tiles, just tall enough for the card info
-    el.style.gridRow = 'span 8'; el.style.gridColumn = '';
+    el.style.gridRow = 'span 9'; el.style.gridColumn = '';
     return;
   }
   if(LAYOUT==='grid'){            // a perfect grid: every tile the same square size
@@ -1672,6 +1692,8 @@ function showGallery(card,p,m){
 $('grid').addEventListener('click',e=>{
   const ib = e.target.closest('button.ibtn');
   if(ib){ const c = ib.closest('.card'), on = !c.classList.contains('info-open'); c.classList.toggle('info-open', on); ib.setAttribute('aria-pressed', on?'true':'false'); ib.setAttribute('aria-label', on?'Hide info':'Show info'); return; }
+  const mb = e.target.closest('button.morebtn');
+  if(mb){ const c = mb.closest('.card'), on = !c.classList.contains('btns-open'); c.classList.toggle('btns-open', on); mb.setAttribute('aria-expanded', on?'true':'false'); return; }
   const nb = e.target.closest('button.nsfwb');
   if(nb){ const card = nb.closest('.card'); if(card && card._p) toggleNsfw(card._p); return; }
   const sv = e.target.closest('button.save');
@@ -2223,7 +2245,7 @@ $('favonly').addEventListener('change',e=>{ state.fav = e.target.checked; refres
 updateFavCount();
 $('subsel').addEventListener('change',e=>{ state.sub=e.target.value; refresh(); });
 if(matchMedia('(max-width:560px)').matches) $('size').value = $('size').max;
-function paintLayout(){ document.querySelectorAll('#layoutseg .pill').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.l===LAYOUT))); document.body.classList.toggle('layout-grid', LAYOUT==='grid'); document.body.classList.toggle('layout-list', LAYOUT==='list'); const h = $('layouthint'); if(h) h.textContent = LAYOUTS[LAYOUT]; if(window.applyInfoMode) window.applyInfoMode(); }
+function paintLayout(){ document.querySelectorAll('#layoutseg .pill').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.l===LAYOUT))); document.body.classList.toggle('layout-grid', LAYOUT==='grid'); document.body.classList.toggle('layout-list', LAYOUT==='list'); const h = $('layouthint'); if(h) h.textContent = LAYOUTS[LAYOUT]; if(window.applyInfoMode) window.applyInfoMode(); document.querySelectorAll('.card.btns-open').forEach(c=>{ c.classList.remove('btns-open'); const b = c.querySelector('.morebtn'); if(b) b.setAttribute('aria-expanded','false'); }); }
 document.querySelectorAll('#layoutseg .pill').forEach(b=>b.addEventListener('click',()=>{
   LAYOUT = b.dataset.l; try{ localStorage.setItem('saved-posts-layout', LAYOUT); }catch(e){}
   paintLayout(); relayoutAll();
