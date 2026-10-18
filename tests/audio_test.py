@@ -5,6 +5,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.abspath(os.pat
 AUD = open(os.path.join(HERE, 'fixtures', 'clip_audio.webm'), 'rb').read(); SIL = open(os.path.join(HERE, 'fixtures', 'clip_silent.webm'), 'rb').read()
 bad = []
 FAIL_API = False
+BATCH = []
 def check(n, ok):
     print(('PASS ' if ok else 'FAIL ') + n)
     if not ok: bad.append(n)
@@ -21,6 +22,10 @@ def handle(r):
     if u.startswith('http://127.0.0.1'): return r.continue_()
     if 'api.redgifs.com/v2/auth/temporary' in u: return r.fulfill(status=200, content_type='application/json', headers={'access-control-allow-origin': '*'}, body='{"token":"t"}')
     if FAIL_API and 'api.redgifs.com' in u: return r.abort()
+    if 'api.redgifs.com/v2/gifs?ids=' in u:
+        BATCH.append(u); ids = u.split('ids=')[1].split(',')
+        gifs = [{'id': i, 'hasAudio': i == 'loudone', 'width': 160, 'height': 90, 'urls': {'sd': 'https://media.redgifs.com/%s-mobile.mp4' % i, 'hd': 'https://media.redgifs.com/%s.mp4' % i}} for i in ids]
+        return r.fulfill(status=200, content_type='application/json', headers={'access-control-allow-origin': '*'}, body=json.dumps({'gifs': gifs}))
     if 'api.redgifs.com/v2/gifs/' in u:
         slug = u.rsplit('/', 1)[1]; ha = slug == 'loudone'
         body = json.dumps({'gif': {'hasAudio': ha, 'width': 160, 'height': 90, 'urls': {'sd': 'https://media.redgifs.com/%s-mobile.mp4' % slug, 'hd': 'https://media.redgifs.com/%s.mp4' % slug, 'poster': ''}}})
@@ -33,7 +38,8 @@ with sync_playwright() as p:
     pg.route('**/*', handle)
     pg.goto('http://127.0.0.1:%d/index.html' % port); pg.wait_for_timeout(1000); ev = pg.evaluate
     ev(seed('loud11', 'loudone', True)); ev(seed('quiet2', 'quietone', False)); ev('startCsvMode()'); pg.wait_for_timeout(500)
-    ev("rgRun(POSTS.find(p=>p.id==='loud11'))"); ev("rgRun(POSTS.find(p=>p.id==='quiet2'))"); pg.wait_for_timeout(1500)
+    pg.wait_for_timeout(2500)
+    check('both clips were looked up in a single request', len(BATCH)==1 and 'loudone' in BATCH[0] and 'quietone' in BATCH[0])
     m = ev("({v:META.loud11.v, ha:META.loud11.ha, q:META.quiet2.ha, qv:META.quiet2.v, done:META.loud11.rgDone})")
     check('loud clip now uses the full RedGifs file with sound', m['v'] == 'https://media.redgifs.com/loudone.mp4' and m['ha'] == 1 and m['done'] == 1)
     check('silent clip is marked as having no sound', m['q'] == 0)
