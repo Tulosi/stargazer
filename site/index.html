@@ -2238,7 +2238,7 @@ function slim(d,rec){
   const useLink = s.is_self || s.domain==='v.redd.it' || type==='removed' || !/^https?:/.test(u);
   const oe = (s.media && s.media.oembed) || (s.secure_media && s.secure_media.oembed) || null;
   const oth = oe && /^https?:/.test(oe.thumbnail_url||'') ? oe.thumbnail_url.replace(/&amp;/g,'&') : '';
-  const gm = /media\.redgifs\.com\/([A-Za-z0-9]+)-/.exec(oth);
+  const gm = /(?:media|thumbs\d*)\.redgifs\.com\/([A-Za-z0-9]+)-/.exec(oth) || /(?:media|thumbs\d*)\.redgifs\.com\/([A-Za-z0-9]+)-/.exec((oe && oe.html) || '');   // the clip's real file name (its capitals matter) shows in the embed's thumbnail address
   /* Reddit serves video and audio as separate files; both live next to each other. */
   const rv = (s.media && s.media.reddit_video) || (s.secure_media && s.secure_media.reddit_video);
   const vm = /v\.redd\.it\/([A-Za-z0-9]+)/i.exec(u);
