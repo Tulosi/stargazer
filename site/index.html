@@ -274,13 +274,13 @@ body.unblur .reveal{display:none!important}
 .card:not(:has(.fs)) .save{right:44px}
 .card:not(:has(.fs)) .nsfwb{right:80px}
 .nsfwb[hidden]{display:none}
-.nsfwb{background:rgba(12,12,14,.26);color:rgba(255,255,255,.72);box-shadow:none;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
-/* 18+ toggle: off = quiet glass button, shown only while the card is hovered or in focus; on = solid white button that stays visible. Hovering previews the other state (an X for removing the mark). */
-.nsfwb[aria-pressed=false]:hover{background:rgba(255,255,255,.92);color:#111}
-.save.nsfwb[aria-pressed=true]{background:rgba(255,255,255,.92);-webkit-backdrop-filter:none;backdrop-filter:none;color:#111;box-shadow:none}
-.save.nsfwb[aria-pressed=true]:hover{background:rgba(255,255,255,.78);color:#111}
+.nsfwb{background:rgba(12,12,14,.26);color:rgba(255,255,255,.36);box-shadow:none;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+/* 18+ toggle: off = glass button with faint text, shown only while the card is hovered or in focus; on = glass button with full white text and a white ring, always visible. Hovering previews the other state (an X for removing the mark). */
+.nsfwb[aria-pressed=false]:hover{background:rgba(12,12,14,.26);color:#fff;box-shadow:inset 0 0 0 1.5px #fff}
+.save.nsfwb[aria-pressed=true]{background:rgba(12,12,14,.26);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#fff;box-shadow:inset 0 0 0 1.5px #fff}
+.save.nsfwb[aria-pressed=true]:hover{background:rgba(12,12,14,.5);color:#fff}
 .nsfwb[aria-pressed=true]:hover svg{opacity:0}
-.nsfwb[aria-pressed=true]:hover::after{content:"";position:absolute;inset:0;margin:auto;width:14px;height:14px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23111' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M3.5 3.5l9 9M12.5 3.5l-9 9'/%3E%3C/svg%3E") center/contain no-repeat}
+.nsfwb[aria-pressed=true]:hover::after{content:"";position:absolute;inset:0;margin:auto;width:14px;height:14px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M3.5 3.5l9 9M12.5 3.5l-9 9'/%3E%3C/svg%3E") center/contain no-repeat}
 body .card .nsfwb[aria-pressed=false]{opacity:0!important;pointer-events:none!important}
 body .card:hover .nsfwb[aria-pressed=false],body .card:focus-within .nsfwb[aria-pressed=false],body .card.is-focus .nsfwb[aria-pressed=false],body .card.info-open .nsfwb[aria-pressed=false],body .card.btns-open .nsfwb[aria-pressed=false]{opacity:1!important;pointer-events:auto!important}
 body .card .nsfwb[aria-pressed=true]{opacity:1!important;pointer-events:auto!important}
