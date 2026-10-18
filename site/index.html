@@ -54,7 +54,7 @@ a{color:inherit}
 button,select,input{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .card :focus-visible{outline-color:#fff;outline-offset:-3px}
-.wrap{max-width:1760px;margin:0 auto;padding-inline:max(14px,env(safe-area-inset-left,0px)) max(14px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1760px;margin:0 auto;padding-top:12px;padding-inline:max(14px,env(safe-area-inset-left,0px)) max(14px,env(safe-area-inset-right,0px))}
 
 /* ---- top bar ---- */
 .deck{position:sticky;top:0;z-index:30;background:var(--glass);-webkit-backdrop-filter:saturate(1.4) blur(16px);backdrop-filter:saturate(1.4) blur(16px);border-bottom:1px solid var(--line)}
@@ -75,6 +75,13 @@ button,select,input{font:inherit;color:inherit}
 #barcount{margin-left:auto;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .pill{height:36px;padding:0 15px;border:0;border-radius:999px;background:var(--surface-2);font-weight:500;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
 .pill:hover{background:var(--line)}
+.pill.primary{background:var(--ink);color:var(--bg)}
+.pill.primary:hover{background:var(--ink);opacity:.86}
+.pill.warnbtn{background:var(--alert-bg);color:var(--alert-ink)}
+.pill.warnbtn:hover{background:var(--alert-line)}
+.actgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.actgrid .pill{justify-content:center}
+.actgrid .wide{grid-column:1/-1}
 #decktoggle[aria-expanded="true"]{background:var(--ink);color:var(--bg)}
 #decktoggle[data-active="1"]::after{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 @media (max-width:720px){#barcount{display:none}#srctoggle{margin-left:auto}.brand .logo{height:34px}}
@@ -124,7 +131,8 @@ input[type=range]{width:100%;accent-color:var(--ink);margin:0}
 .clear{border:0;background:none;color:var(--ink);font-weight:500;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:2px 0 2px 8px}
 
 /* ---- status line ---- */
-.status{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:14px 0 8px;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.status:has(#loadText:empty):has(#recText:empty):has(#summary:empty){display:none}
+.status{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:2px 0 10px;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
 .load{display:flex;flex-wrap:wrap;gap:2px 14px;min-width:0}
 .load .err{color:var(--warn)}
 .load button{margin-left:8px;border:0;background:var(--surface-2);border-radius:999px;padding:3px 11px;cursor:pointer;font-size:12px}
@@ -136,8 +144,9 @@ input[type=range]{width:100%;accent-color:var(--ink);margin:0}
 /* ---- bento grid ---- */
 .card{container-type:inline-size}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(var(--card),100%),1fr));grid-auto-rows:4px;grid-auto-flow:row dense;gap:6px}
-.card{position:relative;border-radius:10px;overflow:hidden;background:var(--surface-2);min-width:0;grid-row:span 40}
-.thumb{position:absolute;inset:0;display:block;overflow:hidden;background:var(--surface-2);text-decoration:none}
+.card{position:relative;border-radius:10px;overflow:hidden;background:var(--bg);min-width:0;grid-row:span 40}
+.thumb{position:absolute;inset:0;display:block;overflow:hidden;background:none;text-decoration:none}
+.thumb img:not([src]){visibility:hidden}   /* an <img> still waiting for its address draws a hairline border in some browsers */
 .thumb img,.thumb .still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:filter .18s,transform .18s,opacity .2s}
 .thumb .still{opacity:0}
 .thumb .still.ready{opacity:1}
@@ -192,8 +201,8 @@ body.unblur .reveal{display:none!important}
 .meta{display:flex;flex-wrap:wrap;gap:1px 10px;align-items:baseline;font:400 11.5px/1.35 var(--font);font-variant-numeric:tabular-nums;color:rgba(255,255,255,.72);margin-top:4px}
 .meta .sub{border:0;background:none;padding:0;cursor:pointer;color:#fff;font:500 11.5px var(--font)}
 .meta .sub:hover{text-decoration:underline;text-underline-offset:2px}
-.meta .note{color:#ffd37a}
-.meta .note.dead{color:#ff9b93}
+.meta .note{color:rgba(255,255,255,.72)}
+.meta .note.dead{color:rgba(255,255,255,.72);text-decoration:line-through;text-decoration-thickness:1px}
 .actions,.arch{display:none}
 .card:hover .actions,.card:focus-within .actions,.card:hover .arch,.card:focus-within .arch{display:flex}
 @media (hover:none){.actions,.arch{display:flex}}
@@ -278,12 +287,13 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
 #confirm p{margin:8px 0;color:var(--muted);font-size:13.5px}
 #confirm .danger{background:#c62828;color:#fff}
 #confirm .danger:hover{background:#a81f1f}
-.srcseg{display:flex;gap:6px}
+.srcseg{display:flex;gap:2px;padding:3px;border-radius:999px;background:var(--surface-2)}
+.srcseg .pill{flex:1 1 auto;justify-content:center;height:30px;padding:0 10px;background:transparent}
+.srcseg .pill:hover{background:var(--line)}
 .srcseg .pill[aria-pressed=true]{background:var(--ink);color:var(--bg)}
 .nsfwgrp{display:grid;gap:6px;margin-bottom:6px}
 .nsfwlbl{font-size:13px;color:var(--muted)}
-.nsfwseg{flex-wrap:wrap}
-.nsfwseg .pill{height:32px;padding:0 12px}
+.nsfwseg .pill{padding:0 8px;font-size:12.5px}
 .subform{display:grid;gap:8px}
 .subform input{height:36px;border:0;border-radius:10px;background:var(--surface-2);padding:0 12px;min-width:0;width:100%}
 .prefixed{display:flex;align-items:center;height:36px;border-radius:10px;background:var(--surface-2);padding-left:12px;color:var(--muted);font-size:13px;white-space:nowrap}
@@ -309,6 +319,12 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
 .empty{padding:90px 0;text-align:center;color:var(--muted);grid-column:1/-1;grid-row:span 12}
 #sentinel{height:1px}
 @media (max-width:560px){:root{--card:360px}}   /* phones: the largest tile size, one column */
+@media (pointer:coarse){
+  .pill{height:42px}
+  .srcseg .pill,.nsfwseg .pill{height:36px}
+  .star,.fs,.save{width:36px;height:36px}
+  .fs{right:50px}.save{right:92px}.nsfwb{right:134px}.badge.tag{right:134px}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
 #pausebar{position:fixed;left:50%;bottom:64px;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:10px;padding:9px 10px 9px 14px;border-radius:999px;background:var(--panel,#1c1c1f);color:var(--text,#eee);border:1px solid var(--line,rgba(128,128,128,.35));box-shadow:0 6px 24px rgba(0,0,0,.35);font-size:13px;max-width:calc(100vw - 24px)}
@@ -421,7 +437,7 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
             <input id="acEmail" class="field" type="email" placeholder="Email" autocomplete="email" aria-label="Email">
             <input id="acPass" class="field" type="password" placeholder="Password (8+ characters)" autocomplete="current-password" aria-label="Password">
             <div class="btnrow">
-              <button class="pill" id="acIn" type="button">Sign in</button>
+              <button class="pill primary" id="acIn" type="button">Sign in</button>
               <button class="pill" id="acUp" type="button">Create account</button>
               <button class="pill" id="acGh" type="button" hidden>Continue with GitHub</button>
               <button class="pill" id="acForgot" type="button">Forgot password</button>
@@ -438,14 +454,14 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
         <div class="grp" id="csvTools">
           <select id="csvSel" class="field" aria-label="CSV file"></select>
           <span class="kindbadge" id="csvKind" data-k="local" role="status"></span>
-          <div class="btnrow">
+          <div class="actgrid">
             <button class="pill" id="csvOpen" type="button" title="Open a CSV and keep it linked for saving">Open CSV</button>
             <button class="pill" id="csvMerge" type="button" title="Add posts from another CSV">Merge CSV</button>
             <button class="pill" id="csvExport" type="button">Export CSV</button>
-            <button class="pill" id="csvCloud" type="button" hidden></button>
-            <button class="pill" id="csvPrune" type="button" title="Delete removed, not-found and broken posts from the CSV">Delete missing/broken</button>
-            <button class="pill" id="csvSync" type="button" title="Re-read the linked file and merge changes made on another device" hidden>Sync now</button>
-            <button class="pill" id="csvReconnect" type="button" hidden>Reconnect file</button>
+            <button class="pill wide" id="csvCloud" type="button" hidden></button>
+            <button class="pill warnbtn wide" id="csvPrune" type="button" title="Delete removed, not-found and broken posts from the CSV">Delete missing/broken</button>
+            <button class="pill wide" id="csvSync" type="button" title="Re-read the linked file and merge changes made on another device" hidden>Sync now</button>
+            <button class="pill wide" id="csvReconnect" type="button" hidden>Reconnect file</button>
           </div>
           <span id="csvStatus"></span>
           <input id="csvfile" type="file" accept=".csv,text/csv,text/plain" hidden>
@@ -2053,7 +2069,7 @@ async function loadAll(){
   const queue = todo.filter(p=>!p.del);
   const total = POSTS.length; let done = total-queue.length;
   const setProgress = (msg,err)=>{ $('loadText').innerHTML = (err?'<span class="err">'+msg+'</span>':msg); $('loadBar').style.width = (done/total*100)+'%'; };
-  setProgress(done===total ? 'Previews loaded ('+total.toLocaleString()+')' : 'Loading previews '+done.toLocaleString()+' / '+total.toLocaleString());
+  setProgress(done===total ? '' : 'Loading previews '+done.toLocaleString()+' / '+total.toLocaleString());
   if(done===total){ loading = false; metaReady(); await recoverAll(); return; }
   let chunkFails = 0, skipped = 0;
   for(let k=0;k<queue.length;k+=100){
@@ -2092,7 +2108,7 @@ async function loadAll(){
     onMeta(chunk);
     await sleep(500);
   }
-  setProgress('Previews loaded ('+(total-missing).toLocaleString()+' of '+total.toLocaleString()+')'+(missing?'. '+missing+' not in the archives yet, showing titles only.':''));
+  setProgress(missing ? 'Previews loaded ('+(total-missing).toLocaleString()+' of '+total.toLocaleString()+'). '+missing+' not in the archives yet, showing titles only.' : '');
   loading = false;
   metaReady();
   await recoverAll();
