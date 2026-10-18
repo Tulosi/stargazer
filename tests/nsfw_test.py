@@ -14,7 +14,7 @@ with sync_playwright() as p:
     b = p.chromium.launch(); pg = b.new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
     pg.route('**/*', lambda r: r.continue_() if r.request.url.startswith('file:') else r.abort())
     pg.goto(PAGE); pg.wait_for_timeout(1200); ev = pg.evaluate
-    pg.click('#decktoggle'); ev(SEED); pg.click('#nsfwseg [data-m=blur]'); pg.wait_for_timeout(500)
+    pg.click('#decktoggle'); check('Show text posts is off by default', ev("document.getElementById('showtext').checked")==False and ev('state.showText')==False); pg.evaluate("document.getElementById('showtext').click()"); ev(SEED); pg.click('#nsfwseg [data-m=blur]'); pg.wait_for_timeout(500)
     btn = lambda i: 'Not NSFW' if ev("document.querySelector('article.card[data-id=\"%s\"] .nsfwb').getAttribute('aria-pressed')" % i) == 'true' else 'Mark NSFW'
     click = lambda i: (pg.dispatch_event('article.card[data-id="%s"] .nsfwb' % i, 'click'), pg.wait_for_timeout(500))
     perma = lambda i: ev("ROWS.find(r=>r.id==='%s').perma" % i)
@@ -47,6 +47,11 @@ with sync_playwright() as p:
     pg.click('#nsfwseg [data-m=only]'); pg.wait_for_timeout(400)
     check('Only: just NSFW', sum(1 for i in ('aaaa11','bbbb22') if has(i))==1 and unb())
     pg.click('#nsfwseg [data-m=hide]'); pg.wait_for_timeout(300)
+    # text posts follow the toggle
+    ev("(()=>{ ROWS.push({id:'tttt33',perma:'https://www.reddit.com/r/pics/comments/tttt33/hello/',starred:false,t:5}); ROWSET.add('tttt33'); META['tttt33']={t:'Just words',o:0,th:'',m:'text',u:'',n:0,s:0,a:'',c:1700000000}; startCsvMode(); })()"); pg.wait_for_timeout(400)
+    check('text post shown when toggle on', has('tttt33'))
+    pg.evaluate("document.getElementById('showtext').click()"); pg.wait_for_timeout(400)
+    check('text post hidden when toggle off', not has('tttt33'))
     check('no page errors', not errs)
     b.close()
 raise SystemExit(1 if bad else 0)

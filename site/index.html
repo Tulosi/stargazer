@@ -391,6 +391,7 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
             <button class="pill" type="button" data-m="only" aria-pressed="false">Only</button>
           </div>
         </div>
+        <label class="toggle" for="showtext" title="Posts that are only text, with no image or video">Show text posts<input id="showtext" type="checkbox"></label>
         <label class="toggle" for="favonly">Starred only <span id="favcount"></span><input id="favonly" type="checkbox"></label>
         <label class="toggle" for="hidebroken" title="Hides posts with no working thumbnail or media, including ones with nothing to display">Hide broken media <span id="deadcount"></span><input id="hidebroken" type="checkbox"></label>
         <label class="toggle" for="autoplay">Auto-play in view<input id="autoplay" type="checkbox"></label>
@@ -492,7 +493,7 @@ const SOURCES = [
 ];
 
 const META = {};
-const state = {q:'', cats:new Set(), kinds:new Set(), media:new Set(), nsfw:'hide', sub:'', sort:'saved', fav:false, hideBroken:true, range:'all', seed:String(Date.now())};
+const state = {q:'', cats:new Set(), kinds:new Set(), media:new Set(), nsfw:'hide', sub:'', sort:'saved', fav:false, hideBroken:true, showText:false, range:'all', seed:String(Date.now())};
 const PAGE = 120;
 let shown = 0, list = [];
 const cardEls = new Map();
@@ -561,6 +562,7 @@ function matches(p, skip){
   if(state.fav && !FAVS.has(p.id)) return false;
   if(state.range!=='all' && !(MODE==='sub' && FEED.live===true && state.sort==='hot')){ const c = (metaOf(p)||{}).c; if(!c || c < Date.now()/1000 - RANGE_S[state.range]) return false; }
   if(state.hideBroken && isUnavailable(p)) return false;
+  if(!state.showText && skip!=='kind' && !state.kinds.has('text') && kindOf(p)==='text') return false;   // text posts are off unless switched on (or picked as a type)
   const n = isNsfw(p);
   if(state.nsfw==='hide' && n) return false;   // 'blur' and 'show' keep NSFW posts in the list
   if(state.nsfw==='only' && !n) return false;
@@ -1445,7 +1447,7 @@ function updateSummary(){
   $('barcount').textContent = list.length.toLocaleString()+' of '+POSTS.length.toLocaleString();
   $('decktoggle').dataset.active = active ? '1' : '0';
   $('summary').innerHTML = active ? list.length.toLocaleString()+' of '+POSTS.length.toLocaleString()+' posts <button class="clear" id="clr" type="button">Clear filters</button>' : '';
-  const c = $('clr'); if(c) c.onclick = ()=>{ state.cats.clear(); state.kinds.clear(); state.media.clear(); state.sub=''; state.q=''; state.fav=false; $('favonly').checked=false; if(state.range!=='all'){ setRange('all'); return; } $('q').value=''; window.markSearchBtn&&markSearchBtn(); $('subsel').value=''; setNsfw('hide'); };
+  const c = $('clr'); if(c) c.onclick = ()=>{ state.cats.clear(); state.kinds.clear(); state.media.clear(); state.sub=''; state.q=''; state.fav=false; $('favonly').checked=false; state.showText=false; $('showtext').checked=false; if(state.range!=='all'){ setRange('all'); return; } $('q').value=''; window.markSearchBtn&&markSearchBtn(); $('subsel').value=''; setNsfw('hide'); };
 }
 
 /* ---------- hover and auto-play ---------- */
@@ -1756,6 +1758,7 @@ function setNsfw(m){
   document.body.classList.toggle('unblur', m==='show'||m==='only');   // Uncensored and Only show NSFW tiles without the blur
   refresh();
 }
+$('showtext').addEventListener('change',e=>{ state.showText = e.target.checked; refresh(); });
 $('nsfwseg').addEventListener('click',e=>{ const b = e.target.closest('.pill'); if(b && b.dataset.m!==state.nsfw) setNsfw(b.dataset.m); });
 (function(){
   const fb = $('decktoggle'), sb = $('srctoggle'), body = document.body;
@@ -2149,7 +2152,7 @@ async function recoverInner(gen){
 
 function onMeta(chunk){
   updateDeadCount();
-  const dependsOnMeta = state.media.size || state.kinds.size || state.nsfw!=='hide' || state.q || state.sort!=='saved' || state.hideBroken || state.range!=='all';
+  const dependsOnMeta = state.media.size || state.kinds.size || state.nsfw!=='hide' || !state.showText || state.q || state.sort!=='saved' || state.hideBroken || state.range!=='all';
   if(dependsOnMeta){ refresh(); return; }
   for(const p of chunk){ const el = cardEls.get(p.id); if(el) fillCard(el,p); }
   updateChips();
