@@ -1137,7 +1137,11 @@ async function rgPump(){
   if(rgRunning) return; rgRunning = true;
   try{
     while(rgQueue.length){
-      if(rgBlockedUntil > Date.now()) await new Promise(r=>setTimeout(r, rgBlockedUntil - Date.now()));
+      if(rgBlockedUntil > Date.now()){
+        // paused after a refusal: give the waiting clips the file named in Reddit's embed data now, rather than after the pause
+        for(const p of rgQueue){ const res = RGC[rgSlug(p)] || rgGuess(metaOf(p) || {}); if(res && !(metaOf(p)||{}).rgDone) rgApply(p,res); }
+        await new Promise(r=>setTimeout(r, rgBlockedUntil - Date.now()));
+      }
       const batch = rgQueue.splice(0,25);
       const need = [...new Set(batch.map(rgSlug).filter(sl=>sl && !RGC[sl]))];
       let failed = false;
@@ -1164,7 +1168,10 @@ const rgIO = new IntersectionObserver(es=>{
   for(const e of es){
     if(!e.isIntersecting) continue;
     const el = e.target, p = el._p; rgIO.unobserve(el);
-    if(p && rgNeeds(p) && !rgBusy.has(p.id)){ rgBusy.add(p.id); rgQueue.push(p); }
+    if(p && rgNeeds(p) && !rgBusy.has(p.id)){
+      rgBusy.add(p.id); rgQueue.push(p);
+      if(rgBlockedUntil > Date.now()){ const res = RGC[rgSlug(p)] || rgGuess(metaOf(p) || {}); if(res) rgApply(p,res); }   // lookups are paused: use the embed's file name meanwhile
+    }
   }
   rgPump();
 },{rootMargin:'400px'});
