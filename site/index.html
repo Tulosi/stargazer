@@ -280,6 +280,10 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
 #confirm .danger:hover{background:#a81f1f}
 .srcseg{display:flex;gap:6px}
 .srcseg .pill[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.nsfwgrp{display:grid;gap:6px;margin-bottom:6px}
+.nsfwlbl{font-size:13px;color:var(--muted)}
+.nsfwseg{flex-wrap:wrap}
+.nsfwseg .pill{height:32px;padding:0 12px}
 .subform{display:grid;gap:8px}
 .subform input{height:36px;border:0;border-radius:10px;background:var(--surface-2);padding:0 12px;min-width:0;width:100%}
 .prefixed{display:flex;align-items:center;height:36px;border-radius:10px;background:var(--surface-2);padding-left:12px;color:var(--muted);font-size:13px;white-space:nowrap}
@@ -379,18 +383,17 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
 
       <div class="pcol">
         <h2>Options</h2>
-        <label class="ctlrow"><span>NSFW</span>
-          <select id="nsfw" class="field" aria-label="NSFW handling">
-            <option value="hide">Hide</option>
-            <option value="blur">Blur until hover</option>
-            <option value="only">Only show</option>
-          </select>
-        </label>
-        <label class="toggle" for="nsfwonly">NSFW only<input id="nsfwonly" type="checkbox"></label>
+        <div class="nsfwgrp" role="group" aria-label="NSFW content"><span class="nsfwlbl">NSFW</span>
+          <div class="srcseg nsfwseg" id="nsfwseg">
+            <button class="pill" type="button" data-m="hide" aria-pressed="true">Hidden</button>
+            <button class="pill" type="button" data-m="blur" aria-pressed="false">Blurred</button>
+            <button class="pill" type="button" data-m="show" aria-pressed="false">Uncensored</button>
+            <button class="pill" type="button" data-m="only" aria-pressed="false">Only</button>
+          </div>
+        </div>
         <label class="toggle" for="favonly">Starred only <span id="favcount"></span><input id="favonly" type="checkbox"></label>
         <label class="toggle" for="hidebroken" title="Hides posts with no working thumbnail or media, including ones with nothing to display">Hide broken media <span id="deadcount"></span><input id="hidebroken" type="checkbox"></label>
         <label class="toggle" for="autoplay">Auto-play in view<input id="autoplay" type="checkbox"></label>
-        <label class="toggle" for="unblur">Unblur all NSFW<input id="unblur" type="checkbox"></label>
       </div>
     </div>
 
@@ -559,7 +562,7 @@ function matches(p, skip){
   if(state.range!=='all' && !(MODE==='sub' && FEED.live===true && state.sort==='hot')){ const c = (metaOf(p)||{}).c; if(!c || c < Date.now()/1000 - RANGE_S[state.range]) return false; }
   if(state.hideBroken && isUnavailable(p)) return false;
   const n = isNsfw(p);
-  if(state.nsfw==='hide' && n) return false;
+  if(state.nsfw==='hide' && n) return false;   // 'blur' and 'show' keep NSFW posts in the list
   if(state.nsfw==='only' && !n) return false;
   if(state.q){
     const m = metaOf(p), hay = (titleOf(p)+' '+p.sub+' '+(m&&m.a||'')).toLowerCase();
@@ -1442,7 +1445,7 @@ function updateSummary(){
   $('barcount').textContent = list.length.toLocaleString()+' of '+POSTS.length.toLocaleString();
   $('decktoggle').dataset.active = active ? '1' : '0';
   $('summary').innerHTML = active ? list.length.toLocaleString()+' of '+POSTS.length.toLocaleString()+' posts <button class="clear" id="clr" type="button">Clear filters</button>' : '';
-  const c = $('clr'); if(c) c.onclick = ()=>{ state.cats.clear(); state.kinds.clear(); state.media.clear(); state.sub=''; state.q=''; state.fav=false; $('favonly').checked=false; if(state.range!=='all'){ setRange('all'); return; } state.nsfw='hide'; $('q').value=''; window.markSearchBtn&&markSearchBtn(); $('nsfw').value='hide'; $('nsfwonly').checked=false; prevNsfw='hide'; $('subsel').value=''; refresh(); };
+  const c = $('clr'); if(c) c.onclick = ()=>{ state.cats.clear(); state.kinds.clear(); state.media.clear(); state.sub=''; state.q=''; state.fav=false; $('favonly').checked=false; if(state.range!=='all'){ setRange('all'); return; } $('q').value=''; window.markSearchBtn&&markSearchBtn(); $('subsel').value=''; setNsfw('hide'); };
 }
 
 /* ---------- hover and auto-play ---------- */
@@ -1747,19 +1750,13 @@ $('shufflebtn').addEventListener('click',()=>{
   syncSortUI(); refresh(); window.scrollTo({top:0});
 });
 $('reshuffle').addEventListener('click',()=>{ state.seed = String(Date.now()+Math.random()); refresh(); window.scrollTo({top:0}); });
-let prevNsfw = 'hide';
-$('nsfw').addEventListener('change',e=>{ state.nsfw=e.target.value; $('nsfwonly').checked = state.nsfw==='only'; if(state.nsfw!=='only') prevNsfw = state.nsfw; refresh(); });
-$('nsfwonly').addEventListener('change',e=>{
-  state.nsfw = e.target.checked ? 'only' : prevNsfw;
-  $('nsfw').value = state.nsfw; refresh();
-});
-(function(){
-  const box = $('unblur'), KEY = 'saved-posts-unblur';
-  const apply = on => { document.body.classList.toggle('unblur', on); box.checked = on; };
-  let on = false; try{ on = localStorage.getItem(KEY)==='1'; }catch(e){}
-  apply(on);
-  box.addEventListener('change',()=>{ apply(box.checked); try{ localStorage.setItem(KEY, box.checked?'1':'0'); }catch(e){} });
-})();
+function setNsfw(m){
+  state.nsfw = m;
+  document.querySelectorAll('#nsfwseg .pill').forEach(x=>x.setAttribute('aria-pressed', x.dataset.m===m ? 'true' : 'false'));
+  document.body.classList.toggle('unblur', m==='show'||m==='only');   // Uncensored and Only show NSFW tiles without the blur
+  refresh();
+}
+$('nsfwseg').addEventListener('click',e=>{ const b = e.target.closest('.pill'); if(b && b.dataset.m!==state.nsfw) setNsfw(b.dataset.m); });
 (function(){
   const fb = $('decktoggle'), sb = $('srctoggle'), body = document.body;
   /* Two floating panels share the bar: Filters (what is shown) and Source (which list, sign-in, sync). Opening one closes the other. */
