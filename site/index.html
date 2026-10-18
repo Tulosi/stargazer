@@ -86,6 +86,7 @@ button,select,input{font:inherit;color:inherit}
 .actgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .actgrid .pill{justify-content:center}
 .actgrid .wide{grid-column:1/-1}
+.actgrid .pill:disabled{opacity:.45;cursor:default}
 #decktoggle[aria-expanded="true"]{background:var(--sel);color:var(--sel-ink)}
 #decktoggle[data-active="1"]::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--hot)}
 @media (max-width:720px){#barcount{display:none}#srctoggle{margin-left:auto}.brand .logo{height:34px}}
@@ -306,7 +307,7 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
 .subform #multiAsk{display:grid;gap:8px}
 .subform .hint,#subErr,#csvStatus{font-size:12px;color:var(--muted)}
 #subErr,#csvStatus[data-kind=warn],#acMsg[data-kind=warn]{color:var(--warn)}
-#acMsg,#acWho{font-size:12px;color:var(--muted)}
+#acMsg,#acWho,#acHint{font-size:12px;color:var(--muted)}
 #acct input.field{width:100%}
 .more{display:flex;flex-direction:column;align-items:center;gap:8px;padding:26px 0 8px;color:var(--muted);font-size:12px}
 #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:50;background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font:500 12.5px var(--font);box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw}
@@ -438,6 +439,7 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
             <div class="btnrow"><button class="pill" id="acSetPw" type="button">Set new password</button><button class="pill" id="acSkipPw" type="button">Not now</button></div>
           </div>
           <div class="grp" id="acctOut">
+            <span id="acHint">Optional. Everything works without an account; you need one only to sync your lists automatically across devices.</span>
             <input id="acEmail" class="field" type="email" placeholder="Email" autocomplete="email" aria-label="Email">
             <input id="acPass" class="field" type="password" placeholder="Password (8+ characters)" autocomplete="current-password" aria-label="Password">
             <div class="btnrow">
@@ -463,6 +465,7 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
             <button class="pill" id="csvMerge" type="button" title="Add posts from another CSV">Merge CSV</button>
             <button class="pill" id="csvExport" type="button">Export CSV</button>
             <button class="pill wide" id="csvCloud" type="button" hidden></button>
+            <button class="pill wide" id="csvUnload" type="button" title="Remove this list from this browser. A linked file and your account copy are left untouched.">Unload CSV</button>
             <button class="pill warnbtn wide" id="csvPrune" type="button" title="Delete removed, not-found and broken posts from the CSV">Delete missing/broken</button>
             <button class="pill wide" id="csvSync" type="button" title="Re-read the linked file and merge changes made on another device" hidden>Sync now</button>
             <button class="pill wide" id="csvReconnect" type="button" hidden>Reconnect file</button>
@@ -2464,6 +2467,7 @@ function csvInfo(){
   cb.hidden = !(CLOUD_ON && SESSION);
   cb.textContent = cloud ? 'Stop syncing' : 'Sync with account';
   cb.title = cloud ? 'Keep this list on this device only. Your account keeps its own copy.' : 'Merge this list into your account and keep it in step across devices';
+  $('csvUnload').disabled = !ROWS.length && !TOMBS.size && !r.handle && !r.cloud && LIB.list.length <= 1;   // nothing to unload: only an empty list is here
   const opts = $('csvSel').options; for(let i=0;i<opts.length;i++){ const x = (LIB.cur && LIB.cur.id===opts[i].value) ? LIB.cur : LIB.list.find(q=>q.id===opts[i].value); if(x) opts[i].textContent = kindLabel(x)+' \u00b7 '+x.name; }
 }
 async function renderLibrary(){
@@ -3166,6 +3170,28 @@ $('csvCloud').addEventListener('click',async()=>{
     if(d!=='ok') return;
     await linkAccount(); csvInfo();
   }
+});
+/* Unload: drop the active list from this browser's library. A linked file on disk and the account's copy are never touched. */
+$('csvUnload').addEventListener('click',async()=>{
+  const rec = LIB.cur; if(!rec) return;
+  const onlyHere = !rec.handle && !isCloudList(rec);
+  const paras = ['"'+rec.name+'" ('+ROWS.length.toLocaleString()+' posts) will be removed from this browser.'];
+  if(rec.handle) paras.push('The linked file on disk is not changed. Use Open CSV to load it again.');
+  if(isCloudList(rec)) paras.push('Your account keeps its copy. Use Sync with account on any list to bring those posts back.');
+  if(onlyHere && (ROWS.length || TOMBS.size)) paras.push('This list is stored only in this browser, so its posts and stars will be gone unless you download a copy first.');
+  const d = await confirmDialog({title:'Unload "'+rec.name+'"?', paras, ok:'Unload',
+    option: onlyHere && (ROWS.length || TOMBS.size) ? 'Download a copy of the CSV first' : ''});
+  if(d!=='ok') return;
+  if(onlyHere && $('cOpt').checked) download(/\.csv$/i.test(rec.name) ? rec.name : rec.name+'.csv', rowsToCsv(ROWS, TOMBS));
+  await commitChain;   // let any pending save or account upload finish first
+  if(LIB.db){ try{ await idbReq('csv','readwrite',s=>s.delete(rec.id)); await idbReq('kv','readwrite',s=>s.delete('last')); }catch(e){} }
+  else { try{ localStorage.removeItem('saved-posts-csv-fallback'); }catch(e){} }
+  LIB.cur = null;
+  const rest = LIB.db ? await libAll() : [];
+  let next = rest.find(r=>r.id!==rec.id) || null;
+  if(!next){ next = {id:'builtin-'+Date.now().toString(36), name:'My saved posts', text:SEED_CSV, handle:null, updated:Date.now()}; await persistRec(next); }
+  await activate(next); startCsvMode();
+  csvStatus('Unloaded "'+rec.name+'". '+(rest.length ? 'Now showing "'+next.name+'".' : 'The list is empty; use Open CSV to load one.'));
 });
 $('csvPrune').addEventListener('click',()=>pruneBroken());
 $('csvSync').addEventListener('click',async()=>{ await autoSync(true); csvStatus('Synced with "'+LIB.cur.name+'".'); });
