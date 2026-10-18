@@ -823,7 +823,7 @@ function markImgFail(p){ if(!anyImgOK) return; IMGFAIL[p.id] = Date.now(); saveI
 function clearImgFail(p){ if(IMGFAIL[p.id]){ delete IMGFAIL[p.id]; saveImgFail(); updateDeadCount(); } }
 
 /* One shared queue: at most 6 image loads at once. A burst of failures looks like rate limiting, so everything pauses for a while and nothing is condemned. */
-const IMGQ = {active:0, max:6, cap:6, q:[], until:0, fails:[], timer:0, next:0, strikes:0, oks:0, tick:0, lastPause:0};
+const IMGQ = {active:0, max:5, cap:5, okT:[], q:[], until:0, fails:[], timer:0, next:0, strikes:0, oks:0, tick:0, lastPause:0};
 const HOSTPAUSE = {};   // host -> time before which that host is tried last (one flaky host shouldn't stall the rest)
 const hostOf = u => { try{ return new URL(u).hostname; }catch(e){ return ''; } };
 function imgSlot(job){ IMGQ.q.push(job); pumpImg(); }
@@ -834,7 +834,7 @@ function pumpImg(){
   if(IMGQ.active >= IMGQ.max || !IMGQ.q.length) return;
   const gap = IMGQ.next - now;
   if(gap > 0){ if(!IMGQ.timer) IMGQ.timer = setTimeout(()=>{ IMGQ.timer = 0; pumpImg(); }, gap); return; }
-  IMGQ.next = now + 120 + Math.random()*180;
+  IMGQ.next = now + 180 + Math.random()*250;
   const job = IMGQ.q.shift(); let freed = false;
   IMGQ.active++;
   job(() => { if(freed) return; freed = true; IMGQ.active--; pumpImg(); });
@@ -842,7 +842,7 @@ function pumpImg(){
 }
 /* A load worked: after enough successes in a row, win back concurrency lost to a pause and ease the back-off. */
 function noteImgOK(){
-  IMGQ.oks++;
+  IMGQ.oks++; IMGQ.okT.push(Date.now()); if(IMGQ.okT.length > 40) IMGQ.okT.shift();
   if(IMGQ.oks >= 25){ IMGQ.oks = 0; if(IMGQ.max < IMGQ.cap) IMGQ.max++; else if(IMGQ.strikes > 0 && Date.now() - IMGQ.lastPause > 120000) IMGQ.strikes--; }
 }
 const fmtS = n => n >= 60 ? Math.floor(n/60)+'m '+String(n%60).padStart(2,'0')+'s' : n+'s';
@@ -866,7 +866,9 @@ function noteImgFail(url){
   const now = Date.now(); IMGQ.fails.push(now); IMGQ.oks = 0;
   const h = url && hostOf(url); if(h) HOSTPAUSE[h] = now + 60000;
   IMGQ.fails = IMGQ.fails.filter(t=>now-t < 10000);
-  if(IMGQ.fails.length >= 10 && IMGQ.until < now){
+  /* A run of dead pictures is not a server pushing back: only pause when almost nothing is loading successfully at the same time. */
+  const okNow = IMGQ.okT.filter(t=>now-t < 10000).length;
+  if(IMGQ.fails.length >= 10 && okNow < IMGQ.fails.length/3 && IMGQ.until < now){
     IMGQ.fails = []; IMGQ.strikes = Math.min(IMGQ.strikes+1, 4);
     pauseImages(Math.min(45 * Math.pow(2, IMGQ.strikes-1), 360));   // 45s, 90s, 3m, 6m on repeated pushback
   }
@@ -906,7 +908,8 @@ function loadFirst(cands, stagger, cb){
     if(done || i!==started || i>=cands.length) return;
     started++;
     const im = new Image(); im.referrerPolicy = 'no-referrer'; probes.push(im);
-    const bad = () => { failed++; noteImgFail(cands[i]); if(failed>=cands.length) finish(null,null,'failed'); else start(started); };
+    const bad = () => { failed++; if(failed===1) noteImgFail(cands[i]); else { const h = hostOf(cands[i]); if(h) HOSTPAUSE[h] = Date.now() + 60000; }   // one failure per picture, however many addresses it tries
+      if(failed>=cands.length) finish(null,null,'failed'); else start(started); };
     im.onload = () => { if(isGonePic(im)) bad(); else finish(cands[i], im); };
     im.onerror = bad;
     im.src = cands[i];
@@ -917,7 +920,7 @@ function loadFirst(cands, stagger, cb){
   timers.push(setTimeout(()=>finish(null,null,'slow'), 60000));
 }
 const isArchiveUrl = u => /^https?:\/\/web\.archive\.org\//.test(u);
-const imgIO = new IntersectionObserver(es=>{ for(const e of es){ if(e.isIntersecting){ imgIO.unobserve(e.target); startImg(e.target); } } },{rootMargin:'600px 0px'});
+const imgIO = new IntersectionObserver(es=>{ for(const e of es){ if(e.isIntersecting){ imgIO.unobserve(e.target); startImg(e.target); } } },{rootMargin:'400px 0px'});
 function startImg(img, attempt){
   const p = img._p, el = img._el, all = img._cands || [];
   if(img.tagName==='VIDEO'){ imgSlot(done=>startStill(img, done)); return; }
