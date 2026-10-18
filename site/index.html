@@ -82,17 +82,18 @@ button,select,input{font:inherit;color:inherit}
 /* ---- filter panel: floats over the grid, closed by default ---- */
 .panel{position:absolute;right:max(14px,env(safe-area-inset-right,0px));left:max(14px,env(safe-area-inset-left,0px));top:calc(100% + 8px);max-width:980px;margin-left:auto;
   background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:22px;
-  display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:28px;max-height:calc(100dvh - 84px);overflow:auto;overscroll-behavior:contain;animation:panelIn .14s ease-out}
+  display:grid;grid-template-columns:1fr 1fr;gap:28px;max-height:calc(100dvh - 84px);overflow:auto;overscroll-behavior:contain;animation:panelIn .14s ease-out}
 @keyframes panelIn{from{opacity:0;transform:translateY(-6px)}}
 body.deck-collapsed #panel,body.src-collapsed #srcpanel{display:none}
 #srcpanel{grid-template-columns:1fr;max-width:460px;gap:12px}
-@media (max-width:880px){.panel{grid-template-columns:1fr;gap:22px;padding:18px}}
+@media (max-width:720px){.panel{grid-template-columns:1fr;gap:22px;padding:18px}}
 .pcol{display:grid;gap:12px;align-content:start;min-width:0}
 .pcol[hidden]{display:none}
 .kindbadge{display:inline-flex;align-items:center;gap:6px;width:fit-content;max-width:100%;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
 .kindbadge[data-k=account]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .kindbadge svg{flex:none}
-@media (min-width:881px){#panel:has(#browseCol[hidden]){grid-template-columns:1fr 1fr;max-width:640px}}
+#panel{max-width:640px}
+#browseCol{grid-column:1/-1;border-top:1px solid var(--line);padding-top:18px}
 .pcol h2{margin:0 0 2px;font-size:12px;font-weight:600;color:var(--muted)}
 .grp{display:grid;gap:7px}
 .linkbtn{border:0;background:none;color:inherit;font:inherit;text-decoration:underline;cursor:pointer;padding:0 0 0 8px;opacity:.8}
@@ -341,13 +342,6 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
     </div>
 
     <div class="panel" id="panel" role="region" aria-label="Filters">
-      <div class="pcol" id="browseCol" hidden>
-        <h2>Browse</h2>
-        <div class="grp"><span class="lbl">Content</span><div class="chips" id="catChips"></div></div>
-        <div class="grp"><span class="lbl">Kind</span><div class="chips" id="kindChips"></div></div>
-        <div class="grp"><span class="lbl">Status</span><div class="chips" id="mediaChips"></div></div>
-      </div>
-
       <div class="pcol">
         <h2>View</h2>
         <label class="ctlrow"><span>Sort</span>
@@ -403,6 +397,13 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
         <label class="toggle" for="favonly">Starred only <span id="favcount"></span><input id="favonly" type="checkbox"></label>
         <label class="toggle" for="hidebroken" title="Hides posts with no working thumbnail or media, including ones with nothing to display">Hide broken media <span id="deadcount"></span><input id="hidebroken" type="checkbox"></label>
         <label class="toggle" for="autoplay">Auto-play in view<input id="autoplay" type="checkbox"></label>
+      </div>
+
+      <div class="pcol" id="browseCol" hidden>
+        <h2>Browse</h2>
+        <div class="grp"><span class="lbl">Content</span><div class="chips" id="catChips"></div></div>
+        <div class="grp"><span class="lbl">Kind</span><div class="chips" id="kindChips"></div></div>
+        <div class="grp"><span class="lbl">Status</span><div class="chips" id="mediaChips"></div></div>
       </div>
     </div>
 
