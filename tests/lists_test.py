@@ -19,7 +19,7 @@ with sync_playwright() as p:
     pg.route('**/*', route); ev = pg.evaluate
     pg.goto(PAGE); pg.wait_for_timeout(1200); pg.click('#srctoggle')
     top = lambda sel: ev("document.querySelector('%s').getBoundingClientRect().top" % sel)
-    check('login block is above the Source switch and the list tools', top('#acct') < top('#srcCsv') < top('#csvTools'))
+    check('Source switch and list tools come first; the optional Account block follows', top('#srcCsv') < top('#csvTools') < top('#acct'))
     check('Account heading present', ev("document.querySelector('#acct h2').textContent") == 'Account')
     check('signed out: list is Local, no sync button', ev("$('csvKind').dataset.k") == 'local' and 'Local list' in ev("$('csvKind').textContent") and not pg.is_visible('#csvCloud'))
     check('selector labels the list as Local', ev("$('csvSel').options[0].textContent").startswith('Local'))

@@ -15,7 +15,9 @@ with sync_playwright() as p:
     pg.route('**/*', lambda r: r.continue_() if r.request.url.startswith('file:') else r.abort())
     pg.goto(PAGE); pg.wait_for_timeout(1000); ev = pg.evaluate
     pg.click('#srctoggle')
+    pg.evaluate("document.getElementById('acct').open=true")
     check('signed out: account is marked optional and needed only for sync', pg.is_visible('#acHint') and 'Optional' in pg.inner_text('#acHint') and 'sync' in pg.inner_text('#acHint'))
+    pg.evaluate("document.getElementById('csvMore').open=true")
     check('empty starting list: Unload is disabled', ev("$('csvUnload').disabled"))
     ev("""async([a,b])=>{
       await idbReq('csv','readwrite',s=>s.delete('builtin'));   // start from just the two test lists
@@ -23,18 +25,18 @@ with sync_playwright() as p:
       await activate(await idbReq('csv','readonly',s=>s.get('csv-b'))); startCsvMode();
     }""", [A, B]); pg.wait_for_timeout(300)
     check('list with posts: Unload is enabled', not ev("$('csvUnload').disabled") and ev("LIB.cur.name") == 'b.csv')
-    pg.click('#csvUnload'); pg.wait_for_timeout(200)
+    (pg.evaluate("document.getElementById('csvMore').open=true"), pg.click('#csvUnload')); pg.wait_for_timeout(200)
     check('confirm warns a browser-only list will be lost and offers a download', 'only in this browser' in pg.inner_text('#cBody') and pg.is_visible('#cOptWrap'))
     pg.click('button[value=cancel]'); pg.wait_for_timeout(200)
     check('cancel keeps the list', ev("LIB.cur.name") == 'b.csv' and ev("ROWS.length") == 1)
-    pg.click('#csvUnload'); pg.wait_for_timeout(200)
+    (pg.evaluate("document.getElementById('csvMore').open=true"), pg.click('#csvUnload')); pg.wait_for_timeout(200)
     with pg.expect_download() as dl:
         pg.check('#cOpt'); pg.click('#cOk')
     pg.wait_for_timeout(400)
     check('download a copy first saves the CSV', dl.value.suggested_filename == 'b.csv')
     check('next list in the library becomes active', ev("LIB.cur.name") == 'a.csv' and ev("ROWS.length") == 2 and 'Unloaded "b.csv"' in pg.inner_text('#csvStatus'))
     check('unloaded list is gone from the library', ev("(async()=>(await libAll()).map(r=>r.name))()") == ['a.csv'] and 'b.csv' not in pg.inner_text('#csvSel'))
-    pg.click('#csvUnload'); pg.wait_for_timeout(200); pg.click('#cOk'); pg.wait_for_timeout(400)
+    (pg.evaluate("document.getElementById('csvMore').open=true"), pg.click('#csvUnload')); pg.wait_for_timeout(200); pg.click('#cOk'); pg.wait_for_timeout(400)
     check('unloading the last list leaves an empty one', ev("ROWS.length") == 0 and 'empty' in pg.inner_text('#csvStatus') and ev("$('csvUnload').disabled"))
     pg.reload(); pg.wait_for_timeout(1000)
     check('after reload the unloaded lists stay gone', ev("ROWS.length") == 0 and ev("(async()=>(await libAll()).length)()") == 1)

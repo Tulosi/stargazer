@@ -93,7 +93,7 @@ with sync_playwright() as p:
     ev(seed('blocked', 'blockedone', True)); ev('startCsvMode()'); pg.wait_for_timeout(500)
     pg.dispatch_event('article.card[data-id="blocked"] button.fs', 'click'); pg.wait_for_timeout(2000)
     check('blocked lookup: official RedGifs player shown', ev("(document.querySelector('#viewer iframe.vyt')||{}).src")=='https://www.redgifs.com/ifr/blockedone')
-    check('blocked lookup: reason is shown', 'lookup failed' in ev("document.getElementById('toast').textContent"))
+    check('blocked lookup: plain-language reason is shown', 'RedGifs player' in ev("document.getElementById('toast').textContent"))
     pg.keyboard.press('Escape'); pg.wait_for_timeout(300)
     # lookup blocked, but Reddit's embed data names the file: use it right away (it carries the sound)
     ev("(()=>{ const id='gues11'; ROWS.push({id,perma:'https://www.reddit.com/r/gifs/comments/'+id+'/x/',starred:false,t:5}); ROWSET.add(id); META[id]={t:'clip',o:0,th:'',m:'gif',u:'https://www.redgifs.com/watch/camelname',g:'CamelName',n:0,s:0,a:'',c:1700000000,v:'https://v.redd.it/x/silent.mp4',w:160,h:90}; startCsvMode(); })()")

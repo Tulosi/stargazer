@@ -17,7 +17,7 @@
 :root{
   --bg:#f5f3f9; --surface:#ffffff; --surface-2:#ece9f3; --ink:#17151f; --muted:#6b6780; --line:#e0dce9;
   --sel:#4a3b78; --sel-ink:#ffffff; --hot:#b32fb8; --g1:#7c3aed; --g2:#c026d3; --g3:#ec4899;
-  --accent:#4a3b78; --accent-ink:#ffffff; --chip-on:#4a3b78; --warn:#b4540a; --alert-ink:#a24743; --alert-bg:rgba(176,74,70,.10); --alert-line:rgba(176,74,70,.38);
+  --accent:#4a3b78; --accent-ink:#ffffff; --chip-on:#4a3b78; --warn:#9c4607; --alert-ink:#a24743; --alert-bg:rgba(176,74,70,.10); --alert-line:rgba(176,74,70,.38);
   --glass:rgba(245,243,249,.8);
   --shadow:0 18px 50px rgba(18,20,28,.16),0 2px 8px rgba(18,20,28,.06);
   --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%236b6780' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
@@ -100,12 +100,20 @@ button,select,input{font:inherit;color:inherit}
   .stats.compact .st+.st::before{left:-12px;top:20%;bottom:20%}
 }
 .search{display:none}
-.deck-bar.search-open .search{display:block;position:absolute;left:0;right:46px;top:50%;transform:translateY(-50%);max-width:none;z-index:2;background:var(--bg);border-radius:999px}
+/* navigation: on wide screens the four buttons sit in the bar with labels and the search box is always there; on phones they form a bottom bar */
+.navbtns{display:contents}
+.nl{display:none}
+@media (min-width:721px){
+  .search{display:block}
+  #searchbtn{display:none}
+  .navbtns .pill{padding:0 14px 0 12px!important}
+  .navbtns .pill .nl{display:inline}
+}
 #searchbtn[aria-expanded="true"]{background:var(--sel);color:var(--sel-ink)}
 #searchbtn[data-active="1"]::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--hot)}
 .search{position:relative;flex:1 1 auto;max-width:520px;min-width:0}
 .search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
-#q{width:100%;height:38px;border:0;border-radius:999px;background:var(--surface-2);padding:0 14px 0 16px;min-width:0}
+#q{width:100%;height:38px;border:0;border-radius:999px;background:var(--surface-2);padding:0 14px 0 36px;min-width:0}
 #q::placeholder{color:var(--muted)}
 .pill{height:36px;padding:0 15px;border:0;border-radius:999px;background:var(--surface-2);font-weight:500;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
 .pill:hover{background:var(--line)}
@@ -116,16 +124,53 @@ button,select,input{font:inherit;color:inherit}
 .actgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .actgrid .pill{justify-content:center}
 .actgrid .wide{grid-column:1/-1}
+.syncrow{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);min-height:18px}
+.syncrow[data-s=error] #syncLine,.syncrow[data-s=offline] #syncLine{color:var(--warn)}
+.syncrow .linkbtn{padding:0 0 0 4px}
+.exphint{font-size:12px;color:var(--muted)}
+.exphint[data-warn="1"]{color:var(--warn)}
+.exphint[hidden],.syncrow[hidden]{display:none}
+.srcbadge[data-s=syncing] svg{animation:spin 1.1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.srcbadge[data-s=error],.srcbadge[data-s=offline]{background:var(--warn);color:#1a1200}
+.acctbox>summary{list-style:none;display:flex;align-items:center;gap:8px;cursor:pointer;padding:2px 0;min-height:32px}
+.acctbox>summary::-webkit-details-marker{display:none}
+.acctbox>summary h2{margin:0}
+.acctbox>summary::after{content:"";margin-left:auto;width:7px;height:7px;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:rotate(45deg);transition:transform .2s}
+.acctbox[open]>summary::after{transform:rotate(-135deg)}
+.optbadge{font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted)}
+.acctbox>summary .sumnote{font-size:12px;color:var(--muted)}
+.acctbox[open]>summary .sumnote{display:none}
+.acctbox[open]>summary{margin-bottom:6px}
+.acctbox .grp{margin-top:8px}
+.moreact>summary{list-style:none;cursor:pointer;justify-content:center;width:100%}
+.moreact>summary::-webkit-details-marker{display:none}
+.moreact[open]>summary{margin-bottom:8px}
+.actgrid.inner{margin-top:0}
+.actgrid .hint{margin:0;font-size:12px;color:var(--muted);line-height:1.45}
 .actgrid .pill:disabled{opacity:.45;cursor:default}
 #decktoggle[aria-expanded="true"]{background:var(--sel);color:var(--sel-ink)}
-#decktoggle[data-active="1"]::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--hot)}
+#decktoggle{position:relative}
+#decktoggle[data-n]::after{content:attr(data-n);position:absolute;top:-3px;right:-3px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;line-height:1;background:var(--sel);color:var(--sel-ink);box-shadow:0 0 0 2px var(--bg)}
+#decktoggle[aria-expanded="true"][data-n]::after{background:var(--sel-ink);color:var(--sel);box-shadow:0 0 0 2px var(--sel)}
 @media (max-width:720px){
-  #srctoggle{margin-left:auto}
+  .deck{-webkit-backdrop-filter:none;backdrop-filter:none;background:color-mix(in srgb,var(--bg) 96%,transparent)}   /* a blurred parent would trap the fixed bottom bar */
+  .navbtns{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:45;justify-content:space-around;align-items:flex-start;padding:8px 10px calc(10px + env(safe-area-inset-bottom,0px));background:color-mix(in srgb,var(--bg) 90%,transparent);-webkit-backdrop-filter:saturate(1.4) blur(16px);backdrop-filter:saturate(1.4) blur(16px);border-top:1px solid var(--line)}
+  .navbtns .pill{margin-bottom:15px}
+  .navbtns .pill .nl{display:block;position:absolute;top:calc(100% + 3px);left:50%;transform:translateX(-50%);font-size:10px;font-weight:500;color:var(--muted);letter-spacing:.02em;line-height:1.2}
+  body{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))}
+  #toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+  #pausebar{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+  #panel,#srcpanel{position:fixed;top:auto;max-width:none;margin:0;left:8px;right:8px;bottom:calc(86px + env(safe-area-inset-bottom,0px));max-height:min(72dvh,calc(100dvh - 120px));animation:sheetIn .2s ease-out}
+  @keyframes sheetIn{from{opacity:0;transform:translateY(12px)}}
+  .deck-bar.search-open .search{display:block;position:fixed;left:12px;right:12px;bottom:calc(86px + env(safe-area-inset-bottom,0px));top:auto;transform:none;z-index:46;max-width:none;border-radius:999px;box-shadow:var(--shadow)}
+  .deck-bar.search-open #q{background:var(--surface);border:1px solid var(--line);height:44px}
+}
+@media (max-width:720px){
   .brand .logo{height:28px}
   .deck-in{padding-top:7px;padding-bottom:7px}
   .deck-bar{gap:8px}
   .deck-bar .pill{width:40px;height:40px;padding:0!important;justify-content:center;border-radius:50%;flex:0 0 auto}
-  .deck-bar.search-open .search{right:48px}
 }
 
 /* ---- filter panel: floats over the grid, closed by default ---- */
@@ -196,6 +241,16 @@ input[type=range]{width:100%;accent-color:var(--sel);margin:0}
 .thumb .ph{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:12px;
   background:hsl(var(--h) var(--ph-s) var(--ph-l));color:var(--ink);font:500 13px/1.25 var(--font);overflow-wrap:anywhere;transition:opacity .15s}
 .thumb .ph span{opacity:.7}
+@keyframes shimmer{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+body.previews-loading .card:not(.is-dead) .thumb .ph{overflow:hidden}
+body.previews-loading .card:not(.is-dead) .thumb .ph::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.14) 50%,transparent 70%);animation:shimmer 1.4s ease-in-out infinite}
+.thumb .tstrip{position:absolute;left:0;right:0;bottom:0;padding:22px 12px 9px;background:linear-gradient(to top,rgba(0,0,0,.66),transparent);color:#fff;font:500 12.5px/1.3 var(--font);display:none;pointer-events:none;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+body.info-off .card:not(.info-open) .thumb:not(.nsfw) .tstrip{display:block}
+.stats .st.busy b::after{content:"";display:inline-block;width:5px;height:5px;margin-left:5px;border-radius:50%;background:var(--sel);vertical-align:middle;animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}
+body.previews-loading #loadText{color:var(--ink);font-weight:500}
+.load .bar{height:3px}
+
 .ph small{font-size:11px;opacity:.75}
 .thumb .clip{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:var(--surface-2);transition:filter .18s,transform .18s}
 .thumb.nsfw img,.thumb.nsfw .still,.thumb.nsfw .clip{filter:blur(22px);transform:scale(1.12)}
@@ -357,6 +412,12 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
 .steps .n{flex:none;width:24px;height:24px;margin-top:0;border-radius:50%;border:1.5px solid var(--sel);color:var(--sel);display:grid;place-items:center;font-size:12px;font-weight:650;line-height:1}
 .intro p{margin:0 0 12px;font-size:14px;line-height:1.55;color:var(--muted)}
 .intro a{color:var(--sel);text-decoration:underline;text-underline-offset:2px;overflow-wrap:anywhere}
+.introcta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:18px 0 14px}
+.introcta .dropnote{font-size:12.5px;color:var(--muted)}
+@media (hover:none){.introcta .dropnote{display:none}}
+.dropveil{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--bg) 82%,transparent);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.dropveil[hidden]{display:none}
+.dropveil>div{padding:36px 54px;border:2px dashed var(--sel);border-radius:22px;font-size:18px;font-weight:600;color:var(--ink);background:var(--surface)}
 .intro code{font-size:.92em;background:var(--surface-2);padding:1px 6px;border-radius:6px}
 .empty{padding:90px 0;text-align:center;color:var(--muted);grid-column:1/-1;grid-row:span 12}
 #sentinel{height:1px}
@@ -364,8 +425,8 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
 @media (pointer:coarse){
   .pill{height:42px}
   .srcseg .pill,.nsfwseg .pill{height:36px}
-  .star,.fs,.save{width:36px;height:36px}
-  .fs{right:50px}.save{right:92px}.nsfwb{right:134px}.badge.tag{right:134px}
+  .star,.fs,.save{width:40px;height:40px}
+  .fs{right:54px}.save{right:100px}.nsfwb{right:146px}.badge.tag{right:146px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
@@ -382,6 +443,7 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
     <div class="deck-bar">
       <a class="brand" href="./" aria-label="Stargazer" title="Stargazer"><svg class="logo" viewBox="0 0 187 46" width="163" height="40" role="img" aria-label="Stargazer" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="logoGrad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="187" y2="14"><stop offset="0" stop-color="#7c3aed"/><stop offset=".55" stop-color="#c026d3"/><stop offset="1" stop-color="#ec4899"/></linearGradient></defs><g fill="url(#logoGrad)"><path d="M1.4280000000000002 28.86H7.6160000000000005Q7.752000000000001 30.186 8.534 30.883Q9.316 31.58 10.574000000000002 31.58Q11.866000000000001 31.58 12.614 30.985Q13.362 30.39 13.362 29.336Q13.362 28.451999999999998 12.767 27.874Q12.172 27.296 11.305 26.922Q10.438 26.548000000000002 8.84 26.072Q6.5280000000000005 25.357999999999997 5.066000000000001 24.644Q3.604 23.93 2.55 22.536Q1.496 21.142 1.496 18.898Q1.496 15.565999999999999 3.91 13.678999999999998Q6.324000000000001 11.791999999999998 10.200000000000001 11.791999999999998Q14.144000000000002 11.791999999999998 16.558 13.678999999999998Q18.972 15.565999999999999 19.142000000000003 18.932H12.852Q12.784 17.776 12.002 17.113Q11.22 16.45 9.996 16.45Q8.942 16.45 8.296 17.011Q7.65 17.572 7.65 18.625999999999998Q7.65 19.782 8.738 20.427999999999997Q9.826 21.073999999999998 12.138000000000002 21.822Q14.450000000000001 22.604 15.895 23.317999999999998Q17.34 24.032 18.394 25.392Q19.448 26.752 19.448 28.894Q19.448 30.933999999999997 18.411 32.599999999999994Q17.374000000000002 34.266 15.402000000000001 35.251999999999995Q13.430000000000001 36.238 10.744000000000002 36.238Q8.126000000000001 36.238 6.0520000000000005 35.388Q3.978 34.538 2.737 32.872Q1.496 31.206 1.4280000000000002 28.86ZM32.992 31.07V36.0H30.034Q26.872 36.0 25.104 34.453Q23.336 32.906 23.336 29.404V21.855999999999998H21.023999999999997V17.028H23.336V12.404H29.15V17.028H32.958V21.855999999999998H29.15V29.472Q29.15 30.322 29.558 30.695999999999998Q29.966 31.07 30.918 31.07ZM42.83 16.756Q44.836 16.756 46.349 17.572Q47.861999999999995 18.387999999999998 48.678 19.714V17.028H54.492V36.0H48.678V33.314Q47.827999999999996 34.64 46.315 35.456Q44.80199999999999 36.272 42.79599999999999 36.272Q40.483999999999995 36.272 38.58 35.065Q36.675999999999995 33.858 35.571 31.631Q34.465999999999994 29.404 34.465999999999994 26.479999999999997Q34.465999999999994 23.555999999999997 35.571 21.345999999999997Q36.675999999999995 19.136 38.58 17.945999999999998Q40.483999999999995 16.756 42.83 16.756ZM44.529999999999994 21.822Q42.79599999999999 21.822 41.589 23.063Q40.382 24.304 40.382 26.479999999999997Q40.382 28.656 41.589 29.930999999999997Q42.79599999999999 31.206 44.529999999999994 31.206Q46.263999999999996 31.206 47.471 29.948Q48.678 28.689999999999998 48.678 26.514Q48.678 24.338 47.471 23.08Q46.263999999999996 21.822 44.529999999999994 21.822ZM69.872 16.823999999999998V22.978H68.274Q66.098 22.978 65.00999999999999 23.913Q63.922 24.848 63.922 27.194V36.0H58.108V17.028H63.922V20.189999999999998Q64.94200000000001 18.625999999999998 66.47200000000001 17.724999999999998Q68.002 16.823999999999998 69.872 16.823999999999998ZM85.116 19.714V17.028H90.93V35.966Q90.93 38.584 89.893 40.709Q88.856 42.834 86.731 44.092Q84.606 45.35 81.444 45.35Q77.228 45.35 74.61 43.361000000000004Q71.992 41.372 71.618 37.972H77.364Q77.636 39.06 78.656 39.689Q79.676 40.318 81.172 40.318Q82.974 40.318 84.045 39.281Q85.116 38.244 85.116 35.966V33.28Q84.266 34.606 82.77000000000001 35.439Q81.274 36.272 79.268 36.272Q76.922 36.272 75.018 35.065Q73.114 33.858 72.009 31.631Q70.904 29.404 70.904 26.479999999999997Q70.904 23.555999999999997 72.009 21.345999999999997Q73.114 19.136 75.018 17.945999999999998Q76.922 16.756 79.268 16.756Q81.274 16.756 82.787 17.572Q84.3 18.387999999999998 85.116 19.714ZM80.968 21.822Q79.234 21.822 78.02699999999999 23.063Q76.82 24.304 76.82 26.479999999999997Q76.82 28.656 78.02699999999999 29.930999999999997Q79.234 31.206 80.968 31.206Q82.702 31.206 83.90899999999999 29.948Q85.116 28.689999999999998 85.116 26.514Q85.116 24.338 83.90899999999999 23.08Q82.702 21.822 80.968 21.822ZM101.754 16.756Q103.76 16.756 105.273 17.572Q106.786 18.387999999999998 107.602 19.714V17.028H113.416V36.0H107.602V33.314Q106.75200000000001 34.64 105.239 35.456Q103.726 36.272 101.72 36.272Q99.408 36.272 97.504 35.065Q95.60000000000001 33.858 94.495 31.631Q93.39 29.404 93.39 26.479999999999997Q93.39 23.555999999999997 94.495 21.345999999999997Q95.60000000000001 19.136 97.504 17.945999999999998Q99.408 16.756 101.754 16.756ZM103.45400000000001 21.822Q101.72 21.822 100.513 23.063Q99.306 24.304 99.306 26.479999999999997Q99.306 28.656 100.513 29.930999999999997Q101.72 31.206 103.45400000000001 31.206Q105.188 31.206 106.39500000000001 29.948Q107.602 28.689999999999998 107.602 26.514Q107.602 24.338 106.39500000000001 23.08Q105.188 21.822 103.45400000000001 21.822ZM122.47200000000001 31.206H130.70000000000002V36.0H115.97800000000001V31.375999999999998L123.86600000000001 21.822H116.046V17.028H130.53V21.652ZM151.07800000000003 27.908H137.92000000000002Q138.056 29.676 139.05900000000003 30.610999999999997Q140.062 31.546 141.52400000000003 31.546Q143.70000000000002 31.546 144.55 29.71H150.73800000000003Q150.26200000000003 31.58 149.02100000000002 33.076Q147.78000000000003 34.572 145.91000000000003 35.422Q144.04000000000002 36.272 141.728 36.272Q138.94000000000003 36.272 136.764 35.082Q134.58800000000002 33.892 133.36400000000003 31.682000000000002Q132.14000000000001 29.472 132.14000000000001 26.514Q132.14000000000001 23.555999999999997 133.34700000000004 21.345999999999997Q134.55400000000003 19.136 136.73000000000002 17.945999999999998Q138.906 16.756 141.728 16.756Q144.48200000000003 16.756 146.62400000000002 17.912Q148.76600000000002 19.067999999999998 149.973 21.209999999999997Q151.18 23.351999999999997 151.18 26.208Q151.18 27.024 151.07800000000003 27.908ZM145.23000000000002 24.677999999999997Q145.23000000000002 23.182 144.21000000000004 22.298000000000002Q143.19000000000003 21.414 141.66000000000003 21.414Q140.198 21.414 139.195 22.264Q138.192 23.113999999999997 137.954 24.677999999999997ZM165.40400000000002 16.823999999999998V22.978H163.806Q161.63000000000002 22.978 160.54200000000003 23.913Q159.454 24.848 159.454 27.194V36.0H153.64000000000001V17.028H159.454V20.189999999999998Q160.47400000000002 18.625999999999998 162.00400000000002 17.724999999999998Q163.53400000000002 16.823999999999998 165.40400000000002 16.823999999999998Z"/><path d="M174.484 0 Q175.744 5.74 181.484 7 Q175.744 8.26 174.484 14 Q173.22400000000002 8.26 167.484 7 Q173.22400000000002 5.74 174.484 0Z"/><path d="M166.484 -0.20000000000000018 Q167.06 2.424 169.684 3 Q167.06 3.576 166.484 6.2 Q165.90800000000002 3.576 163.28400000000002 3 Q165.90800000000002 2.424 166.484 -0.20000000000000018Z"/><path d="M179.484 18 Q180.024 20.46 182.484 21 Q180.024 21.54 179.484 24 Q178.94400000000002 21.54 176.484 21 Q178.94400000000002 20.46 179.484 18Z"/><path d="M70 0 Q70.54 2.46 73 3 Q70.54 3.54 70 6 Q69.46 3.54 67 3 Q69.46 2.46 70 0Z"/><path d="M20 1.0 Q20.45 3.05 22.5 3.5 Q20.45 3.95 20 6.0 Q19.55 3.95 17.5 3.5 Q19.55 3.05 20 1.0Z"/></g></svg></a>
       <label class="search" id="searchbox">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.6"/><path d="M10.6 10.6L14 14"/></svg>
         <input id="q" type="search" placeholder="Search titles, subreddits, authors" aria-label="Search">
       </label>
       <div class="stats" id="stats" hidden aria-live="off">
@@ -389,19 +451,25 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
         <span class="st" tabindex="0"><b id="stGot">0</b><span class="lb">Retrieved</span><em>(Total successfully retrieved from the data source)</em></span>
         <span class="st" tabindex="0"><b id="stAll">0</b><span class="lb">Total</span><em>(The total number of items in the data source, retrievable or not)</em></span>
       </div>
-      <button class="pill" id="srctoggle" type="button" aria-expanded="false" aria-controls="srcpanel" aria-label="Source, account and sync" title="Source, account and sync" style="padding-left:10px;padding-right:10px">
+      <nav class="navbtns" id="navbtns" aria-label="Main">
+        <button class="pill" id="srctoggle" type="button" aria-expanded="false" aria-controls="srcpanel" aria-label="Source, account and sync" title="Source, account and sync" style="padding-left:10px;padding-right:10px">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="8" cy="3.8" rx="5" ry="2"/><path d="M3 3.8v4.2c0 1.1 2.2 2 5 2s5-.9 5-2V3.8"/><path d="M3 8v4.2c0 1.1 2.2 2 5 2s5-.9 5-2V8"/></svg>
         <span class="srcbadge" id="srcBadge" hidden aria-hidden="true"><svg viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 12.2h6.2a2.6 2.6 0 0 0 .5-5.15A3.7 3.7 0 0 0 4.2 6.3a2.95 2.95 0 0 0 .4 5.9z"/></svg></span>
-      </button>
-      <button class="pill" id="decktoggle" type="button" aria-expanded="false" aria-controls="panel" aria-label="Filters" title="Filters" style="padding-left:10px;padding-right:10px">
+        <span class="nl">Source</span>
+        </button>
+        <button class="pill" id="decktoggle" type="button" aria-expanded="false" aria-controls="panel" aria-label="Filters" title="Filters" style="padding-left:10px;padding-right:10px">
         <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 4.5h7M12 4.5h2M2 11.5h2M7 11.5h7"/><circle cx="10.5" cy="4.5" r="1.6"/><circle cx="5.5" cy="11.5" r="1.6"/></svg>
-      </button>
-      <button class="pill" id="shufflebtn" type="button" aria-label="Randomize order" title="Randomize order" style="padding-left:10px;padding-right:10px">
+        <span class="nl">Filters</span>
+        </button>
+        <button class="pill" id="shufflebtn" type="button" aria-label="Randomize order" title="Randomize order" style="padding-left:10px;padding-right:10px">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 4.5h2.2c3.6 0 4.6 7 8.2 7h2.6M1.5 11.5h2.2c1 0 1.7-.6 2.4-1.5M9.9 6c.6-.9 1.3-1.5 2-1.5h2.6"/><path d="M12.5 2.5l2 2-2 2M12.5 9.5l2 2-2 2"/></svg>
-      </button>
-      <button class="pill" id="searchbtn" type="button" aria-expanded="false" aria-controls="q" aria-label="Search" title="Search" style="padding-left:10px;padding-right:10px">
+        <span class="nl">Shuffle</span>
+        </button>
+        <button class="pill" id="searchbtn" type="button" aria-expanded="false" aria-controls="q" aria-label="Search" title="Search" style="padding-left:10px;padding-right:10px">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.6"/><path d="M10.6 10.6L14 14"/></svg>
-      </button>
+        <span class="nl">Search</span>
+        </button>
+      </nav>
     </div>
 
     <div class="panel" id="panel" role="region" aria-label="Filters">
@@ -472,8 +540,40 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
 
     <div class="panel" id="srcpanel" role="region" aria-label="Source and account">
       <div class="pcol">
-        <div class="grp" id="acct" hidden>
-          <h2>Account</h2>
+        <h2>Source</h2>
+        <div class="srcseg"><button class="pill" id="srcCsv" type="button" aria-pressed="true">Saved CSV</button><button class="pill" id="srcSub" type="button" aria-pressed="false">Subreddit</button></div>
+        <div class="grp" id="csvTools">
+          <select id="csvSel" class="field" aria-label="CSV file"></select>
+          <span class="kindbadge" id="csvKind" data-k="local" role="status"></span>
+          <div class="syncrow" id="syncRow" hidden><span id="syncLine" role="status"></span><button class="linkbtn" id="syncRetry" type="button" hidden>Retry</button></div>
+          <span class="exphint" id="expHint" hidden></span>
+          <div class="actgrid">
+            <button class="pill primary wide" id="csvOpen" type="button" title="Open a CSV and keep it linked for saving">Open CSV</button>
+            <button class="pill wide" id="csvCloud" type="button" hidden></button>
+            <button class="pill wide" id="csvSync" type="button" title="Re-read the linked file and merge changes made on another device" hidden>Sync now</button>
+            <button class="pill wide" id="csvReconnect" type="button" hidden>Reconnect file</button>
+            <details class="wide moreact" id="csvMore">
+              <summary class="pill">More actions</summary>
+              <div class="actgrid inner">
+                <button class="pill" id="csvMerge" type="button" title="Add posts from another CSV">Merge CSV</button>
+                <button class="pill" id="csvExport" type="button">Export CSV</button>
+                <button class="pill" id="csvUnload" type="button" title="Remove this list from this browser. A linked file and your account copy are left untouched.">Unload CSV</button>
+                <p class="hint wide">Merge adds the posts from another CSV to this list without duplicates, and carries over stars and deletions.</p>
+                <button class="pill warnbtn wide" id="csvPrune" type="button" title="Delete removed, not-found and broken posts from the CSV">Remove dead posts</button>
+              </div>
+            </details>
+          </div>
+          <span id="csvStatus"></span>
+          <input id="csvfile" type="file" accept=".csv,text/csv,text/plain" hidden>
+        </div>
+        <form class="subform" id="subForm" hidden>
+          <label class="prefixed"><span>reddit.com/r/</span><input id="subUrl" type="text" placeholder="gaming+pcgaming" aria-label="Subreddits, joined with +" spellcheck="false" autocomplete="off" autocapitalize="off"></label>
+          <div class="btnrow"><button class="pill" type="submit">Load</button><span class="hint">Join subreddits with +. Paste a multireddit link to use one. 100 posts at a time.</span></div>
+          <div id="multiAsk" hidden><span class="hint" id="multiLbl"></span><input id="multiNames" type="text" placeholder="pics+aww+earthporn" aria-label="Subreddits in this multireddit" spellcheck="false" autocomplete="off"></div>
+          <span id="subErr" role="alert"></span>
+        </form>
+        <details class="grp acctbox" id="acct" hidden>
+          <summary><h2>Account</h2><span class="optbadge">Optional</span><span class="sumnote">sync across devices</span></summary>
           <div class="grp" id="acReset" hidden>
             <strong>Choose a new password</strong>
             <input id="acNew" class="field" type="password" placeholder="New password (8+ characters)" autocomplete="new-password" aria-label="New password">
@@ -496,31 +596,13 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
             <div class="btnrow"><button class="pill" id="acSync" type="button">Sync now</button><button class="pill" id="acOut" type="button">Sign out</button></div>
           </div>
           <span id="acMsg"></span>
-        </div>
-        <h2>Source</h2>
-        <div class="srcseg"><button class="pill" id="srcCsv" type="button" aria-pressed="true">Saved CSV</button><button class="pill" id="srcSub" type="button" aria-pressed="false">Subreddit</button></div>
-        <div class="grp" id="csvTools">
-          <select id="csvSel" class="field" aria-label="CSV file"></select>
-          <span class="kindbadge" id="csvKind" data-k="local" role="status"></span>
-          <div class="actgrid">
-            <button class="pill" id="csvOpen" type="button" title="Open a CSV and keep it linked for saving">Open CSV</button>
-            <button class="pill" id="csvMerge" type="button" title="Add posts from another CSV">Merge CSV</button>
-            <button class="pill" id="csvExport" type="button">Export CSV</button>
-            <button class="pill wide" id="csvCloud" type="button" hidden></button>
-            <button class="pill wide" id="csvUnload" type="button" title="Remove this list from this browser. A linked file and your account copy are left untouched.">Unload CSV</button>
-            <button class="pill warnbtn wide" id="csvPrune" type="button" title="Delete removed, not-found and broken posts from the CSV">Delete missing/broken</button>
-            <button class="pill wide" id="csvSync" type="button" title="Re-read the linked file and merge changes made on another device" hidden>Sync now</button>
-            <button class="pill wide" id="csvReconnect" type="button" hidden>Reconnect file</button>
-          </div>
-          <span id="csvStatus"></span>
-          <input id="csvfile" type="file" accept=".csv,text/csv,text/plain" hidden>
-        </div>
-        <form class="subform" id="subForm" hidden>
-          <label class="prefixed"><span>reddit.com/r/</span><input id="subUrl" type="text" placeholder="gaming+pcgaming" aria-label="Subreddits, joined with +" spellcheck="false" autocomplete="off" autocapitalize="off"></label>
-          <div class="btnrow"><button class="pill" type="submit">Load</button><span class="hint">Join subreddits with +. Paste a multireddit link to use one. 100 posts at a time.</span></div>
-          <div id="multiAsk" hidden><span class="hint" id="multiLbl"></span><input id="multiNames" type="text" placeholder="pics+aww+earthporn" aria-label="Subreddits in this multireddit" spellcheck="false" autocomplete="off"></div>
-          <span id="subErr" role="alert"></span>
-        </form>
+        </details>
+        <details class="grp acctbox" id="advBox">
+          <summary><h2>Advanced</h2></summary>
+          <span id="advRg" class="hint">RedGifs sound: no problems so far.</span>
+          <button class="pill" id="advRgRetry" type="button">Retry sound lookups</button>
+          <span class="hint">If your browser blocks RedGifs, an optional helper function in your own Supabase project can fetch the clips for this page (see supabase/functions/redgifs in the project).</span>
+        </details>
       </div>
     </div>
   </div>
@@ -887,6 +969,7 @@ function fillCard(el,p){
   el.innerHTML =
     '<a class="thumb'+(nsfw?' nsfw':'')+'" data-open'+(v0 ? ' data-v="'+esc(v0)+'"'+(vs.length>1 ? ' data-vc="'+esc(vs.slice(1,7).join('|'))+'"' : '') : '')+(m && m.ab ? ' data-ab="'+esc(m.ab)+'"' : '')+(m && m.ha!==undefined ? ' data-ha="'+(m.ha?1:0)+'"' : '')+' href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" aria-label="Open: '+esc(titleOf(p))+'">'
     + (thumb ? ph + '<img referrerpolicy="no-referrer" alt="">' : (v0 && !v0.startsWith('yt:') ? ph + '<video class="still" muted playsinline preload="none"></video>' : ph))
+    + '<span class="tstrip">'+esc(titleOf(p))+'</span>'
     + '<span class="badge media'+(v0 ? ' playable' : '')+'">'+esc(MEDIA_LABEL[media]||media)+(gl ? ' 1/'+gl.length : '')+'</span>'
     + (nsfw ? '<span class="badge tag">NSFW</span>' : '')
     + (m && m.rec ? '<span class="badge rec" title="Rebuilt from an archive">Recovered: '+esc(m.rec)+'</span>' : '')
@@ -1195,10 +1278,20 @@ function rgApply(p,res){
   const el = cardEls.get(p.id); if(el) fillCard(el,p);
   if(res.gone) updateDeadCount();
 }
-function rgWarn(){
-  if(window._rgWarned) return; window._rgWarned = 1;
-  toast('RedGifs sound lookup failed ('+RG_ERR+')'+(/^helper 404/.test(RG_ERR) ? ': the RedGifs helper has not been deployed to Supabase yet.' : ', so some clips may be silent. It will retry.'));
+function updateAdvRg(){
+  const el = $('advRg'); if(!el) return;
+  el.textContent = RG_ERR ? 'RedGifs sound: last problem was "'+RG_ERR+'". Some clips may play without sound.' : 'RedGifs sound: no problems so far.';
 }
+function rgWarn(){
+  updateAdvRg();
+  if(window._rgWarned) return; window._rgWarned = 1;
+  toast('Could not reach RedGifs, so some clips may play without sound. It will retry. Details: Source > Advanced.');
+}
+$('advRgRetry').addEventListener('click',()=>{
+  rgBlockedUntil = 0; rgDirectOff = 0; RG_ERR = ''; window._rgWarned = 0; updateAdvRg();
+  document.querySelectorAll('.card').forEach(c=>{ if(c._p) try{ rgWatch(c, c._p); }catch(e){} });
+  toast('Retrying RedGifs sound lookups...');
+});
 async function rgRun(p){
   const slug = rgSlug(p), m = metaOf(p);
   let res = RGC[slug];
@@ -1257,7 +1350,7 @@ const rgIO = new IntersectionObserver(es=>{
 function rgWatch(el,p){ if(rgNeeds(p)) rgIO.observe(el); else rgIO.unobserve(el); }
 
 /* ---------- full-screen viewer ---------- */
-const VIEW = {root:$('viewer'), stage:document.querySelector('#viewer .vstage'), token:0, opener:null, fs:false};
+const VIEW = {hist:false, popping:false, root:$('viewer'), stage:document.querySelector('#viewer .vstage'), token:0, opener:null, fs:false};
 const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement || null;
 function viewerGallery(i){
   const g = VIEW.gal; if(!g) return;
@@ -1271,6 +1364,7 @@ function viewerGallery(i){
   VIEW.root.querySelector('.vcount').textContent = (g.i+1)+' / '+n;
 }
 const viewerStep = d => { if(VIEW.gal && !VIEW.root.hidden) viewerGallery(VIEW.gal.i + d); };
+addEventListener('popstate',()=>{ if(!VIEW.root.hidden){ VIEW.popping = true; try{ closeViewer(); }finally{ VIEW.popping = false; } } });
 function closeViewer(){
   if(VIEW.root.hidden) return;
   VIEW.token++;
@@ -1286,6 +1380,7 @@ function closeViewer(){
   VIEW.stage.replaceChildren();
   VIEW.root.hidden = true; document.body.classList.remove('viewing');
   applyAudio();
+  if(VIEW.hist){ VIEW.hist = false; if(!VIEW.popping){ try{ history.back(); }catch(e){} } }
   if(fsEl()){ try{ (document.exitFullscreen || document.webkitExitFullscreen).call(document); }catch(e){} }
   VIEW.fs = false;
   if(VIEW.opener && VIEW.opener.isConnected) try{ VIEW.opener.focus({preventScroll:true}); }catch(e){}
@@ -1299,7 +1394,8 @@ async function openViewer(p, opts){
   VIEW.opener = document.activeElement;
   VIEW.stage.replaceChildren();
   VIEW.root.hidden = false; document.body.classList.add('viewing');
-  applyAudio();   // silence the card behind the viewer
+  applyAudio();
+  if(!VIEW.hist){ try{ history.pushState({sgViewer:1}, ''); VIEW.hist = true; }catch(e){} }   // so the phone's Back gesture closes the viewer instead of leaving the page   // silence the card behind the viewer
   VIEW.root.querySelector('.vclose').focus({preventScroll:true});
   // real full screen where the browser allows it; otherwise this still fills the whole window
   const rq = VIEW.root.requestFullscreen || VIEW.root.webkitRequestFullscreen;
@@ -1336,7 +1432,7 @@ async function openViewer(p, opts){
     f.setAttribute('allow','autoplay; encrypted-media; picture-in-picture; fullscreen');
     f.src = 'https://www.redgifs.com/ifr/'+rgSlug(p);
     VIEW.stage.replaceChildren(f);
-    toast('RedGifs sound lookup failed'+(RG_ERR ? ' ('+RG_ERR+')' : '')+' - showing the RedGifs player.');
+    updateAdvRg(); toast('Could not load this clip with sound directly, so you are seeing the RedGifs player instead.');
     return;
   }
   const vurl = m ? (m.vh || m.v || '') : '';
@@ -1441,11 +1537,11 @@ function zAt(cx, cy, ns){   // zoom to scale ns keeping the point under (cx,cy) 
 new MutationObserver(()=>{ zReset(); }).observe(VIEW.stage,{childList:true});
 (function(){
   const st = VIEW.stage, dist = () => { const [a,b] = [...ZOOM.pts.values()]; return Math.hypot(a.x-b.x, a.y-b.y); }, mid = () => { const [a,b] = [...ZOOM.pts.values()]; return {x:(a.x+b.x)/2, y:(a.y+b.y)/2}; };
-  let d0 = 0, s0 = 1, m0 = null, t0 = null, sx = 0;
+  let d0 = 0, s0 = 1, m0 = null, t0 = null, sx = 0, sy = 0;
   /* Touch events drive touch screens (they behave the same in every mobile browser, including iOS Safari); pointer events drive mouse and pen. */
   const down = (id,x,y) => {
     ZOOM.pts.set(id,{x,y});
-    if(ZOOM.pts.size===1){ sx = x; ZOOM.moved = false; ZOOM.multi = false; t0 = {x:ZOOM.x, y:ZOOM.y, cx:x, cy:y}; }
+    if(ZOOM.pts.size===1){ sx = x; sy = y; ZOOM.moved = false; ZOOM.multi = false; t0 = {x:ZOOM.x, y:ZOOM.y, cx:x, cy:y}; }
     if(ZOOM.pts.size===2){ ZOOM.multi = true; d0 = dist() || 1; s0 = ZOOM.s; m0 = mid(); t0 = {x:ZOOM.x, y:ZOOM.y}; }
   };
   const move = (id,x,y) => {
@@ -1468,6 +1564,8 @@ new MutationObserver(()=>{ zReset(); }).observe(VIEW.stage,{childList:true});
     if(ZOOM.multi){ if(!ZOOM.pts.size) setTimeout(()=>{ ZOOM.multi = false; },0); return; }
     const dx = x - sx;
     if(ZOOM.s===1 && !ZOOM.moved && VIEW.gal && Math.abs(dx) > 50){ viewerStep(dx<0 ? 1 : -1); return; }   // swipe to the next image
+    const dy = y - sy;
+    if(ZOOM.s===1 && !ZOOM.moved && dy > 90 && dy > Math.abs(dx)*1.6){ closeViewer(); return; }   // swipe down to close
     if(!ZOOM.moved){   // a tap; two quick taps toggle zoom
       const now = Date.now();
       if(now - ZOOM.lastT < 320){ ZOOM.lastT = 0; ZOOM.s>1 ? (ZOOM.s = 1, zApply()) : zAt(x, y, 2.5); }
@@ -1617,16 +1715,19 @@ function introHtml(){
   return '<div class="intro"><p class="nodata" role="status"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M8 4.6v4"/><path d="M8 11.3v.1"/></svg>You currently have no data source selected.</p>'
    + '<p>Stargazer is a tool designed to allow users to parse and visually display the contents of their Reddit account\u2019s \u201CSaved Post\u201D user data. This may prove useful given the native Reddit website and app will only show the latest 1000 saved items, whereas your Reddit user data is not similarly limited.</p>'
    + '<ol class="steps"><li><span class="n" aria-hidden="true">1</span><span>Request your Reddit User data here: <a href="https://www.reddit.com/settings/data-request" target="_blank" rel="noopener noreferrer">https://www.reddit.com/settings/data-request</a></span></li>'
-   + '<li><span class="n" aria-hidden="true">2</span><span>Extract <code>saved_posts.csv</code> and open it via the source tab. By default everything stays local and nothing is uploaded.</span></li></ol>'
+   + '<li><span class="n" aria-hidden="true">2</span><span>Extract <code>saved_posts.csv</code> and open it here (or from the Source tab). By default everything stays local and nothing is uploaded.</span></li></ol>'
+   + '<p class="introcta"><button class="pill primary" id="introOpen" type="button">Open CSV</button><span class="dropnote">or drop the file anywhere on this page</span></p>'
    + (CLOUD_ON ? '<p>You can, if you wish, create an account and upload the CSV to sync across devices.</p>' : '')
    + '</div>';
 }
+setInterval(()=>{ if(!!loading !== document.body.classList.contains('previews-loading')) updateStats(); },500);
 let stT; function updateStats(){
   clearTimeout(stT);
   stT = setTimeout(()=>{
     let got = 0; for(const p of POSTS){ const m = META[p.id]; if(m && (!m.miss || m.rec)) got++; }
     $('stActive').textContent = list.length.toLocaleString(); $('stGot').textContent = got.toLocaleString(); $('stAll').textContent = POSTS.length.toLocaleString();
     $('stats').hidden = !POSTS.length || MODE!=='csv';
+    const ld = !!loading; $('stGot').parentNode.classList.toggle('busy', ld && got < POSTS.length); document.body.classList.toggle('previews-loading', ld);
   },120);
 }
 /* Phones: the count strip folds to one line while scrolling down and stays folded until the page is back at the very top.
@@ -1667,11 +1768,38 @@ let stT; function updateStats(){
   },{passive:true});
   mq.addEventListener && mq.addEventListener('change',reset);
 })();
+/* A refresh keeps the view: filters, sort, search and scroll position are remembered for this tab (session only, so NSFW never stays switched on in a later visit). */
+const VKEY2 = 'saved-posts-view';
+let vsT; function saveView(){ clearTimeout(vsT); vsT = setTimeout(()=>{ try{
+  if(MODE!=='csv' || !POSTS.length) return;
+  sessionStorage.setItem(VKEY2, JSON.stringify({cats:[...state.cats], kinds:[...state.kinds], media:[...state.media], nsfw:state.nsfw, sub:state.sub, sort:state.sort, fav:state.fav, showText:state.showText, hideBroken:state.hideBroken, range:state.range, q:state.q, seed:state.seed, y:Math.round(scrollY)}));
+}catch(e){} }, 300); }
+addEventListener('scroll', saveView, {passive:true});
+function restoreView(){
+  let v = null; try{ v = JSON.parse(sessionStorage.getItem(VKEY2)||'null'); }catch(e){}
+  if(!v || MODE!=='csv') return;
+  state.cats = new Set(v.cats||[]); state.kinds = new Set(v.kinds||[]); state.media = new Set(v.media||[]);
+  state.sub = v.sub||''; state.fav = !!v.fav; state.showText = !!v.showText; state.hideBroken = v.hideBroken!==false; state.q = v.q||''; state.seed = v.seed || state.seed;
+  if(v.sort && $('sort').querySelector('option[value='+v.sort+']')){ state.sort = v.sort; $('sort').value = v.sort; }
+  if(v.range){ state.range = v.range; $('range').value = v.range; }
+  $('q').value = state.q; $('favonly').checked = state.fav; $('showtext').checked = state.showText; $('hidebroken') && ($('hidebroken').checked = state.hideBroken);
+  if($('subsel')) $('subsel').value = state.sub;
+  syncSortUI();
+  setNsfw(v.nsfw || 'hide');   // also refreshes the grid
+  window.markSearchBtn && markSearchBtn();
+  if(v.y > 0){ let n = 0; while(document.documentElement.scrollHeight < v.y + innerHeight + 200 && shown < list.length && n++ < 60) renderMore(); window.scrollTo(0, v.y); }
+}
 function updateSummary(){
-  updateStats();
+  updateStats(); saveView();
   const active = state.cats.size||state.kinds.size||state.media.size||state.sub||state.q||state.fav||state.nsfw!=='hide'||!state.hideBroken||state.range!=='all';
-  $('decktoggle').dataset.active = active ? '1' : '0';
-  $('summary').innerHTML = active ? list.length.toLocaleString()+' of '+POSTS.length.toLocaleString()+' posts <button class="clear" id="clr" type="button">Clear filters</button>' : '';
+  const hidden = MODE==='csv' ? Math.max(0, POSTS.length - list.length) : 0;
+  /* How many separate rules are narrowing the list right now: the defaults count too, since they hide posts a newcomer may not expect. */
+  const n = hidden ? (state.nsfw==='hide' || state.nsfw==='only' ? 1 : 0) + (state.showText ? 0 : 1) + (state.hideBroken ? 1 : 0) + (state.cats.size?1:0) + (state.kinds.size?1:0) + (state.media.size?1:0) + (state.sub?1:0) + (state.q?1:0) + (state.fav?1:0) + (state.range!=='all'?1:0) : 0;
+  const dt = $('decktoggle'); if(n) dt.dataset.n = String(n); else delete dt.dataset.n;
+  dt.dataset.active = active ? '1' : '0';
+  $('summary').innerHTML = hidden ? '<b>'+hidden.toLocaleString()+'</b> hidden by filters <button class="clear" id="rvw" type="button">Review</button>'+(active ? ' <button class="clear" id="clr" type="button">Clear filters</button>' : '')
+    : (active ? list.length.toLocaleString()+' of '+POSTS.length.toLocaleString()+' posts <button class="clear" id="clr" type="button">Clear filters</button>' : '');
+  const rv = $('rvw'); if(rv) rv.onclick = () => { if(document.body.classList.contains('deck-collapsed')) $('decktoggle').click(); };
   const c = $('clr'); if(c) c.onclick = ()=>{ state.cats.clear(); state.kinds.clear(); state.media.clear(); state.sub=''; state.q=''; state.fav=false; $('favonly').checked=false; state.showText=false; $('showtext').checked=false; if(state.range!=='all'){ setRange('all'); return; } $('q').value=''; window.markSearchBtn&&markSearchBtn(); $('subsel').value=''; setNsfw('hide'); };
 }
 
@@ -1740,7 +1868,10 @@ function hasAudioTrack(el){
 }
 /* The sound control only appears once we know this clip has sound. */
 function setupSound(t, el, ctl, entry){
-  const show = () => ctl.classList.add('has-sound');
+  const show = () => {
+    ctl.classList.add('has-sound');
+    try{ if(!localStorage.getItem('saved-posts-audiohint')){ localStorage.setItem('saved-posts-audiohint','1'); toast('This clip has sound. Tap the speaker on it to listen.'); } }catch(e){}
+  };
   const ab = t.dataset.ab, ha = t.dataset.ha;
   if(ab){
     const cands = [ab+'/DASH_AUDIO_128.mp4', ab+'/DASH_AUDIO_64.mp4', ab+'/DASH_audio.mp4'];
@@ -2016,6 +2147,14 @@ $('nsfwseg').addEventListener('click',e=>{ const b = e.target.closest('.pill'); 
   apply(null);
   fb.addEventListener('click',()=>apply(body.classList.contains('deck-collapsed') ? 'filters' : null));
   sb.addEventListener('click',()=>apply(body.classList.contains('src-collapsed') ? 'source' : null));
+  /* tap or click outside an open panel (and outside the buttons that open them) puts it away */
+  document.addEventListener('click',e=>{
+    if(body.classList.contains('deck-collapsed') && body.classList.contains('src-collapsed')) return;
+    if(!e.isTrusted) return;   // the page's own programmatic clicks (such as a download link) are not a tap outside
+    const t = e.target; if(!t || !t.closest || !t.isConnected) return;
+    if(t.closest('#panel,#srcpanel,#navbtns,dialog,#confirm')) return;
+    apply(null);
+  });
   document.addEventListener('keydown',e=>{
     if(e.key!=='Escape' || e.defaultPrevented) return;
     if(!body.classList.contains('deck-collapsed')){ apply(null); fb.focus(); }
@@ -2549,8 +2688,21 @@ function updateSrcBtn(){
   const b = $('srctoggle'), badge = $('srcBadge'); if(!b) return;
   const cloud = isCloudList(LIB.cur);
   if(badge) badge.hidden = !cloud;
-  const t = cloud ? 'Source: account list, synced' + (SESSION && SESSION.email ? ' ('+SESSION.email+')' : '') : (SESSION ? 'Source: local list (signed in as '+(SESSION.email||'your account')+')' : 'Source and sync');
+  const stt = cloud && typeof SYNC!=='undefined' ? ({syncing:', syncing now', ok:', synced', error:', sync problem', offline:', offline'}[SYNC.state] || ', synced') : '';
+  const t = cloud ? 'Source: account list' + stt + (SESSION && SESSION.email ? ' ('+SESSION.email+')' : '') : (SESSION ? 'Source: local list (signed in as '+(SESSION.email||'your account')+')' : 'Source and sync');
   b.setAttribute('aria-label', t); b.title = t;
+}
+const EXPKEY = 'saved-posts-lastexport';
+const lastExport = id => { try{ return (JSON.parse(localStorage.getItem(EXPKEY)||'{}'))[id] || 0; }catch(e){ return 0; } };
+const noteExport = id => { try{ const o = JSON.parse(localStorage.getItem(EXPKEY)||'{}'); o[id] = Date.now(); localStorage.setItem(EXPKEY, JSON.stringify(o)); }catch(e){} };
+/* A Local list lives only in this browser, so nudge toward keeping a copy. Account lists and linked files already have one. */
+function updateExpHint(){
+  const el = $('expHint'), r = LIB.cur; if(!el) return;
+  const need = r && !r.cloud && !r.handle && ROWS.length > 0;
+  el.hidden = !need; if(!need) return;
+  const t = lastExport(r.id), days = t ? (Date.now()-t)/86400000 : Infinity;
+  el.dataset.warn = days > 14 ? '1' : '0';
+  el.textContent = t ? 'Last exported '+agoText(t)+(days > 14 ? '. A fresh backup is a good idea.' : '.') : 'Not backed up yet. This list lives only in this browser, so export a copy now and then.';
 }
 function csvInfo(){
   updateSrcBtn();
@@ -2569,6 +2721,7 @@ function csvInfo(){
   cb.hidden = !(CLOUD_ON && SESSION);
   cb.textContent = cloud ? 'Stop syncing' : 'Sync with account';
   cb.title = cloud ? 'Keep this list on this device only. Your account keeps its own copy.' : 'Merge this list into your account and keep it in step across devices';
+  updateSyncUI(); updateExpHint();
   $('csvUnload').disabled = !ROWS.length && !TOMBS.size && !r.handle && !r.cloud && LIB.list.length <= 1;   // nothing to unload: only an empty list is here
   const opts = $('csvSel').options; for(let i=0;i<opts.length;i++){ const x = (LIB.cur && LIB.cur.id===opts[i].value) ? LIB.cur : LIB.list.find(q=>q.id===opts[i].value); if(x) opts[i].textContent = kindLabel(x)+' \u00b7 '+x.name; }
 }
@@ -2719,9 +2872,38 @@ async function sbRest(path, opts){
   return res;
 }
 const recToWire = (r, del) => del ? {id:r.id, permalink:r.perma||'', starred:false, updated:r.t||0, deleted:true} : {id:r.id, permalink:r.perma||'', starred:!!r.starred, updated:r.t||0, deleted:false};
+/* Sync status shown in the Source panel and on the Source button: syncing, ok (with time), offline, or error. */
+const SYNC = {state:'idle', at:0, err:''};
+async function syncCloud(rec){
+  if(!CLOUD_ON || !SESSION || cloudBusy) return false;
+  SYNC.state = 'syncing'; updateSyncUI();
+  try{
+    const r = await syncCloudInner(rec);
+    if(r){ SYNC.state = 'ok'; SYNC.at = Date.now(); SYNC.err = ''; } else if(SYNC.state==='syncing') SYNC.state = 'idle';
+    updateSyncUI(); return r;
+  }catch(e){
+    SYNC.state = navigator.onLine===false ? 'offline' : 'error'; SYNC.err = (e && e.message) || 'offline'; updateSyncUI(); throw e;
+  }
+}
+const agoText = t => { const m = Math.round((Date.now()-t)/60000); return m < 1 ? 'just now' : m < 60 ? m+' min ago' : m < 1440 ? Math.round(m/60)+' h ago' : Math.round(m/1440)+' d ago'; };
+function updateSyncUI(){
+  const row = $('syncRow'), line = $('syncLine'), retry = $('syncRetry'), badge = $('srcBadge');
+  const cloud = isCloudList(LIB.cur);
+  let st = SYNC.state; if(cloud && st==='idle' && navigator.onLine===false) st = 'offline';
+  if(row){
+    row.hidden = !cloud; row.dataset.s = st;
+    line.textContent = st==='syncing' ? 'Syncing...' : st==='ok' ? 'Synced '+agoText(SYNC.at) : st==='offline' ? 'Offline. Changes will sync when you are back online.' : st==='error' ? 'Sync problem: '+SYNC.err : '';
+    retry.hidden = !(cloud && (st==='error' || st==='offline'));
+  }
+  if(badge) badge.dataset.s = cloud ? st : '';
+  updateSrcBtn();
+}
+setInterval(updateSyncUI, 30000);
+addEventListener('online', ()=>{ updateSyncUI(); if(SESSION && LIB.cur && LIB.cur.cloud) autoSync(true); });
+addEventListener('offline', updateSyncUI);
 /* Download what changed in the account since last time, merge it into this list, then upload what this device changed. */
 let cloudBusy = false;
-async function syncCloud(rec){
+async function syncCloudInner(rec){
   if(!CLOUD_ON || !SESSION || cloudBusy) return false;
   cloudBusy = true;
   try{
@@ -2768,6 +2950,7 @@ function acctRender(){
   $('acct').hidden = !on;
   if(!on){ csvInfo(); return; }
   $('acReset').hidden = !(RESET_MODE && SESSION);
+  if(SESSION || RESET_MODE || RETURN_ERR) $('acct').open = true;   // signed in (or arriving from an email link): show it; otherwise it stays folded away
   $('acctOut').hidden = !!SESSION; $('acctIn').hidden = !SESSION || (RESET_MODE && !!SESSION);
   $('acWho').textContent = SESSION ? 'Signed in as '+(SESSION.email || 'your account')+'. Lists marked Account sync across your devices; Local lists stay on this one.' : '';
   $('acGh').hidden = !((CFG.providers||[]).includes('github'));
@@ -2798,6 +2981,7 @@ async function doSign(kind){
     else acctMsg('Account created. Check your email to confirm it, then sign in.');
   }catch(e){ acctMsg(e.message || 'Could not sign in.','warn'); }
 }
+$('syncRetry').addEventListener('click',()=>{ if(SESSION && LIB.cur && LIB.cur.cloud) autoSync(true); });
 $('acIn').onclick = () => doSign('in');
 $('acUp').onclick = () => doSign('up');
 $('acPass').addEventListener('keydown',e=>{ if(e.key==='Enter') doSign('in'); });
@@ -2992,7 +3176,7 @@ async function pruneBroken(){
   let all;
   for(;;){
     const r = await confirmDialog({
-      title:'Delete missing and broken posts?',
+      title:'Remove dead posts?',
       paras:[total.toLocaleString()+' posts match the Hide broken media filter: '+hit.removed.length.toLocaleString()+' removed or deleted with nothing recovered, '+hit.broken.length.toLocaleString()+' whose media cannot be shown, and '+hit.notfound.length.toLocaleString()+' not found in any archive.',
              'Posts not found in any archive are often recent saves that still exist on Reddit, so they are only deleted if you tick the box below.',
              'Deleted posts are permanently removed from "'+LIB.cur.name+'". This cannot be undone. Your saved posts on Reddit are not changed.'],
@@ -3229,14 +3413,29 @@ $('csvSel').addEventListener('change',async()=>{
   const rec = LIB.list.find(r=>r.id===$('csvSel').value); if(!rec) return;
   await activate(rec); startCsvMode();
 });
-$('csvOpen').addEventListener('click',async()=>{
-  const r = await pickCsv(false); if(!r) return;
+async function openCsvResult(r){
   const {rows} = csvToRows(r.text);
   if(!rows.length){ csvStatus('No posts found in that file. It needs an id and permalink column.','warn'); return; }
   const rec = {id:'csv-'+Date.now().toString(36), name:r.name, text:r.text, handle:r.handle, updated:Date.now(), synced:!!r.handle};
   await persistRec(rec); await activate(rec); startCsvMode();
   csvStatus('Opened "'+r.name+'" with '+rows.length.toLocaleString()+' posts.');
-});
+}
+document.addEventListener('click',e=>{ if(e.target.closest && e.target.closest('#introOpen')) $('csvOpen').click(); });
+$('csvOpen').addEventListener('click',async()=>{ const r = await pickCsv(false); if(r) await openCsvResult(r); });
+/* Drop a CSV anywhere on the page to open it (files from a drop cannot be linked for saving, like the plain file picker). */
+(function(){
+  let depth = 0; const hasFiles = e => e.dataTransfer && [...(e.dataTransfer.types||[])].includes('Files');
+  const veil = document.createElement('div'); veil.className = 'dropveil'; veil.hidden = true; veil.innerHTML = '<div>Drop your CSV to open it</div>'; document.body.appendChild(veil);
+  addEventListener('dragenter',e=>{ if(!hasFiles(e)) return; e.preventDefault(); depth++; veil.hidden = false; });
+  addEventListener('dragover',e=>{ if(hasFiles(e)) e.preventDefault(); });
+  addEventListener('dragleave',e=>{ if(!hasFiles(e)) return; depth = Math.max(0,depth-1); if(!depth) veil.hidden = true; });
+  addEventListener('drop',async e=>{
+    if(!hasFiles(e)) return; e.preventDefault(); depth = 0; veil.hidden = true;
+    const f = e.dataTransfer.files[0]; if(!f) return;
+    if(!/\.(csv|txt)$/i.test(f.name) && f.type && !/csv|text/.test(f.type)){ csvStatus('That does not look like a CSV file.','warn'); return; }
+    await openCsvResult({name:f.name, text:await f.text(), handle:null});
+  });
+})();
 $('csvMerge').addEventListener('click',async()=>{
   const r = await pickCsv(true); if(!r) return;
   const remote = csvToRows(r.text);
@@ -3261,7 +3460,7 @@ $('csvMerge').addEventListener('click',async()=>{
   applyMerged(res); await commit(); startCsvMode();
   csvStatus('Merged "'+r.name+'": '+rep.added.length.toLocaleString()+' added'+(rep.removedHere.length?', '+rep.removedHere.length+' removed':'')+(rep.skippedDeleted.length ? (restore ? ', '+rep.skippedDeleted.length+' restored' : ', '+rep.skippedDeleted.length+' kept deleted') : '')+'.');
 });
-$('csvExport').addEventListener('click',()=>{ download(/\.csv$/i.test(LIB.cur.name) ? LIB.cur.name : LIB.cur.name+'.csv', rowsToCsv(ROWS, TOMBS)); csvStatus('Exported '+ROWS.length.toLocaleString()+' posts'+(TOMBS.size ? ' and '+TOMBS.size.toLocaleString()+' deletion records' : '')+'.'); });
+$('csvExport').addEventListener('click',()=>{ noteExport(LIB.cur.id); updateExpHint(); download(/\.csv$/i.test(LIB.cur.name) ? LIB.cur.name : LIB.cur.name+'.csv', rowsToCsv(ROWS, TOMBS)); csvStatus('Exported '+ROWS.length.toLocaleString()+' posts'+(TOMBS.size ? ' and '+TOMBS.size.toLocaleString()+' deletion records' : '')+'.'); });
 $('csvCloud').addEventListener('click',async()=>{
   const rec = LIB.cur; if(!rec || !SESSION) return;
   if(isCloudList(rec)){
@@ -3286,7 +3485,7 @@ $('csvUnload').addEventListener('click',async()=>{
   const d = await confirmDialog({title:'Unload "'+rec.name+'"?', paras, ok:'Unload',
     option: onlyHere && (ROWS.length || TOMBS.size) ? 'Download a copy of the CSV first' : ''});
   if(d!=='ok') return;
-  if(onlyHere && $('cOpt').checked) download(/\.csv$/i.test(rec.name) ? rec.name : rec.name+'.csv', rowsToCsv(ROWS, TOMBS));
+  if(onlyHere && $('cOpt').checked){ noteExport(rec.id); } if(onlyHere && $('cOpt').checked) download(/\.csv$/i.test(rec.name) ? rec.name : rec.name+'.csv', rowsToCsv(ROWS, TOMBS));
   await commitChain;   // let any pending save or account upload finish first
   if(LIB.db){ try{ await idbReq('csv','readwrite',s=>s.delete(rec.id)); await idbReq('kv','readwrite',s=>s.delete('last')); }catch(e){} }
   else { try{ localStorage.removeItem('saved-posts-csv-fallback'); }catch(e){} }
@@ -3312,6 +3511,8 @@ $('csvReconnect').addEventListener('click',async()=>{
   await initData();
   acctRender();
   startCsvMode();
+  try{ if(ROWS.length && navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+  try{ restoreView(); }catch(e){}   // ask the browser not to clear this list when it is short on space
   if(RESET_MODE || RETURN_ERR){   // show the Source panel, where the new-password form (or the problem) is
     if(document.body.classList.contains('src-collapsed')) $('srctoggle').click();
     if(RETURN_ERR) acctMsg(RETURN_ERR,'warn'); else acctMsg('Choose a new password for your account.');

@@ -23,6 +23,14 @@ with sync_playwright() as p:
     pg.goto(PAGE); pg.wait_for_timeout(1200); ev = pg.evaluate
     ev("""async()=>{ LIB.cur.cloud = true; LIB.cur.needFull = true; await autoSync(true); }"""); pg.wait_for_timeout(500)
     check('cloud sync filled the list', ev("ROWS.length") == 2)
+    pg.click('#srctoggle'); pg.wait_for_timeout(200)
+    check('sync row shows a time after a good sync', 'Synced' in ev("$('syncLine').textContent") and ev("$('srcBadge').dataset.s") == 'ok')
+    pg.route('**/rest/v1/**', lambda r: r.abort())
+    ev("autoSync(true)"); pg.wait_for_timeout(700)
+    check('failed sync shows a problem and a Retry button', ev("$('syncRow').dataset.s") in ('error', 'offline') and pg.is_visible('#syncRetry'))
+    check('source button says there is a sync problem', 'problem' in ev("$('srctoggle').title") or 'offline' in ev("$('srctoggle').title"))
+    pg.unroute('**/rest/v1/**')
+    pg.route('**/*', route)
     pg.route('**/rest/v1/**', lambda r: r.abort())   # offline on refresh
     pg.reload(); pg.wait_for_timeout(1500)
     check('after refresh the account list is still loaded', ev("ROWS.length") == 2 and ev("LIB.cur.cloud") is True)
