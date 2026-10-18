@@ -77,7 +77,8 @@ button,select,input{font:inherit;color:inherit}
   background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:22px;
   display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:28px;max-height:calc(100dvh - 84px);overflow:auto;overscroll-behavior:contain;animation:panelIn .14s ease-out}
 @keyframes panelIn{from{opacity:0;transform:translateY(-6px)}}
-body.deck-collapsed .panel{display:none}
+body.deck-collapsed #panel,body.src-collapsed #srcpanel{display:none}
+#srcpanel{grid-template-columns:1fr;max-width:460px;gap:12px}
 @media (max-width:880px){.panel{grid-template-columns:1fr;gap:22px;padding:18px}}
 .pcol{display:grid;gap:12px;align-content:start;min-width:0}
 .pcol h2{margin:0 0 2px;font-size:12px;font-weight:600;color:var(--muted)}
@@ -287,7 +288,7 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
 #pausebar b{font-variant-numeric:tabular-nums}
 </style>
 </head>
-<body class="deck-collapsed">
+<body class="deck-collapsed src-collapsed">
 <section class="deck" aria-label="Search and filters">
   <div class="deck-in">
     <div class="deck-bar">
@@ -301,6 +302,9 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
         <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 4.5h7M12 4.5h2M2 11.5h2M7 11.5h7"/><circle cx="10.5" cy="4.5" r="1.6"/><circle cx="5.5" cy="11.5" r="1.6"/></svg>
         Filters
       </button>
+      <button class="pill" id="srctoggle" type="button" aria-expanded="false" aria-controls="srcpanel" aria-label="Source, account and sync" title="Source, account and sync" style="padding-left:10px;padding-right:10px">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.6 12.2h6.2a2.6 2.6 0 0 0 .5-5.15A3.7 3.7 0 0 0 4.2 6.3a2.95 2.95 0 0 0 .4 5.9z"/></svg>
+      </button>
       <button class="pill" id="shufflebtn" type="button" aria-label="Randomize order" title="Randomize order" style="padding-left:10px;padding-right:10px">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 4.5h2.2c3.6 0 4.6 7 8.2 7h2.6M1.5 11.5h2.2c1 0 1.7-.6 2.4-1.5M9.9 6c.6-.9 1.3-1.5 2-1.5h2.6"/><path d="M12.5 2.5l2 2-2 2M12.5 9.5l2 2-2 2"/></svg>
       </button>
@@ -308,44 +312,6 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
 
     <div class="panel" id="panel" role="region" aria-label="Filters">
       <div class="pcol">
-        <h2>Source</h2>
-        <div class="srcseg"><button class="pill" id="srcCsv" type="button" aria-pressed="true">Saved CSV</button><button class="pill" id="srcSub" type="button" aria-pressed="false">Subreddit</button></div>
-        <div class="grp" id="acct" hidden>
-          <div class="grp" id="acctOut">
-            <input id="acEmail" class="field" type="email" placeholder="Email" autocomplete="email" aria-label="Email">
-            <input id="acPass" class="field" type="password" placeholder="Password (8+ characters)" autocomplete="current-password" aria-label="Password">
-            <div class="btnrow">
-              <button class="pill" id="acIn" type="button">Sign in</button>
-              <button class="pill" id="acUp" type="button">Create account</button>
-              <button class="pill" id="acGh" type="button" hidden>Continue with GitHub</button>
-              <button class="pill" id="acForgot" type="button">Forgot password</button>
-            </div>
-          </div>
-          <div class="grp" id="acctIn" hidden>
-            <span id="acWho"></span>
-            <div class="btnrow"><button class="pill" id="acSync" type="button">Sync now</button><button class="pill" id="acOut" type="button">Sign out</button></div>
-          </div>
-          <span id="acMsg"></span>
-        </div>
-        <div class="grp" id="csvTools">
-          <select id="csvSel" class="field" aria-label="CSV file"></select>
-          <div class="btnrow">
-            <button class="pill" id="csvOpen" type="button" title="Open a CSV and keep it linked for saving">Open CSV</button>
-            <button class="pill" id="csvMerge" type="button" title="Add posts from another CSV">Merge CSV</button>
-            <button class="pill" id="csvExport" type="button">Export CSV</button>
-            <button class="pill" id="csvPrune" type="button" title="Delete removed, not-found and broken posts from the CSV">Delete missing/broken</button>
-            <button class="pill" id="csvSync" type="button" title="Re-read the linked file and merge changes made on another device" hidden>Sync now</button>
-            <button class="pill" id="csvReconnect" type="button" hidden>Reconnect file</button>
-          </div>
-          <span id="csvStatus"></span>
-          <input id="csvfile" type="file" accept=".csv,text/csv,text/plain" hidden>
-        </div>
-        <form class="subform" id="subForm" hidden>
-          <label class="prefixed"><span>reddit.com/r/</span><input id="subUrl" type="text" placeholder="gaming+pcgaming" aria-label="Subreddits, joined with +" spellcheck="false" autocomplete="off" autocapitalize="off"></label>
-          <div class="btnrow"><button class="pill" type="submit">Load</button><span class="hint">Join subreddits with +. Paste a multireddit link to use one. 100 posts at a time.</span></div>
-          <div id="multiAsk" hidden><span class="hint" id="multiLbl"></span><input id="multiNames" type="text" placeholder="pics+aww+earthporn" aria-label="Subreddits in this multireddit" spellcheck="false" autocomplete="off"></div>
-          <span id="subErr" role="alert"></span>
-        </form>
         <h2>Browse</h2>
         <div class="grp"><span class="lbl">Content</span><div class="chips" id="catChips"></div></div>
         <div class="grp"><span class="lbl">Kind</span><div class="chips" id="kindChips"></div></div>
@@ -407,6 +373,49 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
         <label class="toggle" for="hidebroken" title="Hides posts with no working thumbnail or media, including ones with nothing to display">Hide broken media <span id="deadcount"></span><input id="hidebroken" type="checkbox"></label>
         <label class="toggle" for="autoplay">Auto-play in view<input id="autoplay" type="checkbox"></label>
         <label class="toggle" for="unblur">Unblur all NSFW<input id="unblur" type="checkbox"></label>
+      </div>
+    </div>
+
+    <div class="panel" id="srcpanel" role="region" aria-label="Source and account">
+      <div class="pcol">
+        <h2>Source</h2>
+        <div class="srcseg"><button class="pill" id="srcCsv" type="button" aria-pressed="true">Saved CSV</button><button class="pill" id="srcSub" type="button" aria-pressed="false">Subreddit</button></div>
+        <div class="grp" id="acct" hidden>
+          <div class="grp" id="acctOut">
+            <input id="acEmail" class="field" type="email" placeholder="Email" autocomplete="email" aria-label="Email">
+            <input id="acPass" class="field" type="password" placeholder="Password (8+ characters)" autocomplete="current-password" aria-label="Password">
+            <div class="btnrow">
+              <button class="pill" id="acIn" type="button">Sign in</button>
+              <button class="pill" id="acUp" type="button">Create account</button>
+              <button class="pill" id="acGh" type="button" hidden>Continue with GitHub</button>
+              <button class="pill" id="acForgot" type="button">Forgot password</button>
+            </div>
+          </div>
+          <div class="grp" id="acctIn" hidden>
+            <span id="acWho"></span>
+            <div class="btnrow"><button class="pill" id="acSync" type="button">Sync now</button><button class="pill" id="acOut" type="button">Sign out</button></div>
+          </div>
+          <span id="acMsg"></span>
+        </div>
+        <div class="grp" id="csvTools">
+          <select id="csvSel" class="field" aria-label="CSV file"></select>
+          <div class="btnrow">
+            <button class="pill" id="csvOpen" type="button" title="Open a CSV and keep it linked for saving">Open CSV</button>
+            <button class="pill" id="csvMerge" type="button" title="Add posts from another CSV">Merge CSV</button>
+            <button class="pill" id="csvExport" type="button">Export CSV</button>
+            <button class="pill" id="csvPrune" type="button" title="Delete removed, not-found and broken posts from the CSV">Delete missing/broken</button>
+            <button class="pill" id="csvSync" type="button" title="Re-read the linked file and merge changes made on another device" hidden>Sync now</button>
+            <button class="pill" id="csvReconnect" type="button" hidden>Reconnect file</button>
+          </div>
+          <span id="csvStatus"></span>
+          <input id="csvfile" type="file" accept=".csv,text/csv,text/plain" hidden>
+        </div>
+        <form class="subform" id="subForm" hidden>
+          <label class="prefixed"><span>reddit.com/r/</span><input id="subUrl" type="text" placeholder="gaming+pcgaming" aria-label="Subreddits, joined with +" spellcheck="false" autocomplete="off" autocapitalize="off"></label>
+          <div class="btnrow"><button class="pill" type="submit">Load</button><span class="hint">Join subreddits with +. Paste a multireddit link to use one. 100 posts at a time.</span></div>
+          <div id="multiAsk" hidden><span class="hint" id="multiLbl"></span><input id="multiNames" type="text" placeholder="pics+aww+earthporn" aria-label="Subreddits in this multireddit" spellcheck="false" autocomplete="off"></div>
+          <span id="subErr" role="alert"></span>
+        </form>
       </div>
     </div>
   </div>
@@ -1698,12 +1707,19 @@ $('nsfwonly').addEventListener('change',e=>{
   box.addEventListener('change',()=>{ apply(box.checked); try{ localStorage.setItem(KEY, box.checked?'1':'0'); }catch(e){} });
 })();
 (function(){
-  const btn = $('decktoggle');
-  const apply = open => { document.body.classList.toggle('deck-collapsed', !open); btn.setAttribute('aria-expanded', open ? 'true' : 'false'); };
-  apply(false);
-  btn.addEventListener('click',()=>apply(document.body.classList.contains('deck-collapsed')));
+  const fb = $('decktoggle'), sb = $('srctoggle'), body = document.body;
+  /* Two floating panels share the bar: Filters (what is shown) and Source (which list, sign-in, sync). Opening one closes the other. */
+  const apply = which => {
+    body.classList.toggle('deck-collapsed', which!=='filters'); body.classList.toggle('src-collapsed', which!=='source');
+    fb.setAttribute('aria-expanded', which==='filters' ? 'true' : 'false'); sb.setAttribute('aria-expanded', which==='source' ? 'true' : 'false');
+  };
+  apply(null);
+  fb.addEventListener('click',()=>apply(body.classList.contains('deck-collapsed') ? 'filters' : null));
+  sb.addEventListener('click',()=>apply(body.classList.contains('src-collapsed') ? 'source' : null));
   document.addEventListener('keydown',e=>{
-    if(e.key==='Escape' && !e.defaultPrevented && !document.body.classList.contains('deck-collapsed')){ apply(false); btn.focus(); }
+    if(e.key!=='Escape' || e.defaultPrevented) return;
+    if(!body.classList.contains('deck-collapsed')){ apply(null); fb.focus(); }
+    else if(!body.classList.contains('src-collapsed')){ apply(null); sb.focus(); }
   });
 })();
 (function(){

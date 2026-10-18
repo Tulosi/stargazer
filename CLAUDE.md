@@ -8,7 +8,7 @@ Hosted on GitHub Pages. Accounts and storage come from Supabase (free plan). The
 - `supabase/schema.sql`  table, row-level security and the `merge_posts` function. Run once in the Supabase SQL editor.
 - `tools/hot_relay.py`  optional local relay that lets the page read Reddit's real hot feed (browsers cannot call Reddit directly).
 - `.github/workflows/`  `pages.yml` deploys `site/`; `keepalive.yml` pings Supabase so the free project is not paused.
-- `tests/`  Playwright and SQL checks (see below).
+- `tests/`  Playwright checks (`merge_test.py`, `nsfw_test.py`, `panels_test.py`).
 
 ## Rules that must not be broken
 1. **No personal data in the repo.** No saved-post lists, no CSV files, no subreddit lists from a real account, no keys other than the Supabase anon key. `.gitignore` blocks `*.csv` and `local/`.
@@ -21,6 +21,7 @@ Hosted on GitHub Pages. Accounts and storage come from Supabase (free plan). The
 5. The page must keep working with no `config.js` values (accounts hidden) and from `file://`.
 
 ## Working notes
+- The top bar has two floating panels: **Filters** (`#panel`, what is shown) and **Source** (`#srcpanel`, which list, sign-in, sync, Subreddit mode). Opening one closes the other. Keep source/account controls out of Filters.
 - The page is one file on purpose. Search by function name (`syncCloud`, `mergeSets`, `fillCard`, `openViewer`, ...).
 - Archive APIs (Arctic Shift, PullPush, Wayback) are rate limited; requests go through `timed()` / `apiRetry()` with per-host spacing and back-off. Do not add direct `fetch` calls to them.
 - Images load through the `IMGQ` queue (limits concurrency, pauses on bursts of failures, shows a countdown).
