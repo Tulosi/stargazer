@@ -270,6 +270,9 @@ body.unblur .reveal{display:none!important}
 .fs{right:44px}
 .save{right:80px}
 .nsfwb{right:116px}
+/* no full-screen button (text posts): the others close the gap */
+.card:not(:has(.fs)) .save{right:44px}
+.card:not(:has(.fs)) .nsfwb,.card:not(:has(.fs)) .badge.tag{right:80px}
 .nsfwb[hidden]{display:none}
 .nsfwb[aria-pressed=true]{background:rgba(255,255,255,.78);color:#111}
 .nsfwb[aria-pressed=true]:hover{background:rgba(255,255,255,.92);color:#111}
@@ -426,6 +429,8 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
   .srcseg .pill,.nsfwseg .pill{height:36px}
   .star,.fs,.save{width:40px;height:40px}
   .fs{right:54px}.save{right:100px}.nsfwb{right:146px}.badge.tag{right:146px}
+  .card:not(:has(.fs)) .save{right:54px}
+  .card:not(:has(.fs)) .nsfwb,.card:not(:has(.fs)) .badge.tag{right:100px}
 }
 
 /* ---------- List layout: short rows, card info on a blurred preview, no media controls ---------- */
@@ -454,6 +459,8 @@ body.layout-list .meta>*{flex:none}
   body.layout-list .card.btns-open .fs{right:92px}
   body.layout-list .card.btns-open .save{right:134px}
   body.layout-list .card.btns-open .nsfwb{right:176px}
+  body.layout-list .card.btns-open:not(:has(.fs)) .save{right:92px}
+  body.layout-list .card.btns-open:not(:has(.fs)) .nsfwb{right:134px}
   body.layout-list .badge.tag{top:6px;margin-top:0;right:52px}
 }
 body.layout-list .star,body.layout-list .fs,body.layout-list .save{top:50%;margin-top:-15px}

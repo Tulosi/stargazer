@@ -14,7 +14,7 @@ with sync_playwright() as p:
     pg.goto(PAGE); pg.wait_for_timeout(800); ev = pg.evaluate
     ev("""async(t)=>{ await persistRec({id:'x',name:'x.csv',text:t,handle:null,updated:Date.now()}); await activate(await idbReq('csv','readonly',s=>s.get('x'))); for(const k in META) delete META[k]; startCsvMode(); }""", H + rows)
     pg.wait_for_timeout(600)
-    ev("""()=>{ POSTS.forEach((p,i)=>{ META[p.id] = {t:'T'+i,o:0,th:'https://i.redd.it/a.jpg',m:'img',u:'',n:0,s:0,a:'',c:0,w:i%2?1600:400,h:i%2?400:900}; }); refresh(); }""")
+    ev("""()=>{ POSTS.forEach((p,i)=>{ META[p.id] = {t:'T'+i,o:0,th:'https://i.redd.it/a.jpg',m:'image',u:'',n:0,s:0,a:'',c:0,w:i%2?1600:400,h:i%2?400:900}; }); state.hideBroken=false; refresh(); }""")
     pg.wait_for_timeout(400)
     ev('relayoutAll()')
     rows_ = lambda: ev("[...new Set([...document.querySelectorAll('#grid .card')].map(c=>c.style.gridRow))]")
@@ -37,6 +37,11 @@ with sync_playwright() as p:
     ev("document.querySelector('#layoutseg [data-l=list]').click()")
     check('List remembers its own card-info choice', ev("document.getElementById('infomode').value")=='hover')
     ev("document.querySelector('#layoutseg [data-l=masonry]').click()")
+    ev("document.querySelector('#layoutseg [data-l=masonry]').click()"); pg.wait_for_timeout(200)
+    def gap():
+        return ev("""(()=>{ const c=[...document.querySelectorAll('#grid .card')].find(x=>x.querySelector('.fs')&&x.querySelector('.save')); const st=c.querySelector('.star').getBoundingClientRect(), a=c.querySelector('.fs').getBoundingClientRect(); const fs=c.querySelector('.fs'); const g1=Math.round(st.left-a.right); fs.remove(); const sv=c.querySelector('.save').getBoundingClientRect(); return [g1, Math.round(st.left-sv.right)]; })()""")
+    g = gap()
+    check('without a full-screen button the save button closes the gap', abs(g[0]-g[1]) <= 1)
     check('hint names Masonry as best for media', 'media' in ev("document.getElementById('layouthint').textContent"))
     ev("document.querySelector('#layoutseg [data-l=list]').click()")
     check('hint names List as best for text posts', 'text posts' in ev("document.getElementById('layouthint').textContent"))
