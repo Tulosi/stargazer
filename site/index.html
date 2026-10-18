@@ -116,7 +116,14 @@ button,select,input{font:inherit;color:inherit}
 .actgrid .pill:disabled{opacity:.45;cursor:default}
 #decktoggle[aria-expanded="true"]{background:var(--sel);color:var(--sel-ink)}
 #decktoggle[data-active="1"]::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--hot)}
-@media (max-width:720px){#srctoggle{margin-left:auto}.brand .logo{height:34px}}
+@media (max-width:720px){
+  #srctoggle{margin-left:auto}
+  .brand .logo{height:28px}
+  .deck-in{padding-top:7px;padding-bottom:7px}
+  .deck-bar{gap:8px}
+  .deck-bar .pill{width:36px;height:36px;padding:0!important;justify-content:center;border-radius:50%;flex:0 0 auto}
+  .deck-bar.search-open .search{right:44px}
+}
 
 /* ---- filter panel: floats over the grid, closed by default ---- */
 .panel{position:absolute;right:max(14px,env(safe-area-inset-right,0px));left:max(14px,env(safe-area-inset-left,0px));top:calc(100% + 8px);max-width:980px;margin-left:auto;
