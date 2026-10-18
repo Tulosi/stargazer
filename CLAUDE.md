@@ -1,0 +1,30 @@
+# Saved Posts Browser
+
+A single-file web page (`site/index.html`, no build step, no dependencies) that shows saved Reddit posts as a bento gallery.
+Hosted on GitHub Pages. Accounts and storage come from Supabase (free plan). The page is public; the data is not.
+
+## Layout
+- `site/index.html`  the whole app (HTML, CSS, JS). `site/config.js` holds the Supabase URL and anon key (safe to publish; Row Level Security protects data).
+- `supabase/schema.sql`  table, row-level security and the `merge_posts` function. Run once in the Supabase SQL editor.
+- `tools/hot_relay.py`  optional local relay that lets the page read Reddit's real hot feed (browsers cannot call Reddit directly).
+- `.github/workflows/`  `pages.yml` deploys `site/`; `keepalive.yml` pings Supabase so the free project is not paused.
+- `tests/`  Playwright and SQL checks (see below).
+
+## Rules that must not be broken
+1. **No personal data in the repo.** No saved-post lists, no CSV files, no subreddit lists from a real account, no keys other than the Supabase anon key. `.gitignore` blocks `*.csv` and `local/`.
+2. **Never add the Supabase `service_role` key anywhere.**
+3. **Data scheme** (CSV and database): `id, permalink, starred, updated, deleted`. `updated` is the ms time of the last change to that post; `deleted=1` is a tombstone that is kept forever.
+   Merge rule, in `pickRec` / `mergeSets` in the page and in `merge_posts` in SQL (keep them identical): newer `updated` wins; on a tie a tombstone beats a live row; two live ties keep the star if either has it.
+   A post with a tombstone must never be revived by an older copy.
+4. Every edit must stamp the record (`nowT`) and call `markDirty`; deletions go through `deleteRows`.
+5. The page must keep working with no `config.js` values (accounts hidden) and from `file://`.
+
+## Working notes
+- The page is one file on purpose. Search by function name (`syncCloud`, `mergeSets`, `fillCard`, `openViewer`, ...).
+- Archive APIs (Arctic Shift, PullPush, Wayback) are rate limited; requests go through `timed()` / `apiRetry()` with per-host spacing and back-off. Do not add direct `fetch` calls to them.
+- Images load through the `IMGQ` queue (limits concurrency, pauses on bursts of failures, shows a countdown).
+- Touch screens use touch events for pinch/zoom in the viewer; mouse and pen use pointer events.
+- Test by loading the page in Playwright with network routes mocked (see `tests/`). There is no live access to Reddit or the archives from the dev sandbox.
+
+## Deploying
+Push to `main`; `pages.yml` publishes `site/`. Settings needed once: Pages source = GitHub Actions; Actions secrets `SUPABASE_URL`, `SUPABASE_ANON_KEY` for the keepalive.

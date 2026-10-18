@@ -1,0 +1,7 @@
+# personal data never goes in this repository
+local/
+*.csv
+config.local.js
+.env
+node_modules/
+__pycache__/

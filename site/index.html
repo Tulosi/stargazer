@@ -1,0 +1,2875 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src * data: blob:; media-src * data: blob:; connect-src *; frame-src https://www.youtube.com https://www.redgifs.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<script src="config.js"></script>
+<meta name="referrer" content="no-referrer">
+<title>Saved</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+<script>try{var t=localStorage.getItem("saved-posts-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<style>
+/* Quiet chrome, loud media. Neutral monochrome UI; the only colour on the page comes from the posts themselves.
+   Tokens keep their old names so existing component rules and scripts keep working. */
+:root{
+  --bg:#f3f4f6; --surface:#ffffff; --surface-2:#e8e9ed; --ink:#15161a; --muted:#6a6d77; --line:#dcdee4;
+  --accent:#15161a; --accent-ink:#ffffff; --chip-on:#15161a; --warn:#b4540a;
+  --glass:rgba(243,244,246,.78);
+  --shadow:0 18px 50px rgba(18,20,28,.16),0 2px 8px rgba(18,20,28,.06);
+  --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%236a6d77' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
+  --ph-l:88%; --ph-s:20%;
+  --font:'Geist',ui-sans-serif,system-ui,-apple-system,'Segoe UI Variable Text','Segoe UI',Roboto,'Helvetica Neue',sans-serif;
+  --font-display:var(--font); --font-body:var(--font); --font-mono:var(--font);
+  --card:230px;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#121214; --surface:#1b1b1f; --surface-2:#26262b; --ink:#ececef; --muted:#8d8f98; --line:#2f2f35;
+  --accent:#ececef; --accent-ink:#121214; --chip-on:#ececef; --warn:#f0a35e;
+  --glass:rgba(18,18,20,.78);
+  --shadow:0 18px 50px rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.4);
+  --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%238d8f98' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
+  --ph-l:22%; --ph-s:16%;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#121214; --surface:#1b1b1f; --surface-2:#26262b; --ink:#ececef; --muted:#8d8f98; --line:#2f2f35;
+    --accent:#ececef; --accent-ink:#121214; --chip-on:#ececef; --warn:#f0a35e;
+    --glass:rgba(18,18,20,.78);
+    --shadow:0 18px 50px rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.4);
+    --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%238d8f98' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
+    --ph-l:22%; --ph-s:16%;
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 14px/1.45 var(--font);padding-bottom:56px;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+[hidden]{display:none!important}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.card :focus-visible{outline-color:#fff;outline-offset:-3px}
+.wrap{max-width:1760px;margin:0 auto;padding-inline:max(14px,env(safe-area-inset-left,0px)) max(14px,env(safe-area-inset-right,0px))}
+
+/* ---- top bar ---- */
+.deck{position:sticky;top:0;z-index:30;background:var(--glass);-webkit-backdrop-filter:saturate(1.4) blur(16px);backdrop-filter:saturate(1.4) blur(16px);border-bottom:1px solid var(--line)}
+.deck-in{position:relative;max-width:1760px;margin:0 auto;padding:10px max(14px,env(safe-area-inset-right,0px)) 10px max(14px,env(safe-area-inset-left,0px))}
+.deck-bar{display:flex;align-items:center;gap:12px}
+.brand{font-weight:600;font-size:15px;letter-spacing:-.01em;margin-right:4px}
+.search{position:relative;flex:1 1 auto;max-width:520px;min-width:0}
+.search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+#q{width:100%;height:38px;border:0;border-radius:999px;background:var(--surface-2);padding:0 14px 0 38px;min-width:0}
+#q::placeholder{color:var(--muted)}
+#barcount{margin-left:auto;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill{height:36px;padding:0 15px;border:0;border-radius:999px;background:var(--surface-2);font-weight:500;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.pill:hover{background:var(--line)}
+#decktoggle[aria-expanded="true"]{background:var(--ink);color:var(--bg)}
+#decktoggle[data-active="1"]::after{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+@media (max-width:720px){#barcount,.brand{display:none}#decktoggle{margin-left:auto}}
+
+/* ---- filter panel: floats over the grid, closed by default ---- */
+.panel{position:absolute;right:max(14px,env(safe-area-inset-right,0px));left:max(14px,env(safe-area-inset-left,0px));top:calc(100% + 8px);max-width:980px;margin-left:auto;
+  background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:22px;
+  display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:28px;max-height:calc(100dvh - 84px);overflow:auto;overscroll-behavior:contain;animation:panelIn .14s ease-out}
+@keyframes panelIn{from{opacity:0;transform:translateY(-6px)}}
+body.deck-collapsed .panel{display:none}
+@media (max-width:880px){.panel{grid-template-columns:1fr;gap:22px;padding:18px}}
+.pcol{display:grid;gap:12px;align-content:start;min-width:0}
+.pcol h2{margin:0 0 2px;font-size:12px;font-weight:600;color:var(--muted)}
+.grp{display:grid;gap:7px}
+.lbl{font-size:12px;color:var(--muted)}
+.grp:has(.chips:empty){display:none}
+.ctlrow{display:grid;grid-template-columns:92px minmax(0,1fr);align-items:center;gap:10px;font-size:13px}
+.ctlrow:has(select[hidden]){display:none}
+.field{appearance:none;-webkit-appearance:none;border:0;background:var(--surface-2);border-radius:10px;height:34px;padding:0 12px;min-width:0;max-width:100%;font-size:13px}
+select.field{background:var(--surface-2) var(--chev) no-repeat right 11px center;padding-right:30px;cursor:pointer;text-overflow:ellipsis}
+input[type=range]{width:100%;accent-color:var(--ink);margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+.chip{border:0;background:var(--surface-2);color:var(--ink);border-radius:999px;padding:5px 12px;cursor:pointer;display:inline-flex;gap:7px;align-items:baseline;font-size:12.5px;line-height:1.3}
+.chip small{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.chip:hover{background:var(--line)}
+.chip[aria-pressed=true]{background:var(--chip-on);color:var(--accent-ink)}
+.chip[aria-pressed=true] small{color:inherit;opacity:.65}
+.toggle{display:flex;align-items:center;gap:6px;min-height:32px;cursor:pointer;user-select:none;font-size:13px}
+.toggle span{color:var(--muted);font-variant-numeric:tabular-nums}
+.toggle input{appearance:none;-webkit-appearance:none;order:2;margin:0 0 0 auto;flex:none;width:34px;height:20px;border-radius:999px;background:var(--line);position:relative;cursor:pointer;transition:background .15s}
+.toggle input::after{content:"";position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.35);transition:transform .15s,background .15s}
+.toggle input:checked{background:var(--ink)}
+.toggle input:checked::after{transform:translateX(14px);background:var(--bg)}
+.toggle input:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+#favmsg{font-size:12px;color:var(--muted);flex-basis:100%}
+.clear{border:0;background:none;color:var(--ink);font-weight:500;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:2px 0 2px 8px}
+
+/* ---- status line ---- */
+.status{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:14px 0 8px;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.load{display:flex;flex-wrap:wrap;gap:2px 14px;min-width:0}
+.load .err{color:var(--warn)}
+.load button{margin-left:8px;border:0;background:var(--surface-2);border-radius:999px;padding:3px 11px;cursor:pointer;font-size:12px}
+.load .bar{position:fixed;top:0;left:0;right:0;height:2px;z-index:60;pointer-events:none}
+.load .bar i{display:block;height:100%;width:0;background:var(--ink);transition:width .3s}
+.load .bar i[style*="100%"]{opacity:0;transition:width .3s,opacity .5s .7s}
+.summary{white-space:nowrap}
+
+/* ---- bento grid ---- */
+.card{container-type:inline-size}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(var(--card),100%),1fr));grid-auto-rows:4px;grid-auto-flow:row dense;gap:6px}
+.card{position:relative;border-radius:10px;overflow:hidden;background:var(--surface-2);min-width:0;grid-row:span 40}
+.thumb{position:absolute;inset:0;display:block;overflow:hidden;background:var(--surface-2);text-decoration:none}
+.thumb img,.thumb .still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:filter .18s,transform .18s,opacity .2s}
+.thumb .still{opacity:0}
+.thumb .still.ready{opacity:1}
+.thumb iframe.clip{position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none;background:#000}
+.thumb .ph{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:12px;
+  background:hsl(var(--h) var(--ph-s) var(--ph-l));color:var(--ink);font:500 13px/1.25 var(--font);overflow-wrap:anywhere;transition:opacity .15s}
+.thumb .ph span{opacity:.7}
+.ph small{font-size:11px;opacity:.75}
+.thumb .clip{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:var(--surface-2);transition:filter .18s,transform .18s}
+.thumb.nsfw img,.thumb.nsfw .still,.thumb.nsfw .clip{filter:blur(22px);transform:scale(1.12)}
+.card:hover .thumb.nsfw img,.card:hover .thumb.nsfw .still,.card:hover .thumb.nsfw .clip,.thumb.nsfw:focus-visible img,.thumb.nsfw:focus-visible .still,.thumb.nsfw:focus-visible .clip,.thumb.nsfw.show img,.thumb.nsfw.show .still,.thumb.nsfw.show .clip{filter:none;transform:none}
+body.unblur .thumb.nsfw img,body.unblur .thumb.nsfw .still,body.unblur .thumb.nsfw .clip{filter:none;transform:none}
+body.unblur .reveal{display:none!important}
+.card.is-dead .ph{filter:grayscale(.65)}
+
+/* frosted pills and buttons on top of media */
+.badge,.star,.fs,.save,.reveal{background:rgba(12,12,14,.26);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:rgba(255,255,255,.78);transition:opacity .15s,background .15s,color .15s}
+.star:hover,.fs:hover,.save:hover,.reveal:hover{background:rgba(12,12,14,.5);color:#fff}
+.badge{position:absolute;font:500 11px/1 var(--font);padding:5px 9px;border-radius:999px}
+.badge.playable::before{content:'\25B8\00a0'}
+.badge.media{left:8px;top:8px}
+.badge.tag{right:116px;top:8px}
+.badge.rec{right:8px;top:46px}
+.star,.fs,.save{position:absolute;top:8px;z-index:2;width:30px;height:30px;display:grid;place-items:center;border:0;border-radius:50%;padding:0;font-size:16px;line-height:1;cursor:pointer}
+.star{right:8px}
+.fs{right:44px}
+.save{right:80px}
+.fs svg{display:block}
+.gnav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:32px;height:32px;display:grid;place-items:center;border:0;border-radius:50%;padding:0;background:rgba(12,12,14,.26);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:rgba(255,255,255,.78);font-size:22px;line-height:1;cursor:pointer;opacity:0;transition:opacity .15s,background .15s}
+.gnav:hover{background:rgba(12,12,14,.6);color:#fff}
+.gprev{left:8px}
+.gnext{right:8px}
+.card:hover .gnav,.card:focus-within .gnav{opacity:1}
+@media (hover:none){.gnav{opacity:1}}
+.star:hover,.fs:hover,.save:hover{background:rgba(12,12,14,.78)}
+.star[aria-pressed=true]{color:#fff}
+.save[aria-pressed=true]{color:#fff}
+.reveal{position:absolute;left:8px;top:40px;z-index:2;display:none;border:0;border-radius:999px;padding:5px 10px;font:500 11px var(--font);cursor:pointer}
+@media (hover:none){.thumb.nsfw ~ .reveal{display:block}}
+
+/* info overlay lives inside the card frame; clicks outside its links fall through to the thumbnail */
+.info{position:absolute;left:0;right:0;bottom:0;z-index:1;padding:30px 11px 10px;color:#fff;pointer-events:none;transition:opacity .15s;
+  background:linear-gradient(to top,rgba(0,0,0,.74) 0,rgba(0,0,0,.4) 58%,rgba(0,0,0,0) 100%)}
+.info a,.info button{pointer-events:auto}
+.title{margin:0;font:500 13px/1.32 var(--font);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;text-shadow:0 1px 10px rgba(0,0,0,.35)}
+.title a{text-decoration:none;color:#fff}
+.title a:hover{text-decoration:underline;text-underline-offset:2px}
+.meta{display:flex;flex-wrap:wrap;gap:1px 10px;align-items:baseline;font:400 11.5px/1.35 var(--font);font-variant-numeric:tabular-nums;color:rgba(255,255,255,.72);margin-top:4px}
+.meta .sub{border:0;background:none;padding:0;cursor:pointer;color:#fff;font:500 11.5px var(--font)}
+.meta .sub:hover{text-decoration:underline;text-underline-offset:2px}
+.meta .note{color:#ffd37a}
+.meta .note.dead{color:#ff9b93}
+.actions,.arch{display:none}
+.card:hover .actions,.card:focus-within .actions,.card:hover .arch,.card:focus-within .arch{display:flex}
+@media (hover:none){.actions,.arch{display:flex}}
+.actions{gap:6px;margin-top:9px}
+.btn{flex:1;text-align:center;text-decoration:none;border:0;border-radius:999px;padding:6px 10px;font-weight:500;font-size:11.5px;background:rgba(255,255,255,.2);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);color:#fff}
+.btn:hover{background:rgba(255,255,255,.32)}
+.btn.primary{background:#fff;color:#111}
+.btn.primary:hover{background:rgba(255,255,255,.85)}
+.arch{flex-wrap:wrap;gap:2px 10px;font:400 11px var(--font);color:rgba(255,255,255,.75);margin-top:7px}
+.arch a{color:#fff;text-underline-offset:2px}
+
+/* card info modes: always (default markup), on hover, hidden (star and full screen stay reachable) */
+body.info-off .card .info,body.info-off .card .badge,body.info-off .card .ph span{display:none}
+body.info-off .card.info-open .info,body.info-off .card.info-open .badge{display:block}
+body.info-off .card.info-open .ph span{display:inline}
+.card.info-open .info{padding-right:46px}
+.ibtn{display:none;position:absolute;right:8px;bottom:8px;z-index:5;width:30px;height:30px;place-items:center;border:0;border-radius:50%;padding:0;background:rgba(12,12,14,.26);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:rgba(255,255,255,.78);cursor:pointer}
+.ibtn:hover{background:rgba(12,12,14,.5);color:#fff}
+.ibtn[aria-pressed=true]{background:rgba(255,255,255,.78);color:#111}
+@media (hover:none){body.info-off .ibtn{display:grid}}
+body.info-off .card .star,body.info-off .card .fs,body.info-off .card .save{opacity:0}
+body.info-off .card:hover .star,body.info-off .card:hover .fs,body.info-off .card:hover .save,body.info-off .card:focus-within .star,body.info-off .card:focus-within .fs,body.info-off .card:focus-within .save{opacity:1}
+body.info-hover .card .info,body.info-hover .card .badge,body.info-hover .card .reveal,body.info-hover .card .star,body.info-hover .card .fs,body.info-hover .card .save,body.info-hover .card .ph span{opacity:0}
+body.info-hover .card:hover .info,body.info-hover .card:hover .badge,body.info-hover .card:hover .reveal,body.info-hover .card:hover .star,body.info-hover .card:hover .fs,body.info-hover .card:hover .save,body.info-hover .card:hover .ph span,
+body.info-hover .card:focus-within .info,body.info-hover .card:focus-within .badge,body.info-hover .card:focus-within .reveal,body.info-hover .card:focus-within .star,body.info-hover .card:focus-within .fs,body.info-hover .card:focus-within .save,body.info-hover .card:focus-within .ph span{opacity:1}
+@media (hover:none){body.info-off .card .star,body.info-off .card .fs,body.info-off .card .save{opacity:1}}
+@media (hover:none){body.info-hover .card .info,body.info-hover .card .badge,body.info-hover .card .reveal,body.info-hover .card .star,body.info-hover .card .fs,body.info-hover .card .save,body.info-hover .card .ph span{opacity:1}}
+
+/* touch screens: save, star and the (i) button only appear on the tile in focus (or while its info is open) */
+@media (hover:none){
+  .card .star,.card .save,.card .ibtn{transition:opacity .18s}
+  body .card:not(.is-focus):not(.info-open) .star,body .card:not(.is-focus):not(.info-open) .save,body .card:not(.is-focus):not(.info-open) .ibtn{opacity:0;pointer-events:none}
+}
+/* keep the (i) button clear of the player controls once they are showing */
+.card:has(.ctl) .ibtn{bottom:46px}
+
+/* playback: hairline progress while playing, full controls on hover */
+.cprog{position:absolute;left:0;bottom:0;height:2px;width:0;background:#fff;opacity:.9;z-index:3;pointer-events:none;transition:opacity .15s}
+.card:hover .cprog,.card:focus-within .cprog{opacity:0}
+.ctl{position:absolute;left:0;right:0;bottom:0;z-index:4;display:flex;align-items:center;gap:8px;height:38px;padding:0 10px 0 7px;
+  background:linear-gradient(to top,rgba(0,0,0,.72),rgba(0,0,0,0));opacity:0;pointer-events:none;transition:opacity .15s}
+.card:hover .ctl,.card:focus-within .ctl,.ctl.paused{opacity:1;pointer-events:auto}
+@media (hover:none){.ctl{opacity:1;pointer-events:auto}}
+.ctl .pp,.ctl .vol{flex:none;width:26px;height:26px;border:0;border-radius:50%;padding:0;display:grid;place-items:center;background:rgba(255,255,255,.2);color:#fff;font-size:11px;line-height:1;cursor:pointer}
+.ctl .pp:hover,.ctl .vol:hover{background:rgba(255,255,255,.34)}
+.ctl .vol svg{display:block}
+.volwrap{display:none;position:relative;flex:none;margin-left:2px}
+.ctl.has-sound .volwrap{display:flex}
+.volfly{position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);width:32px;height:92px;display:none;
+  background:rgba(12,12,14,.78);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-radius:16px}
+.volfly::after{content:"";position:absolute;left:0;right:0;top:100%;height:8px}
+.volwrap:hover .volfly,.volwrap:focus-within .volfly{display:block}
+.volr{position:absolute;left:50%;top:50%;width:66px;height:18px;margin:0;transform:translate(-50%,-50%) rotate(-90deg);accent-color:#fff;cursor:pointer}
+.ctl .seek{flex:1;min-width:30px;height:14px;margin:0;accent-color:#fff;cursor:pointer}
+.ctl .time{flex:none;font:400 10.5px var(--font);font-variant-numeric:tabular-nums;color:rgba(255,255,255,.9);white-space:nowrap}
+@container (max-width:230px){.ctl .time{display:none}}
+.card:hover .info,.card:focus-within .info{transition:none}
+.card.playing:hover .info,.card.playing:focus-within .info{padding-bottom:44px}
+
+/* ---- viewer, toast, misc ---- */
+#viewer{position:fixed;inset:0;z-index:200;background:#000;display:flex;align-items:center;justify-content:center}
+#viewer[hidden]{display:none}
+#viewer .vstage{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+#viewer img,#viewer video{max-width:100%;max-height:100%;object-fit:contain}
+#viewer img{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-user-drag:none;will-change:transform;transition:none}
+#viewer .vstage{touch-action:none;overflow:hidden}
+#viewer .vclose{position:absolute;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));z-index:2;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:16px;line-height:1;cursor:pointer;display:grid;place-items:center}
+#viewer .vclose:hover,#viewer .vsound:hover{background:rgba(255,255,255,.3)}
+#viewer .vsound{position:absolute;top:max(12px,env(safe-area-inset-top));right:calc(max(12px,env(safe-area-inset-right)) + 50px);z-index:2;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;cursor:pointer;display:grid;place-items:center}
+#viewer .vsound[hidden]{display:none}
+#viewer :focus-visible{outline-color:#fff}
+body.viewing{overflow:hidden}
+#viewer .vnav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:48px;height:48px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:30px;line-height:1;cursor:pointer;display:grid;place-items:center}
+#viewer .vnav:hover{background:rgba(255,255,255,.3)}
+#viewer .vprev{left:max(12px,env(safe-area-inset-left))}
+#viewer .vnext{right:max(12px,env(safe-area-inset-right))}
+#viewer .vcount{position:absolute;bottom:max(14px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:2;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.16);color:#fff;font-size:12.5px;font-variant-numeric:tabular-nums}
+dialog#confirm{border:0;border-radius:18px;padding:24px;max-width:440px;width:calc(100% - 32px);background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+#confirm h3{margin:0 0 10px;font-size:17px;font-weight:600}
+#confirm p{margin:8px 0;color:var(--muted);font-size:13.5px}
+#confirm .danger{background:#c62828;color:#fff}
+#confirm .danger:hover{background:#a81f1f}
+.srcseg{display:flex;gap:6px}
+.srcseg .pill[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.subform{display:grid;gap:8px}
+.subform input{height:36px;border:0;border-radius:10px;background:var(--surface-2);padding:0 12px;min-width:0;width:100%}
+.prefixed{display:flex;align-items:center;height:36px;border-radius:10px;background:var(--surface-2);padding-left:12px;color:var(--muted);font-size:13px;white-space:nowrap}
+.prefixed:focus-within{outline:2px solid var(--ink);outline-offset:2px}
+.prefixed input{background:none;border-radius:0;padding:0 12px 0 1px;color:var(--ink);outline:none;flex:1}
+.subform #multiAsk{display:grid;gap:8px}
+.subform .hint,#subErr,#csvStatus{font-size:12px;color:var(--muted)}
+#subErr,#csvStatus[data-kind=warn],#acMsg[data-kind=warn]{color:var(--warn)}
+#acMsg,#acWho{font-size:12px;color:var(--muted)}
+#acct input.field{width:100%}
+.more{display:flex;flex-direction:column;align-items:center;gap:8px;padding:26px 0 8px;color:var(--muted);font-size:12px}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:50;background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font:500 12.5px var(--font);box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw}
+#toast.on{opacity:1}
+.empty{padding:90px 0;text-align:center;color:var(--muted);grid-column:1/-1;grid-row:span 12}
+#sentinel{height:1px}
+@media (max-width:560px){:root{--card:360px}}   /* phones: the largest tile size, one column */
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+#pausebar{position:fixed;left:50%;bottom:64px;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:10px;padding:9px 10px 9px 14px;border-radius:999px;background:var(--panel,#1c1c1f);color:var(--text,#eee);border:1px solid var(--line,rgba(128,128,128,.35));box-shadow:0 6px 24px rgba(0,0,0,.35);font-size:13px;max-width:calc(100vw - 24px)}
+#pausebar .pdot{width:8px;height:8px;border-radius:50%;background:#e5a13a;flex:none;animation:pbp 1.2s ease-in-out infinite}
+@keyframes pbp{50%{opacity:.3}}
+#pausebar button{border:1px solid var(--line,rgba(128,128,128,.4));background:transparent;color:inherit;border-radius:999px;padding:4px 10px;font:inherit;cursor:pointer}
+#pausebar b{font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body class="deck-collapsed">
+<section class="deck" aria-label="Search and filters">
+  <div class="deck-in">
+    <div class="deck-bar">
+      <span class="brand">Saved</span>
+      <label class="search">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.6"/><path d="M10.6 10.6L14 14"/></svg>
+        <input id="q" type="search" placeholder="Search titles, subreddits, authors" aria-label="Search">
+      </label>
+      <span id="barcount" aria-live="polite"></span>
+      <button class="pill" id="decktoggle" type="button" aria-expanded="false" aria-controls="panel">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 4.5h7M12 4.5h2M2 11.5h2M7 11.5h7"/><circle cx="10.5" cy="4.5" r="1.6"/><circle cx="5.5" cy="11.5" r="1.6"/></svg>
+        Filters
+      </button>
+      <button class="pill" id="shufflebtn" type="button" aria-label="Randomize order" title="Randomize order" style="padding-left:10px;padding-right:10px">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 4.5h2.2c3.6 0 4.6 7 8.2 7h2.6M1.5 11.5h2.2c1 0 1.7-.6 2.4-1.5M9.9 6c.6-.9 1.3-1.5 2-1.5h2.6"/><path d="M12.5 2.5l2 2-2 2M12.5 9.5l2 2-2 2"/></svg>
+      </button>
+    </div>
+
+    <div class="panel" id="panel" role="region" aria-label="Filters">
+      <div class="pcol">
+        <h2>Source</h2>
+        <div class="srcseg"><button class="pill" id="srcCsv" type="button" aria-pressed="true">Saved CSV</button><button class="pill" id="srcSub" type="button" aria-pressed="false">Subreddit</button></div>
+        <div class="grp" id="acct" hidden>
+          <div class="grp" id="acctOut">
+            <input id="acEmail" class="field" type="email" placeholder="Email" autocomplete="email" aria-label="Email">
+            <input id="acPass" class="field" type="password" placeholder="Password (8+ characters)" autocomplete="current-password" aria-label="Password">
+            <div class="btnrow">
+              <button class="pill" id="acIn" type="button">Sign in</button>
+              <button class="pill" id="acUp" type="button">Create account</button>
+              <button class="pill" id="acGh" type="button" hidden>Continue with GitHub</button>
+              <button class="pill" id="acForgot" type="button">Forgot password</button>
+            </div>
+          </div>
+          <div class="grp" id="acctIn" hidden>
+            <span id="acWho"></span>
+            <div class="btnrow"><button class="pill" id="acSync" type="button">Sync now</button><button class="pill" id="acOut" type="button">Sign out</button></div>
+          </div>
+          <span id="acMsg"></span>
+        </div>
+        <div class="grp" id="csvTools">
+          <select id="csvSel" class="field" aria-label="CSV file"></select>
+          <div class="btnrow">
+            <button class="pill" id="csvOpen" type="button" title="Open a CSV and keep it linked for saving">Open CSV</button>
+            <button class="pill" id="csvMerge" type="button" title="Add posts from another CSV">Merge CSV</button>
+            <button class="pill" id="csvExport" type="button">Export CSV</button>
+            <button class="pill" id="csvPrune" type="button" title="Delete removed, not-found and broken posts from the CSV">Delete missing/broken</button>
+            <button class="pill" id="csvSync" type="button" title="Re-read the linked file and merge changes made on another device" hidden>Sync now</button>
+            <button class="pill" id="csvReconnect" type="button" hidden>Reconnect file</button>
+          </div>
+          <span id="csvStatus"></span>
+          <input id="csvfile" type="file" accept=".csv,text/csv,text/plain" hidden>
+        </div>
+        <form class="subform" id="subForm" hidden>
+          <label class="prefixed"><span>reddit.com/r/</span><input id="subUrl" type="text" placeholder="gaming+pcgaming" aria-label="Subreddits, joined with +" spellcheck="false" autocomplete="off" autocapitalize="off"></label>
+          <div class="btnrow"><button class="pill" type="submit">Load</button><span class="hint">Join subreddits with +. Paste a multireddit link to use one. 100 posts at a time.</span></div>
+          <div id="multiAsk" hidden><span class="hint" id="multiLbl"></span><input id="multiNames" type="text" placeholder="pics+aww+earthporn" aria-label="Subreddits in this multireddit" spellcheck="false" autocomplete="off"></div>
+          <span id="subErr" role="alert"></span>
+        </form>
+        <h2>Browse</h2>
+        <div class="grp"><span class="lbl">Content</span><div class="chips" id="catChips"></div></div>
+        <div class="grp"><span class="lbl">Kind</span><div class="chips" id="kindChips"></div></div>
+        <div class="grp"><span class="lbl">Status</span><div class="chips" id="mediaChips"></div></div>
+      </div>
+
+      <div class="pcol">
+        <h2>View</h2>
+        <label class="ctlrow"><span>Sort</span>
+          <select id="sort" class="field" aria-label="Sort order">
+            <option value="hot">Hot (Reddit default)</option>
+            <option value="random">Random</option>
+            <option value="saved">Saved order</option>
+            <option value="new">Newest posts</option>
+            <option value="old">Oldest posts</option>
+            <option value="comments">Most comments</option>
+            <option value="score">Highest score</option>
+            <option value="sub">Subreddit A to Z</option>
+          </select>
+        </label>
+        <label class="ctlrow"><span>Time range</span>
+          <select id="range" class="field" aria-label="Time range">
+            <option value="all">All time</option>
+            <option value="month">This month</option>
+            <option value="week">This week</option>
+            <option value="day">Today</option>
+          </select>
+        </label>
+        <div class="ctlrow"><span></span><button class="pill" id="reshuffle" type="button" hidden>Reshuffle</button></div>
+        <label class="ctlrow"><span>Subreddit</span><select id="subsel" class="field" aria-label="Subreddit"></select></label>
+        <label class="ctlrow"><span>Tile size</span><input id="size" type="range" min="150" max="360" step="10" value="230"></label>
+        <label class="ctlrow"><span>Card info</span>
+          <select id="infomode" class="field" aria-label="Card info">
+            <option value="show">Always visible</option>
+            <option value="hover">Show on hover</option>
+            <option value="off">Hidden</option>
+          </select>
+        </label>
+        <label class="ctlrow"><span>Theme</span>
+          <select id="theme" class="field" aria-label="Theme">
+            <option value="system">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="pcol">
+        <h2>Options</h2>
+        <label class="ctlrow"><span>NSFW</span>
+          <select id="nsfw" class="field" aria-label="NSFW handling">
+            <option value="hide">Hide</option>
+            <option value="blur">Blur until hover</option>
+            <option value="only">Only show</option>
+          </select>
+        </label>
+        <label class="toggle" for="nsfwonly">NSFW only<input id="nsfwonly" type="checkbox"></label>
+        <label class="toggle" for="favonly">Starred only <span id="favcount"></span><input id="favonly" type="checkbox"></label>
+        <label class="toggle" for="hidebroken" title="Hides posts with no working thumbnail or media, including ones with nothing to display">Hide broken media <span id="deadcount"></span><input id="hidebroken" type="checkbox"></label>
+        <label class="toggle" for="autoplay">Auto-play in view<input id="autoplay" type="checkbox"></label>
+        <label class="toggle" for="unblur">Unblur all NSFW<input id="unblur" type="checkbox"></label>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="status">
+    <div class="load" id="load" aria-live="polite">
+      <span id="loadText">Waiting to load previews</span>
+      <span id="recText"></span>
+      <div class="bar"><i id="loadBar"></i></div>
+    </div>
+    <div class="summary" id="summary"></div>
+  </div>
+  <main class="grid" id="grid"></main>
+  <div class="more" id="moreWrap" hidden><span id="moreNote"></span><button class="pill" id="moreBtn" type="button">Load next 100</button></div>
+  <div id="sentinel"></div>
+</div>
+
+<div id="viewer" role="dialog" aria-modal="true" aria-label="Media viewer" hidden><button class="vnav vprev" type="button" aria-label="Previous image" hidden>&#8249;</button><button class="vnav vnext" type="button" aria-label="Next image" hidden>&#8250;</button><span class="vcount" hidden></span><button class="vsound" type="button" aria-label="Unmute" hidden></button><button class="vclose" type="button" aria-label="Close">&#10005;</button><div class="vstage"></div></div>
+<dialog id="confirm"><form method="dialog"><h3 id="cTitle"></h3><div id="cBody"></div><label id="cOptWrap" class="toggle" hidden><span id="cOptLbl"></span><input type="checkbox" id="cOpt"></label><div class="btnrow" style="justify-content:flex-end;margin-top:18px"><button class="pill" id="cExtra" value="extra" hidden></button><button class="pill" value="cancel" autofocus>Cancel</button><button class="pill danger" id="cOk" value="ok"></button></div></form></dialog>
+<div id="pausebar" role="status" aria-live="polite" hidden><span class="pdot"></span><span id="pauseTxt"></span><button type="button" id="pauseSkip" title="Retry now">Retry now</button></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const SUBCAT = {"gaming": "Gaming", "games": "Gaming", "pcgaming": "Gaming", "gamedeals": "Gaming", "pcmasterrace": "Tech & Hardware", "buildapc": "Tech & Hardware", "technology": "Tech & Hardware", "android": "Tech & Hardware", "askreddit": "General & Humor", "pics": "General & Humor", "funny": "General & Humor", "todayilearned": "General & Humor", "science": "General & Humor", "worldnews": "General & Humor", "memes": "General & Humor", "movies": "Film, TV & Video", "television": "Film, TV & Video", "videos": "Film, TV & Video", "music": "Music", "listentothis": "Music", "food": "Food & Drink", "cooking": "Food & Drink", "recipes": "Food & Drink", "coffee": "Food & Drink", "diy": "DIY & Home", "homeimprovement": "DIY & Home", "personalfinance": "General & Humor", "canada": "Local & Canada", "nsfw": "Adult", "gonewild": "Adult", "realgirls": "Adult", "rule34": "Adult", "porn": "Adult"};
+const PERMA_RE = /reddit\.com\/r\/([A-Za-z0-9_]+)\/comments\/([a-z0-9]+)(?:\/([^\/?#]*))?/i;
+const SEED_CSV = `id,permalink,starred,updated,deleted
+`;
+const POSTS = [], ROWS = [], ROWSET = new Set();
+let loadGen = 0;
+const CAT_ORDER = ['Food & Drink','Gaming','Film, TV & Video','Local & Canada','Tech & Hardware','DIY & Home','General & Humor','Music','Adult','Other'];
+const MEDIA = [['image','Image'],['gif','GIF'],['video','Video'],['gallery','Gallery'],['link','Link'],['text','Text post'],['removed','Removed'],['recovered','Recovered'],['pending','Not loaded']];
+const RANGE_S = {day:86400, week:7*86400, month:30*86400};
+const KINDS = [['image','Image'],['gallery','Gallery'],['video','Video'],['gif','GIF'],['text','Text post'],['link','Link']];
+const STATUS = [['removed','Removed'],['recovered','Recovered'],['pending','Not loaded']];
+const kindOf = p => { const m = mediaOf(p); return KINDS.some(k=>k[0]===m) ? m : ''; };
+const MEDIA_LABEL = Object.fromEntries(MEDIA);
+const CACHE_KEY = 'saved-posts-meta-v7', CACHE_TTL = 24*3600*1000;
+/* Reddit blocks direct browser requests (CORS) and now gates its API behind approval, so previews come from public Reddit archives. */
+const SOURCES = [
+  ['Arctic Shift', ids => 'https://arctic-shift.photon-reddit.com/api/posts/ids?ids='+ids.join(',')],
+  ['PullPush',     ids => 'https://api.pullpush.io/reddit/search/submission/?ids='+ids.join(',')]
+];
+
+const META = {};
+const state = {q:'', cats:new Set(), kinds:new Set(), media:new Set(), nsfw:'hide', sub:'', sort:'saved', fav:false, hideBroken:true, range:'all', seed:String(Date.now())};
+const PAGE = 120;
+let shown = 0, list = [];
+const cardEls = new Map();
+const $ = id => document.getElementById(id);
+const fmt = n => n>=10000 ? (n/1000).toFixed(0)+'k' : n>=1000 ? (n/1000).toFixed(1)+'k' : String(n);
+const hue = s => { let h=0; for(const c of s) h=(h*31+c.charCodeAt(0))%360; return h; };
+
+/* ---------- favourites (kept in this browser's localStorage) ---------- */
+const FKEY = 'saved-posts-favs';
+const FAVS = new Set();
+try{ JSON.parse(localStorage.getItem(FKEY)||'[]').forEach(id=>FAVS.add(id)); }catch(e){}
+function setStar(p,on){
+  if(!p) return;
+  let row = ROWS.find(x=>x.id===p.id);
+  if(on){
+    FAVS.add(p.id);
+    if(!row){ row = {id:p.id, perma:p.perma||p.link, starred:true, t:nowT((TOMBS.get(p.id)||{}).t)}; TOMBS.delete(p.id); ROWS.unshift(row); ROWSET.add(p.id); syncSaveButtons(); toast('Starred and saved to "'+LIB.cur.name+'"'); }
+    else{ row.starred = true; row.t = nowT(row.t); }
+  } else { FAVS.delete(p.id); if(row){ row.starred = false; row.t = nowT(row.t); } }
+  markDirty(p.id);
+  commit();
+}
+function updateFavCount(){ const n = POSTS.reduce((a,p)=>a+(FAVS.has(p.id)?1:0),0); $('favcount').textContent = n ? '('+n+')' : ''; }
+
+/* ---------- cache ---------- */
+try{
+  const c = JSON.parse(localStorage.getItem(CACHE_KEY)||'null');
+  if(c && Date.now()-c.t < CACHE_TTL) Object.assign(META, c.d);
+}catch(e){}
+function saveCache(){ try{ const d = {}; for(const id in META) if(ROWSET.has(id)) d[id] = META[id]; localStorage.setItem(CACHE_KEY, JSON.stringify({t:Date.now(), d})); }catch(e){} }
+
+/* ---------- derived values ---------- */
+const metaOf = p => META[p.id];
+const titleOf = p => (metaOf(p) && metaOf(p).t) || p.title;
+const isRec = p => !!(metaOf(p) && metaOf(p).rec);
+function matchesMedia(p){ const m = mediaOf(p); for(const k of state.media){ if(k===m || (k==='recovered' && isRec(p))) return true; } return false; }
+const mediaOf = p => p.del ? 'removed' : (metaOf(p) ? metaOf(p).m : 'pending');
+function isNsfw(p){
+  if(p.cat==='Adult') return true;
+  const m = metaOf(p);
+  if(m) return !!m.o;
+  return p.sub.toLowerCase().startsWith('u_');
+}
+/* Where a card should go when the original post is gone: the archive copy it was recovered from. */
+function recHref(p){
+  const m = metaOf(p);
+  if(m && m.rec){
+    if(m.wb) return m.wb;
+    if(m.rec==='PullPush') return 'https://api.pullpush.io/reddit/search/submission/?ids='+p.id;
+    return 'https://arctic-shift.photon-reddit.com/api/posts/ids?ids='+p.id;   // the archive that just returned this post
+  }
+  return p.link;
+}
+const sourceOf = p => (metaOf(p) && metaOf(p).u) || recHref(p);
+
+/* ---------- filtering ---------- */
+function matches(p, skip){
+  if(skip!=='cat' && state.cats.size && !state.cats.has(p.cat)) return false;
+  if(skip!=='media' && state.media.size && !matchesMedia(p)) return false;
+  if(skip!=='kind' && state.kinds.size && !state.kinds.has(kindOf(p))) return false;
+  if(state.sub && p.sub!==state.sub) return false;
+  if(state.fav && !FAVS.has(p.id)) return false;
+  if(state.range!=='all' && !(MODE==='sub' && FEED.live===true && state.sort==='hot')){ const c = (metaOf(p)||{}).c; if(!c || c < Date.now()/1000 - RANGE_S[state.range]) return false; }
+  if(state.hideBroken && isUnavailable(p)) return false;
+  const n = isNsfw(p);
+  if(state.nsfw==='hide' && n) return false;
+  if(state.nsfw==='only' && !n) return false;
+  if(state.q){
+    const m = metaOf(p), hay = (titleOf(p)+' '+p.sub+' '+(m&&m.a||'')).toLowerCase();
+    if(!state.q.split(/\s+/).every(w=>hay.includes(w))) return false;
+  }
+  return true;
+}
+function sorted(arr){
+  const m = p => metaOf(p) || {};
+  const by = {
+    saved:(a,b)=>a.i-b.i,
+    new:(a,b)=>(m(b).c||0)-(m(a).c||0)||a.i-b.i,
+    old:(a,b)=>((m(a).c||1e12)-(m(b).c||1e12))||a.i-b.i,
+    comments:(a,b)=>(m(b).n||0)-(m(a).n||0)||a.i-b.i,
+    score:(a,b)=>(m(b).s||0)-(m(a).s||0)||a.i-b.i,
+    sub:(a,b)=>a.sub.toLowerCase().localeCompare(b.sub.toLowerCase())||a.i-b.i
+  };
+  if(state.sort==='hot' && FEED.live){ return arr.sort((a,b)=>(a.rank??1e9)-(b.rank??1e9)); }   // exactly Reddit's order
+  if(state.sort==='hot'){
+    // Reddit's published "hot" formula: log of the score plus an age term (one order of magnitude per 12.5 hours)
+    // Archive scores are often stale snapshots (0 or 1), so a score above 1 is trusted and comments add to the engagement figure.
+    const hot = p => { const x = m(p), sc = Math.max(x.s>1 ? x.s : 0, 0) + 3*(x.n||0); return Math.log10(Math.max(sc,1)) + ((x.c||0) - 1134028003)/45000; };
+    const k = new Map(arr.map(p=>[p.id,hot(p)]));
+    return arr.sort((a,b)=>k.get(b.id)-k.get(a.id)||a.i-b.i);
+  }
+  if(state.sort==='random'){
+    // a seeded shuffle: stable while you browse, new order when you pick Random again or press Reshuffle
+    const mix = t => { let h = 2166136261; for(let i=0;i<t.length;i++){ h ^= t.charCodeAt(i); h = Math.imul(h,16777619); } h ^= h>>>16; h = Math.imul(h,2246822507); h ^= h>>>13; h = Math.imul(h,3266489909); h ^= h>>>16; return h>>>0; };
+    const k = new Map(arr.map(p=>[p.id, mix(state.seed+':'+p.id)]));
+    return arr.sort((a,b)=>(k.get(a.id)<k.get(b.id)?-1:k.get(a.id)>k.get(b.id)?1:0));
+  }
+  return arr.sort(by[state.sort]);
+}
+
+/* ---------- cards ---------- */
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+const WB_TS = '20230601';
+const wbImg = u => 'https://web.archive.org/web/'+WB_TS+'im_/'+u;
+const FS_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>';
+function imgCandidates(p){
+  const m = metaOf(p), prim = [], arch = [];
+  if(!m) return [];
+  const add = (arr,u) => { if(u && /^https?:/.test(u) && !prim.includes(u) && !arch.includes(u)) arr.push(u); };
+  add(prim, m.th);
+  const pr = /^https?:\/\/preview\.redd\.it\/([^\/?#]+)/i.exec(m.th||'');
+  if(pr) add(prim, 'https://i.redd.it/'+pr[1]);                 // the same image without the signed-URL requirement
+  const direct = m.u && /\.(jpe?g|png|webp|gif)(\?|$)/i.test(m.u) ? m.u : '';
+  add(prim, direct);
+  const im = /imgur\.com\/(?:gallery\/|a\/)?([A-Za-z0-9]{5,8})(?:[./?]|$)/i.exec(m.u||'');
+  const ij = im ? 'https://i.imgur.com/'+im[1]+'.jpg' : '';
+  add(prim, ij);
+  if(m.yt){ add(prim, 'https://i.ytimg.com/vi/'+m.yt+'/maxresdefault.jpg'); add(prim, 'https://i.ytimg.com/vi/'+m.yt+'/hqdefault.jpg'); }
+  if(m.gl && m.gl.length) add(prim, 'https://i.redd.it/'+m.gl[0]);
+  add(arch, m.th && wbImg(m.th)); add(arch, direct && wbImg(direct)); add(arch, ij && wbImg(ij));
+  return prim.concat(arch);
+}
+/* Full-screen order of preference: the original file (i.redd.it / direct link / imgur) first, then Reddit's full-size preview, then archive copies, and the card's thumbnail last. */
+function fullResCandidates(p, resolved){
+  const m = metaOf(p) || {}, out = [];
+  const add = u => { if(u && /^https?:/.test(u) && !out.includes(u)) out.push(u); };
+  const direct = m.u && /\.(jpe?g|png|webp|gif)(\?|$)/i.test(m.u) ? m.u : '';
+  const h = healthOf(p), trusted = !!(resolved && h && h.k!=='orig');   // the link checker already found the original dead or replaced: its working copy goes first
+  if(trusted) add(resolved);
+  if(!(h && h.k!=='orig')) add(direct);
+  const im = /imgur\.com\/(?:gallery\/|a\/)?([A-Za-z0-9]{5,8})(?:[./?]|$)/i.exec(m.u||'');
+  if(im) add('https://i.imgur.com/'+im[1]+'.jpg');
+  for(const u of [m.pv, m.th]){ const pr = /^https?:\/\/(?:external-)?preview\.redd\.it\/([^\/?#]+)/i.exec(u||''); if(pr && !/^external/.test(u.split('/')[2])) add('https://i.redd.it/'+pr[1]); }
+  add(resolved);
+  add(m.pv);
+  if(h && h.k!=='orig') add(direct);   // last resort only
+  if(direct) add(wbImg(direct));
+  add(m.th);
+  return out;
+}
+function buildCard(p){
+  const el = document.createElement('article');
+  el.className = 'card';
+  el.dataset.id = p.id;
+  fillCard(el,p);
+  cardIO.observe(el);
+  return el;
+}
+/* ---------- thumbnail loading: near the viewport only, a few at a time, with a back-off when an image host pushes back ---------- */
+const IF_KEY = 'saved-posts-imgfail-v2', IF_TTL = 12*3600*1000;   // v2: earlier failures recorded during throttling are discarded
+try{ localStorage.removeItem('saved-posts-imgfail-v1'); }catch(e){}
+const IMGFAIL = {};
+try{ const o = JSON.parse(localStorage.getItem(IF_KEY)||'{}'), now = Date.now(); for(const k in o) if(now-o[k] < IF_TTL) IMGFAIL[k] = o[k]; }catch(e){}
+let ifT; const saveImgFail = () => { clearTimeout(ifT); ifT = setTimeout(()=>{ try{ localStorage.setItem(IF_KEY, JSON.stringify(IMGFAIL)); }catch(e){} },800); };
+let anyImgOK = false;   // only trust a failure once something else has loaded, so being offline doesn't condemn everything
+function markImgFail(p){ if(!anyImgOK) return; IMGFAIL[p.id] = Date.now(); saveImgFail(); updateDeadCount(); if(state.hideBroken) scheduleRefresh(); }
+function clearImgFail(p){ if(IMGFAIL[p.id]){ delete IMGFAIL[p.id]; saveImgFail(); updateDeadCount(); } }
+
+/* One shared queue: at most 6 image loads at once. A burst of failures looks like rate limiting, so everything pauses for a while and nothing is condemned. */
+const IMGQ = {active:0, max:6, cap:6, q:[], until:0, fails:[], timer:0, next:0, strikes:0, oks:0, tick:0, lastPause:0};
+const HOSTPAUSE = {};   // host -> time before which that host is tried last (one flaky host shouldn't stall the rest)
+const hostOf = u => { try{ return new URL(u).hostname; }catch(e){ return ''; } };
+function imgSlot(job){ IMGQ.q.push(job); pumpImg(); }
+function pumpImg(){
+  const now = Date.now(), wait = IMGQ.until - now;
+  if(wait > 0){ if(!IMGQ.timer) IMGQ.timer = setTimeout(()=>{ IMGQ.timer = 0; pumpImg(); }, wait+50); return; }
+  // Start jobs one at a time with a small random gap rather than in a burst, and only as many as the current (adaptive) limit allows.
+  if(IMGQ.active >= IMGQ.max || !IMGQ.q.length) return;
+  const gap = IMGQ.next - now;
+  if(gap > 0){ if(!IMGQ.timer) IMGQ.timer = setTimeout(()=>{ IMGQ.timer = 0; pumpImg(); }, gap); return; }
+  IMGQ.next = now + 120 + Math.random()*180;
+  const job = IMGQ.q.shift(); let freed = false;
+  IMGQ.active++;
+  job(() => { if(freed) return; freed = true; IMGQ.active--; pumpImg(); });
+  pumpImg();
+}
+/* A load worked: after enough successes in a row, win back concurrency lost to a pause and ease the back-off. */
+function noteImgOK(){
+  IMGQ.oks++;
+  if(IMGQ.oks >= 25){ IMGQ.oks = 0; if(IMGQ.max < IMGQ.cap) IMGQ.max++; else if(IMGQ.strikes > 0 && Date.now() - IMGQ.lastPause > 120000) IMGQ.strikes--; }
+}
+const fmtS = n => n >= 60 ? Math.floor(n/60)+'m '+String(n%60).padStart(2,'0')+'s' : n+'s';
+function startPauseTicker(){ if(!IMGQ.tick) IMGQ.tick = setInterval(pauseUI, 500); }
+function pauseUI(){
+  const bar = $('pausebar'), img = Math.ceil((IMGQ.until - Date.now())/1000), api = apiWaitLeft();
+  if(img <= 0 && api <= 0){ bar.hidden = true; clearInterval(IMGQ.tick); IMGQ.tick = 0; return; }
+  bar.hidden = false;
+  $('pauseTxt').innerHTML = api > 0
+    ? 'The archive is rate limiting requests. Retrying in <b>'+fmtS(api)+'</b>'
+    : 'Image servers are pushing back. Thumbnails resume in <b>'+fmtS(img)+'</b>';
+}
+function pauseImages(secs){
+  IMGQ.until = Date.now() + secs*1000; IMGQ.lastPause = Date.now(); IMGQ.oks = 0;
+  clearTimeout(IMGQ.timer); IMGQ.timer = 0;
+  IMGQ.max = Math.max(2, Math.ceil(IMGQ.max/2));   // come back more gently than we left
+  pumpImg(); pauseUI();
+  startPauseTicker();
+}
+function noteImgFail(url){
+  const now = Date.now(); IMGQ.fails.push(now); IMGQ.oks = 0;
+  const h = url && hostOf(url); if(h) HOSTPAUSE[h] = now + 60000;
+  IMGQ.fails = IMGQ.fails.filter(t=>now-t < 10000);
+  if(IMGQ.fails.length >= 10 && IMGQ.until < now){
+    IMGQ.fails = []; IMGQ.strikes = Math.min(IMGQ.strikes+1, 4);
+    pauseImages(Math.min(45 * Math.pow(2, IMGQ.strikes-1), 360));   // 45s, 90s, 3m, 6m on repeated pushback
+  }
+}
+$('pauseSkip').onclick = () => { for(const k in APIH) APIH[k].until = 0; IMGQ.until = 0; IMGQ.fails = []; clearTimeout(IMGQ.timer); IMGQ.timer = 0; pauseUI(); pumpImg(); };
+const throttled = () => IMGQ.until > Date.now() - 20000;
+const hostLast = c => c.map((u,i)=>[u,i]).sort((x,y)=>((HOSTPAUSE[hostOf(x[0])]||0) > Date.now()) - ((HOSTPAUSE[hostOf(y[0])]||0) > Date.now()) || x[1]-y[1]).map(x=>x[0]);
+
+/* Try candidates in order: the next one starts when one errors, or after a short wait if one is just slow. Losers are cancelled.
+   cb(url, element, reason) where reason is 'failed' (every source errored) or 'slow' (nothing answered in time). */
+function loadFirst(cands, stagger, cb){
+  cands = hostLast(cands);   // hosts that just failed go to the back of the line
+  let done = false, started = 0, failed = 0; const timers = [], probes = [];
+  const finish = (u, el, reason) => {
+    if(done) return; done = true; timers.forEach(clearTimeout);
+    probes.forEach(im=>{ if(im!==el){ im.onload = im.onerror = null; im.removeAttribute('src'); } });
+    cb(u, el, reason);
+  };
+  const start = i => {
+    if(done || i!==started || i>=cands.length) return;
+    started++;
+    const im = new Image(); im.referrerPolicy = 'no-referrer'; probes.push(im);
+    const bad = () => { failed++; noteImgFail(cands[i]); if(failed>=cands.length) finish(null,null,'failed'); else start(started); };
+    im.onload = () => { if(/imgur\.com/.test(cands[i]) && im.naturalWidth===161 && im.naturalHeight===81) bad(); else finish(cands[i], im); };
+    im.onerror = bad;
+    im.src = cands[i];
+    timers.push(setTimeout(()=>start(i+1), stagger));
+  };
+  if(!cands.length){ cb(null,null,'failed'); return; }
+  start(0);
+  timers.push(setTimeout(()=>finish(null,null,'slow'), 60000));
+}
+const isArchiveUrl = u => /^https?:\/\/web\.archive\.org\//.test(u);
+const imgIO = new IntersectionObserver(es=>{ for(const e of es){ if(e.isIntersecting){ imgIO.unobserve(e.target); startImg(e.target); } } },{rootMargin:'600px 0px'});
+function startImg(img, attempt){
+  const p = img._p, el = img._el, all = img._cands || [];
+  if(img.tagName==='VIDEO'){ imgSlot(done=>startStill(img, done)); return; }
+  const live = all.filter(u=>!isArchiveUrl(u)), arch = all.filter(isArchiveUrl);   // Wayback copies are only asked for once the real sources have all failed
+  imgSlot(done=>{
+    if(!img.isConnected || el._p!==p){ done(); return; }
+    const settle = (url, node, reason) => {
+      if(!img.isConnected || el._p!==p){ done(); return; }
+      if(url){
+        done(); anyImgOK = true; noteImgOK(); clearImgFail(p);
+        node.alt = ''; node.referrerPolicy = 'no-referrer';
+        img.replaceWith(node);                                  // reuse the element that already loaded, so the image isn't fetched twice
+        const ph = node.parentNode && node.parentNode.querySelector('.ph'); if(ph) ph.remove();
+        const m = metaOf(p); if(m && !m.w && node.naturalWidth > 50){ m.w = node.naturalWidth; m.h = node.naturalHeight; layoutCard(el,p); }
+        return;
+      }
+      done();
+      // Wait a moment before condemning anything: if a wave of failures turns out to be rate limiting, retry later instead.
+      setTimeout(()=>{
+        if(!img.isConnected || el._p!==p) return;
+        if((reason==='slow' || throttled()) && (attempt||0) < 2){ setTimeout(()=>{ if(img.isConnected) startImg(img,(attempt||0)+1); }, 20000); return; }
+        img.remove(); markImgFail(p); if(img._rescue) img._rescue();
+      }, 8000);
+    };
+    loadFirst(live, 3500, (url, node, reason)=>{
+      if(url || !arch.length || throttled()) settle(url, node, reason);
+      else loadFirst(arch, 8000, settle);
+    });
+  });
+}
+/* No thumbnail but a video file: show its first frame as the still. */
+function startStill(v, done){
+  const p = v._p, list = (v._cands||[]).filter(u=>!u.startsWith('yt:')).slice(0,4); let i = 0, ended = false;
+  const end = () => { if(!ended){ ended = true; done(); } };
+  const tryNext = () => {
+    if(i>=list.length){ v.remove(); markImgFail(p); end(); return; }
+    const u = list[i++]; v.src = u + (u.includes('#') ? '' : '#t=0.1');
+  };
+  v.addEventListener('loadeddata',()=>{ anyImgOK = true; clearImgFail(p); v.classList.add('ready'); const ph = v.parentNode && v.parentNode.querySelector('.ph'); if(ph) ph.remove(); end(); },{once:true});
+  v.addEventListener('error',tryNext);
+  setTimeout(end, 20000);
+  v.preload = 'metadata'; tryNext();
+}
+function fillCard(el,p){
+  const old = el.querySelector('.thumb'); if(old) releasePlayable(old);
+  const m = metaOf(p), nsfw = isNsfw(p), media = mediaOf(p);
+  const h = healthOf(p), dead = !!(h && h.k==='dead');
+  if(h) RESOLVED.add(p.id);
+  const href = openHref(p), note = noteFor(p);
+  const cands = dead ? [] : imgCandidates(p), thumb = cands[0];
+  const removed = media==='removed' || (m && m.rec);
+  const vs = dead ? [] : playSources(m), v0 = vs[0] || '';
+  const gl = m && m.gl && m.gl.length > 1 ? m.gl : null;
+  const stats = m && !m.miss ? ((m.s||0) > 1 ? '<span>'+fmt(m.s)+' pts</span>' : '')+((m.n||0) > 0 ? '<span>'+fmt(m.n)+' comments</span>' : '') : '';
+  const ph = '<div class="ph" style="--h:'+hue(p.sub)+'"><span>r/'+esc(p.sub)+(dead?'<br><small>media unavailable</small>':'')+'</span></div>';
+  el._p = p; el._gi = 0; el.classList.toggle('is-dead', dead);
+  el.innerHTML =
+    '<a class="thumb'+(nsfw?' nsfw':'')+'" data-open'+(v0 ? ' data-v="'+esc(v0)+'"'+(vs.length>1 ? ' data-vc="'+esc(vs.slice(1,7).join('|'))+'"' : '') : '')+(m && m.ab ? ' data-ab="'+esc(m.ab)+'"' : '')+(m && m.ha!==undefined ? ' data-ha="'+(m.ha?1:0)+'"' : '')+' href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" aria-label="Open: '+esc(titleOf(p))+'">'
+    + (thumb ? ph + '<img referrerpolicy="no-referrer" alt="">' : (v0 && !v0.startsWith('yt:') ? ph + '<video class="still" muted playsinline preload="none"></video>' : ph))
+    + '<span class="badge media'+(v0 ? ' playable' : '')+'">'+esc(MEDIA_LABEL[media]||media)+(gl ? ' 1/'+gl.length : '')+'</span>'
+    + (nsfw ? '<span class="badge tag">NSFW</span>' : '')
+    + (m && m.rec ? '<span class="badge rec" title="Rebuilt from an archive">Recovered: '+esc(m.rec)+'</span>' : '')
+    + '</a>'
+    + (nsfw && thumb ? '<button class="reveal" type="button">Reveal</button>' : '')
+    + '<button class="star" type="button" data-id="'+esc(p.id)+'" aria-pressed="'+(FAVS.has(p.id)?'true':'false')+'" aria-label="Star this post" title="Star this post">'+(FAVS.has(p.id)?'\u2605':'\u2606')+'</button>'
+    + '<button class="save" type="button" data-id="'+esc(p.id)+'" aria-pressed="'+(ROWSET.has(p.id)?'true':'false')+'" aria-label="'+(ROWSET.has(p.id)?'Remove from your CSV':'Save to your CSV')+'" title="'+(ROWSET.has(p.id)?'Remove from your CSV':'Save to your CSV')+'">'+(ROWSET.has(p.id)?BM_ON:BM_OFF)+'</button>'
+    + (MEDIA_KINDS.has(media) && (thumb || v0) ? '<button class="fs" type="button" aria-label="Full screen" title="Full screen">'+FS_ICON+'</button>' : '')
+    + '<button class="ibtn" type="button" aria-label="Show info" aria-pressed="false"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6.3"/><path d="M8 7.2v3.6"/><circle cx="8" cy="5.1" r=".6" fill="currentColor"/></svg></button>'
+    + (gl ? '<button class="gnav gprev" type="button" aria-label="Previous image">&#8249;</button><button class="gnav gnext" type="button" aria-label="Next image">&#8250;</button>' : '')
+    + '<div class="info">'
+    + '<h3 class="title"><a data-open href="'+esc(href)+'" target="_blank" rel="noopener noreferrer">'+esc(titleOf(p))+'</a></h3>'
+    + '<div class="meta"><button class="sub" type="button" data-sub="'+esc(p.sub)+'">r/'+esc(p.sub)+'</button>'+stats
+    + (note ? '<span class="note'+(dead?' dead':'')+'">'+esc(note)+'</span>' : '')+'</div>'
+    + '<div class="actions"><a class="btn primary" data-open href="'+esc(href)+'" target="_blank" rel="noopener noreferrer">Open source</a>'
+    + '<a class="btn" href="'+esc(recHref(p))+'" target="_blank" rel="noopener noreferrer">Comments</a></div>'
+    + (removed ? '<div class="arch"><span>Archives:</span><a href="'+esc('https://web.archive.org/web/'+WB_TS+'/https://old.reddit.com/r/'+p.sub+'/comments/'+p.id+'/')+'" target="_blank" rel="noopener noreferrer">Wayback</a>'
+        + '<a href="'+esc('https://arctic-shift.photon-reddit.com/api/posts/ids?ids='+p.id)+'" target="_blank" rel="noopener noreferrer">Arctic Shift</a></div>' : '')
+    + '</div>';
+  const tEl = el.querySelector('.thumb'); if(tEl && tEl.dataset.v) wirePlayable(tEl);
+  // If every preview fails, look for a working full-size copy and show that instead.
+  const rescue = () => {
+    if(!(MEDIA_KINDS.has(media) && chainOf(p).length)) return;
+    resolveTarget(p).then(r=>{
+      if(!(r && r.confirmed && r.type==='img' && r.kind!=='preview' && el._p===p)) return;
+      const t = el.querySelector('.thumb'), phEl = t && t.querySelector('.ph'); if(!phEl) return;
+      const im = document.createElement('img'); im.referrerPolicy = 'no-referrer'; im.alt = ''; im.src = r.href; phEl.replaceWith(im);
+    });
+  };
+  const img = el.querySelector('.thumb img, .thumb video.still');
+  if(img){ img._cands = img.tagName==='VIDEO' ? vs : cands; img._p = p; img._el = el; img._rescue = rescue; imgIO.observe(img); }
+  else if(!dead && !h) rescue();
+  layoutCard(el,p);
+  rgWatch(el,p);
+}
+
+/* ---------- link and media health ---------- */
+const MEDIA_KINDS = new Set(['image','gif','video','gallery']);
+/* YouTube embeds need a real web origin, so they only play when the page is served over http(s). */
+const YT_PLAY = /^https?:$/.test(location.protocol);
+function playSources(m){
+  if(!m) return [];
+  if(m.yt && YT_PLAY) return ['yt:'+m.yt];
+  const out = [];
+  if(m.v) out.push(m.v);
+  if(m.rb) for(const q of ['720','480','360','240','1080']){ const u = m.rb+'/DASH_'+q+'.mp4'; if(!out.includes(u)) out.push(u); }
+  return out;
+}
+const HKEY = 'saved-posts-health-v1', H_TTL = 3*864e5;
+const HEALTH = {};            // id -> {k:'orig'|'archive'|'video'|'preview'|'page'|'dead', i:chainIndex, g:chainSig, t:time}
+const RESOLVED = new Set();   // ids whose link targets are settled
+const TARGETS = new Map();    // id -> Promise<result> (this session)
+const CHAINS = new WeakMap();
+let lastOk = Date.now();
+try{ const o = JSON.parse(localStorage.getItem(HKEY)||'{}'), now = Date.now(); for(const id in o) if(o[id] && now-o[id].t < H_TTL) HEALTH[id] = o[id]; }catch(e){}
+let hsT; function saveHealth(){ clearTimeout(hsT); hsT = setTimeout(()=>{ try{ localStorage.setItem(HKEY, JSON.stringify(HEALTH)); }catch(e){} },800); }
+const hashStr = t => { let h = 5381; for(let i=0;i<t.length;i++) h = ((h<<5)+h+t.charCodeAt(i))|0; return (h>>>0).toString(36); };
+const wbRaw = u => 'https://web.archive.org/web/'+WB_TS+'id_/'+u;
+const vtype = u => /\.gif(\?|$)/i.test(u) ? 'img' : 'video';
+
+function buildChain(p,m){
+  const out = [], seen = new Set();
+  const add = e => { const key = e.probe || ('~'+e.href); if(!e.href || seen.has(key)) return; seen.add(key); out.push(e); };
+  if(!MEDIA_KINDS.has(mediaOf(p))){ out.sig = ''; return out; }
+  const u = m.u || '', src = sourceOf(p);
+  const isImg = /\.(jpe?g|png|webp|gif)(\?|$)/i.test(u) || /^https?:\/\/i\.redd\.it\//i.test(u);
+  const vid = playableFromUrl(u);
+  if(vid && !/\.gif(\?|$)/i.test(vid)){ add({href:vid, probe:vid, type:'video', kind:'orig'}); add({href:wbRaw(vid), probe:wbRaw(vid), type:'video', kind:'archive'}); }
+  else if(isImg){ add({href:u, probe:u, type:'img', kind:'orig'}); add({href:wbImg(u), probe:wbImg(u), type:'img', kind:'archive'}); }
+  const im = /imgur\.com\/(?:gallery\/|a\/)?([A-Za-z0-9]{5,8})(?:[./?]|$)/i.exec(u);
+  if(im){ const j = 'https://i.imgur.com/'+im[1]+'.jpg'; add({href:j, probe:j, type:'img', kind:'orig'}); add({href:wbImg(j), probe:wbImg(j), type:'img', kind:'archive'}); }
+  if(u && !isImg && !vid) add({href:src, probe:'', type:'page', kind:'page'});   // an ordinary web page: a browser can't tell if it is alive
+  if(m.v){
+    const redditVid = /\/\/v\.redd\.it\//i.test(m.v) && src===p.link;
+    add({href: redditVid ? src : m.v, probe:m.v, type:vtype(m.v), kind:'orig'});
+  }
+  if(m.th){ add({href:m.th, probe:m.th, type:'img', kind:'preview'}); add({href:wbImg(m.th), probe:wbImg(m.th), type:'img', kind:'preview'}); }
+  out.sig = hashStr(out.map(e=>e.probe||e.href).join('|'));
+  return out;
+}
+function chainOf(p){
+  const m = metaOf(p); if(!m) return [];
+  let c = CHAINS.get(m); if(!c){ c = buildChain(p,m); CHAINS.set(m,c); }
+  return c;
+}
+function healthOf(p){
+  const e = HEALTH[p.id]; if(!e) return null;
+  const c = chainOf(p);
+  if(!c.length || e.g!==c.sig) return null;
+  if(e.k!=='dead' && !c[e.i]) return null;
+  return e;
+}
+const isDead = p => { const h = healthOf(p); return !!(h && h.k==='dead') || !!(metaOf(p) && metaOf(p).rgGone); };
+/* A tile with nothing to show (no thumbnail, no video, no image link to try) counts as broken too.
+   Posts with no metadata at all only count once the archive lookup has finished, so a failed lookup doesn't hide everything. */
+let metaOK = false;
+function isBlank(p){
+  const m = metaOf(p);
+  if(!m) return metaOK;
+  if(m.rgGone) return true;
+  if(rgNeeds(p)) return false;      // RedGifs file still being looked up
+  if(m.m==='text') return false;    // text posts have no media by nature
+  return !!IMGFAIL[p.id] || !(playSources(m).length || imgCandidates(p).length);
+}
+const isUnavailable = p => isDead(p) || isBlank(p);
+function metaReady(){ metaOK = true; updateDeadCount(); if(state.hideBroken) refresh(true); resolveReveddit(); }
+/* Posts that link to a Reveddit page: borrow the thumbnail and media of the post they point at. */
+async function resolveReveddit(){
+  const todo = POSTS.filter(p=>{ const m = metaOf(p); return m && m.rd && !m.rdDone; });
+  if(!todo.length) return;
+  const ids = [...new Set(todo.map(p=>metaOf(p).rd))];
+  for(let i=0;i<ids.length;i+=100){
+    let data = []; try{ data = await fetchBatch(ids.slice(i,i+100)); }catch(e){ return; }
+    const by = new Map(data.map(d=>[d.id,d]));
+    for(const p of todo){
+      const m = metaOf(p), d = m && by.get(m.rd); if(!d) continue;
+      const r = slim(d);
+      Object.assign(m, {th:r.th||m.th, v:r.v||m.v, rb:r.rb, ab:r.ab, yt:r.yt, gl:r.gl, w:r.w||m.w, h:r.h||m.h, m:r.m==='removed' ? m.m : r.m, u:'https://www.reddit.com/comments/'+m.rd+'/', rdDone:1});
+      const el = cardEls.get(p.id); if(el) fillCard(el,p);
+    }
+    await sleep(500);
+  }
+  clearTimeout(rfT); updateDeadCount();
+}
+function openHref(p){
+  const h = healthOf(p);
+  if(h){ if(h.k==='dead') return recHref(p); const e = chainOf(p)[h.i]; if(e) return e.href; }
+  return sourceOf(p);
+}
+function noteFor(p){
+  const h = healthOf(p); if(!h) return '';
+  return h.k==='dead' ? 'media unavailable' : h.k==='archive' ? 'archived copy' : h.k==='preview' ? 'preview only' : '';
+}
+let dcT; function updateDeadCount(){
+  clearTimeout(dcT);
+  dcT = setTimeout(()=>{ let n = 0; for(const p of POSTS) if(isUnavailable(p)) n++; $('deadcount').textContent = n ? '('+n+')' : ''; },150);
+}
+let rfT; function scheduleRefresh(){ clearTimeout(rfT); rfT = setTimeout(()=>refresh(true),400); }
+
+/* probing: a HEAD request when the host allows it, otherwise load the file in an element */
+let active = 0; const waitQ = [];
+const slot = () => new Promise(r=>{ const go = ()=>{ active++; r(); }; active < 3 ? go() : waitQ.push(go); });
+const release = () => { active--; const n = waitQ.shift(); if(n) n(); };
+function probeImage(url){
+  return new Promise(res=>{
+    const im = new Image(); im.referrerPolicy = 'no-referrer'; let done = false;
+    const fin = v => { if(done) return; done = true; clearTimeout(t); im.onload = im.onerror = null; res(v); };
+    const t = setTimeout(()=>fin(null),15000);
+    im.onload = ()=>fin(!(/imgur\.com/.test(url) && im.naturalWidth===161 && im.naturalHeight===81) && im.naturalWidth>0);
+    im.onerror = ()=>fin(false);
+    im.src = url;
+  });
+}
+function probeVideo(url){
+  return new Promise(res=>{
+    const v = document.createElement('video'); v.muted = true; v.preload = 'metadata'; let done = false;
+    const fin = r => { if(done) return; done = true; clearTimeout(t); v.onloadedmetadata = v.onerror = null; v.removeAttribute('src'); try{ v.load(); }catch(e){} res(r); };
+    const t = setTimeout(()=>fin(null),15000);
+    v.onloadedmetadata = ()=>fin(true);
+    v.onerror = ()=>fin(false);
+    v.src = url;
+  });
+}
+async function probe(url,type){
+  await slot();
+  try{
+    try{
+      const ctl = new AbortController(), to = setTimeout(()=>ctl.abort(),8000);
+      const r = await fetch(url,{method:'HEAD', signal:ctl.signal}); clearTimeout(to);
+      if(r.status===404 || r.status===410) return false;
+      if(r.ok){
+        const ct = r.headers.get('content-type')||'';
+        if(r.redirected && /removed|404/i.test(r.url)) return false;
+        if(!ct || /^(image|video)\//i.test(ct) || /octet-stream/i.test(ct)){ lastOk = Date.now(); return true; }
+        return false;
+      }
+    }catch(e){ /* blocked by CORS or network error: fall back to loading it in an element */ }
+    const ok = type==='video' ? await probeVideo(url) : await probeImage(url);
+    if(ok===true) lastOk = Date.now();
+    return ok;
+  } finally { release(); }
+}
+const canDeclareDead = () => navigator.onLine!==false && Date.now()-lastOk < 30000;
+
+function resolveTarget(p){
+  if(TARGETS.has(p.id)) return TARGETS.get(p.id);
+  const chain = chainOf(p), h = healthOf(p);
+  let pr;
+  if(!chain.length) pr = Promise.resolve({href:sourceOf(p), kind:'orig', type:'page', confirmed:false});
+  else if(h && h.k==='dead') pr = Promise.resolve({dead:true, href:recHref(p), kind:'dead'});
+  else if(h){ const e = chain[h.i]; pr = Promise.resolve({href:e.href, kind:e.kind, type:e.type, confirmed:!!e.probe}); }
+  else pr = (async()=>{
+    let r = null, inconclusive = false;
+    for(let i=0;i<chain.length;i++){
+      const e = chain[i];
+      if(!e.probe){ r = {href:e.href, kind:e.kind, type:e.type, confirmed:false, i}; break; }
+      const ok = await probe(e.probe, e.type);
+      if(ok===true){ r = {href:e.href, kind:e.kind, type:e.type, confirmed:true, i}; break; }
+      if(ok===null) inconclusive = true;
+    }
+    if(!r){
+      if(inconclusive || !canDeclareDead()) return {unknown:true, href:recHref(p), kind:'unknown'};
+      r = {dead:true, href:recHref(p), kind:'dead'};
+    }
+    HEALTH[p.id] = {k:r.dead?'dead':r.kind, i:r.i, g:chain.sig, t:Date.now()};
+    saveHealth();
+    return r;
+  })();
+  TARGETS.set(p.id, pr);
+  pr.then(r=>{ if(r.unknown) TARGETS.delete(p.id); applyTarget(p,r); });
+  return pr;
+}
+function applyTarget(p,r){
+  if(r.unknown) return;
+  RESOLVED.add(p.id);
+  const el = cardEls.get(p.id);
+  if(el && el._p===p){
+    const dead = !!r.dead, href = dead ? recHref(p) : r.href;
+    el.querySelectorAll('a[data-open]').forEach(a=>{ a.href = href; });
+    el.classList.toggle('is-dead', dead);
+    const th = el.querySelector('.thumb');
+    if(th) th.title = dead ? (metaOf(p) && metaOf(p).rec ? 'No working media found. Opens the archived copy.' : 'No working media found. Opens the Reddit post.') : r.kind==='archive' ? 'The original link is dead. Opens an archived copy.' : r.kind==='preview' ? 'The original media is unavailable. Opens the preview image.' : '';
+    const meta = el.querySelector('.meta'), note = noteFor(p);
+    if(meta){
+      let n = meta.querySelector('.note');
+      if(note){ if(!n){ n = document.createElement('span'); meta.appendChild(n); } n.className = 'note'+(dead?' dead':''); n.textContent = note; }
+      else if(n) n.remove();
+    }
+    if(dead){ const sp = th && th.querySelector('.ph span'); if(sp && !sp.querySelector('small')) sp.innerHTML = 'r/'+esc(p.sub)+'<br><small>media unavailable</small>'; }
+  }
+  updateDeadCount();
+  if(r.dead && state.hideBroken) scheduleRefresh();
+}
+let toastT; function toast(msg){ const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove('on'),4000); }
+
+// Check a card's real link shortly after the pointer settles on it, so the click can go straight to a live copy.
+let hoverT, hoverCard = null;
+$('grid').addEventListener('mouseover',e=>{
+  const card = e.target.closest('.card'); if(card===hoverCard) return;
+  hoverCard = card; clearTimeout(hoverT);
+  if(card && card._p) hoverT = setTimeout(()=>resolveTarget(card._p),350);
+});
+$('grid').addEventListener('mouseleave',()=>{ hoverCard = null; clearTimeout(hoverT); });
+$('grid').addEventListener('touchstart',e=>{ const c = e.target.closest('.card'); if(c && c._p) resolveTarget(c._p); },{passive:true});
+$('grid').addEventListener('focusin',e=>{ const c = e.target.closest('.card'); if(c && c._p) resolveTarget(c._p); });
+$('grid').addEventListener('load',()=>{ lastOk = Date.now(); },true);
+
+/* ---------- RedGifs: turn watch-page links into playable files ---------- */
+const RG_RE = /(?:redgifs\.com\/(?:watch|ifr|i|gifs\/detail)\/|gifdeliverynetwork\.com\/(?:watch\/)?)([a-z0-9]+)/i;
+const RGKEY = 'saved-posts-rg-v2', RG_TTL = 7*864e5;
+const RGC = {};
+try{ const o = JSON.parse(localStorage.getItem(RGKEY)||'{}'), now = Date.now(); for(const k in o) if(o[k] && now-o[k].t < RG_TTL) RGC[k] = o[k]; }catch(e){}
+let rgT, rgSave; const saveRG = () => { clearTimeout(rgT); rgT = setTimeout(()=>{ try{ localStorage.setItem(RGKEY, JSON.stringify(RGC)); }catch(e){} },800); };
+const rgSlug = p => { const m = metaOf(p), x = RG_RE.exec((m && m.u) || ''); return x ? x[1].toLowerCase() : (m && m.g ? m.g.toLowerCase() : (m && m.rs) || ''); };   // posts that only carry RedGifs embed data have no redgifs link, so use the name from the embed
+let rgTok = null, rgBlocked = false;
+async function rgToken(force){
+  if(!force && rgTok && Date.now() < rgTok.exp) return rgTok.v;
+  const r = await fetch('https://api.redgifs.com/v2/auth/temporary');
+  if(!r.ok) throw new Error('auth '+r.status);
+  const j = await r.json(); if(!j.token) throw new Error('no token');
+  rgTok = {v:j.token, exp:Date.now()+20*36e5}; return rgTok.v;
+}
+async function rgFetch(slug, retry){
+  const tok = await rgToken(!!retry);
+  const r = await fetch('https://api.redgifs.com/v2/gifs/'+slug, {headers:{Authorization:'Bearer '+tok}});
+  if(r.status===401 && !retry) return rgFetch(slug,true);
+  if(r.status===404 || r.status===410) return {gone:1};
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  const g = (await r.json()).gif || {}, u = g.urls || {};
+  const ha = !!g.hasAudio, v = ha ? (u.hd || u.sd) : (u.sd || u.hd); if(!v) return {gone:1};
+  return {v, vh:u.hd||v, ha, th:u.poster||u.thumbnail||'', w:g.width||0, h:g.height||0};
+}
+/* If the API can't be reached from the browser, fall back to the file names Reddit's own embed data reveals. */
+const rgGuess = m => m.g ? {v:'https://media.redgifs.com/'+m.g+'-mobile.mp4', vh:'https://media.redgifs.com/'+m.g+'.mp4', th:'', w:0, h:0} : null;
+const rgNeeds = p => { const m = metaOf(p); return !!(m && !m.v && !m.rgGone && m.m!=='removed' && rgSlug(p)); };
+function rgApply(p,res){
+  const m = metaOf(p); if(!m) return;
+  if(res.gone) m.rgGone = 1;
+  else { m.v = res.v; if(res.ha!==undefined) m.ha = res.ha ? 1 : 0; if(res.vh && res.vh!==res.v) m.vh = res.vh; if(!m.th && res.th) m.th = res.th; if(res.w && res.h){ m.w = res.w; m.h = res.h; } }
+  clearTimeout(rgSave); rgSave = setTimeout(saveCache,1500);
+  const el = cardEls.get(p.id); if(el) fillCard(el,p);
+  if(res.gone) updateDeadCount();
+}
+async function rgRun(p){
+  const slug = rgSlug(p), m = metaOf(p);
+  let res = RGC[slug];
+  if(!res){
+    if(!rgBlocked){
+      try{ res = await rgFetch(slug); RGC[slug] = Object.assign({t:Date.now()}, res); saveRG(); }
+      catch(e){ if(e instanceof TypeError) rgBlocked = true; res = null; }   // network or CORS failure: stop calling the API this session
+    }
+    if(!res) res = rgGuess(m);
+  }
+  if(res) rgApply(p,res);
+}
+const rgBusy = new Set(), rgQueue = []; let rgActive = 0;
+function rgPump(){
+  while(rgActive < 3 && rgQueue.length){
+    const p = rgQueue.shift(); rgActive++;
+    rgRun(p).catch(()=>{}).finally(()=>{ setTimeout(()=>{ rgActive--; rgPump(); },250); });
+  }
+}
+const rgIO = new IntersectionObserver(es=>{
+  for(const e of es){
+    if(!e.isIntersecting) continue;
+    const el = e.target, p = el._p; rgIO.unobserve(el);
+    if(p && rgNeeds(p) && !rgBusy.has(p.id)){ rgBusy.add(p.id); rgQueue.push(p); }
+  }
+  rgPump();
+},{rootMargin:'400px'});
+function rgWatch(el,p){ if(rgNeeds(p)) rgIO.observe(el); else rgIO.unobserve(el); }
+
+/* ---------- full-screen viewer ---------- */
+const VIEW = {root:$('viewer'), stage:document.querySelector('#viewer .vstage'), token:0, opener:null, fs:false};
+const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement || null;
+function viewerGallery(i){
+  const g = VIEW.gal; if(!g) return;
+  const n = g.m.gl.length; g.i = (i+n)%n;
+  const name = g.m.gl[g.i], urls = ['https://i.redd.it/'+name, 'https://preview.redd.it/'+name];
+  if(g.i===0 && g.m.th) urls.push(g.m.th);
+  const tok = ++VIEW.token, im = new Image(); im.referrerPolicy = 'no-referrer'; im.alt = titleOf(g.p);
+  let k = 0; im.onerror = () => { if(++k < urls.length) im.src = urls[k]; };
+  im.addEventListener('load',()=>{ if(tok===VIEW.token) VIEW.stage.replaceChildren(im); });
+  im.src = urls[0];
+  VIEW.root.querySelector('.vcount').textContent = (g.i+1)+' / '+n;
+}
+const viewerStep = d => { if(VIEW.gal && !VIEW.root.hidden) viewerGallery(VIEW.gal.i + d); };
+function closeViewer(){
+  if(VIEW.root.hidden) return;
+  VIEW.token++;
+  if(VIEW.gal){
+    const g = VIEW.gal, card = cardEls.get(g.p.id);
+    if(card){ card._gi = g.i; showGallery(card, g.p, g.m); }
+    VIEW.gal = null;
+  }
+  VIEW.root.querySelectorAll('.vnav,.vcount').forEach(x=>x.hidden = true);
+  if(VIEW.aud){ VIEW.aud.pause(); VIEW.aud.removeAttribute('src'); VIEW.aud = null; }
+  VIEW.root.querySelector('.vsound').hidden = true;
+  VIEW.stage.querySelectorAll('video').forEach(v=>{ v.pause(); v.removeAttribute('src'); try{ v.load(); }catch(e){} });
+  VIEW.stage.replaceChildren();
+  VIEW.root.hidden = true; document.body.classList.remove('viewing');
+  if(fsEl()){ try{ (document.exitFullscreen || document.webkitExitFullscreen).call(document); }catch(e){} }
+  VIEW.fs = false;
+  if(VIEW.opener && VIEW.opener.isConnected) try{ VIEW.opener.focus({preventScroll:true}); }catch(e){}
+}
+async function openViewer(p, opts){
+  opts = opts || {};
+  let m = metaOf(p); const card = cardEls.get(p.id), tok = ++VIEW.token;
+  const thumbImg = card && card.querySelector('.thumb img');
+  const thumbSrc = thumbImg ? (thumbImg.currentSrc || thumbImg.src) : '';
+  const mkImg = url => { const im = new Image(); im.referrerPolicy = 'no-referrer'; im.alt = titleOf(p); im.src = url; return im; };
+  VIEW.opener = document.activeElement;
+  VIEW.stage.replaceChildren();
+  VIEW.root.hidden = false; document.body.classList.add('viewing');
+  VIEW.root.querySelector('.vclose').focus({preventScroll:true});
+  // real full screen where the browser allows it; otherwise this still fills the whole window
+  const rq = VIEW.root.requestFullscreen || VIEW.root.webkitRequestFullscreen;
+  if(rq){ try{ const r = rq.call(VIEW.root); VIEW.fs = true; if(r && r.catch) r.catch(()=>{ VIEW.fs = false; }); }catch(e){ VIEW.fs = false; } }
+  if(m && m.gl && m.gl.length > 1){
+    VIEW.gal = {p, m, i:(card && card._gi) || 0};
+    VIEW.root.querySelectorAll('.vnav,.vcount').forEach(x=>x.hidden = false);
+    if(thumbSrc) VIEW.stage.appendChild(mkImg(thumbSrc));
+    viewerGallery(VIEW.gal.i);
+    return;
+  }
+  if(thumbSrc) VIEW.stage.appendChild(mkImg(thumbSrc));   // show what's on the card straight away, then upgrade
+  if(rgNeeds(p) && !rgBusy.has(p.id)){ rgBusy.add(p.id); try{ await rgRun(p); }catch(e){} if(tok!==VIEW.token) return; m = metaOf(p); }
+  const vurl = m ? (m.vh || m.v || '') : '';
+  if(vurl && !/\.gif(\?|$)/i.test(vurl)){
+    const v = document.createElement('video');
+    v.controls = true; v.loop = true; v.playsInline = true; v.preload = 'auto'; v.src = vurl;
+    v.muted = AUDIO.muted; v.volume = AUDIO.vol;
+    v.addEventListener('volumechange',()=>{ if(VIEW.root.hidden) return; AUDIO.muted = v.muted; if(v.volume>0 && v.volume!==AUDIO.vol){ AUDIO.vol = v.volume; saveVol(); } applyAudio(); });
+    if(thumbSrc) v.poster = thumbSrc;
+    v.addEventListener('loadedmetadata',()=>{ if(opts.t){ try{ v.currentTime = opts.t; }catch(e){} } });
+    v.addEventListener('error',()=>{ if(tok===VIEW.token && !thumbSrc){ toast('Could not load this video.'); closeViewer(); } });
+    VIEW.stage.replaceChildren(v);
+    const sb = VIEW.root.querySelector('.vsound'); sb.hidden = true;
+    if(m && m.ab){
+      // Reddit video: sound comes from a separate file, kept in step with the picture
+      const cands = [m.ab+'/DASH_AUDIO_128.mp4', m.ab+'/DASH_AUDIO_64.mp4', m.ab+'/DASH_audio.mp4'];
+      const a = document.createElement('audio'); a.preload = 'auto'; a.loop = true; let ci = 0; a.src = cands[0];
+      const paintSb = () => { sb.innerHTML = v.muted ? SPK_OFF : SPK_ON; sb.setAttribute('aria-label', v.muted ? 'Unmute' : 'Mute'); };
+      a.addEventListener('error',()=>{ if(++ci < cands.length) a.src = cands[ci]; else { sb.hidden = true; VIEW.aud = null; } });
+      a.addEventListener('loadedmetadata',()=>{ sb.hidden = false; paintSb(); });
+      const drive = () => { a.volume = v.volume; a.muted = v.muted; if(!v.paused && !v.muted && a.paused){ try{ a.currentTime = v.currentTime; }catch(e){} a.play().catch(()=>{ a.muted = true; }); } if(v.muted || v.paused) a.pause(); };
+      v.addEventListener('volumechange',drive); v.addEventListener('play',drive); v.addEventListener('pause',()=>a.pause());
+      v.addEventListener('seeked',()=>{ if(!a.paused){ try{ a.currentTime = v.currentTime; }catch(e){} } });
+      v.addEventListener('timeupdate',()=>{ if(!a.paused && Math.abs(a.currentTime - v.currentTime) > 0.35){ try{ a.currentTime = v.currentTime; }catch(e){} } });
+      sb.onclick = () => { v.muted = !v.muted; if(!v.muted && v.volume < 0.05) v.volume = 0.6; paintSb(); };
+      VIEW.aud = a;
+    }
+    v.play().catch(()=>{ v.muted = true; v.play().catch(()=>{}); });   // blocked with sound? play silently instead
+    return;
+  }
+  let resolved = '';
+  if(healthOf(p) || !fullResCandidates(p).length || !(m && m.u && /\.(jpe?g|png|webp|gif)(\?|$)/i.test(m.u))){
+    let r = null; try{ r = await resolveTarget(p); }catch(e){}
+    if(tok!==VIEW.token) return;
+    if(r && !r.dead && !r.unknown && r.type==='img' && r.href) resolved = r.href;
+  }
+  const urls = fullResCandidates(p, resolved);
+  if(!urls.length){ if(!thumbSrc){ toast('No media available to show.'); closeViewer(); } return; }
+  /* Try sources in order; start the next one when one errors, loads as a known "removed" placeholder, or is just slow. The first good one wins. */
+  let k = 0, won = false; const probes = [], timers = [];
+  const settle = im => { won = true; timers.forEach(clearTimeout); probes.forEach(x=>{ if(x!==im){ x.onload = x.onerror = null; x.removeAttribute('src'); } }); VIEW.stage.replaceChildren(im); };
+  const fail = () => {
+    if(won || tok!==VIEW.token) return;
+    if(k < urls.length){ next(); return; }
+    if(probes.every(x=>x._done) && !thumbSrc && !VIEW.stage.querySelector('img')){ toast('No media available to show.'); closeViewer(); }
+  };
+  const next = () => {
+    if(won || tok!==VIEW.token || k >= urls.length) return;
+    const url = urls[k++], im = mkImg(url); probes.push(im);
+    let mine = false;
+    const bad = () => { if(im._done) return; im._done = true; fail(); };
+    im.addEventListener('error',bad);
+    im.addEventListener('load',()=>{
+      if(won || tok!==VIEW.token || im._done) return;
+      const w = im.naturalWidth, h2 = im.naturalHeight;
+      if(w <= 2 || h2 <= 2 || (/imgur\.com/.test(url) && w===161 && h2===81)){ bad(); return; }   // blank pixel or Imgur's "removed" picture
+      im._done = true; settle(im);
+    });
+    timers.push(setTimeout(()=>{ if(!won && !im._done && k < urls.length && tok===VIEW.token) next(); }, 6000));
+  };
+  next();
+}
+VIEW.root.querySelector('.vclose').addEventListener('click',closeViewer);
+VIEW.root.addEventListener('click',e=>{ if(e.target===VIEW.root || e.target===VIEW.stage) closeViewer(); });
+document.addEventListener('keydown',e=>{
+  if(VIEW.root.hidden) return;
+  if(e.key==='Escape'){ e.preventDefault(); closeViewer(); }
+  else if(e.key==='ArrowLeft' && VIEW.gal){ e.preventDefault(); viewerStep(-1); }
+  else if(e.key==='ArrowRight' && VIEW.gal){ e.preventDefault(); viewerStep(1); }
+});
+VIEW.root.querySelector('.vprev').addEventListener('click',e=>{ e.stopPropagation(); viewerStep(-1); });
+VIEW.root.querySelector('.vnext').addEventListener('click',e=>{ e.stopPropagation(); viewerStep(1); });
+/* Pinch to zoom, drag to pan, double-tap (or double-click) to toggle zoom, mouse wheel to zoom. Swipe between gallery images only while not zoomed. */
+const ZOOM = {s:1, x:0, y:0, pts:new Map(), last:0, lastT:0, multi:false, moved:false};
+const zImg = () => VIEW.stage.querySelector('img');
+function zApply(){
+  const im = zImg(); if(!im) return;
+  const W = VIEW.stage.clientWidth, H = VIEW.stage.clientHeight, mx = Math.max(0,(im.offsetWidth*ZOOM.s - W)/2), my = Math.max(0,(im.offsetHeight*ZOOM.s - H)/2);
+  if(ZOOM.s <= 1.02){ ZOOM.s = 1; ZOOM.x = ZOOM.y = 0; }
+  ZOOM.x = Math.max(-mx, Math.min(mx, ZOOM.x)); ZOOM.y = Math.max(-my, Math.min(my, ZOOM.y));
+  im.style.transform = ZOOM.s===1 ? '' : 'translate('+ZOOM.x+'px,'+ZOOM.y+'px) scale('+ZOOM.s+')';
+  im.style.cursor = ZOOM.s>1 ? 'grab' : '';
+}
+function zReset(){ ZOOM.s = 1; ZOOM.x = ZOOM.y = 0; ZOOM.pts.clear(); ZOOM.multi = false; }
+function zAt(cx, cy, ns){   // zoom to scale ns keeping the point under (cx,cy) fixed
+  const r = VIEW.stage.getBoundingClientRect(), px = cx - (r.left + r.width/2), py = cy - (r.top + r.height/2);
+  ns = Math.max(1, Math.min(8, ns));
+  const qx = (px - ZOOM.x)/ZOOM.s, qy = (py - ZOOM.y)/ZOOM.s;
+  ZOOM.s = ns; ZOOM.x = px - qx*ns; ZOOM.y = py - qy*ns; zApply();
+}
+new MutationObserver(()=>{ zReset(); }).observe(VIEW.stage,{childList:true});
+(function(){
+  const st = VIEW.stage, dist = () => { const [a,b] = [...ZOOM.pts.values()]; return Math.hypot(a.x-b.x, a.y-b.y); }, mid = () => { const [a,b] = [...ZOOM.pts.values()]; return {x:(a.x+b.x)/2, y:(a.y+b.y)/2}; };
+  let d0 = 0, s0 = 1, m0 = null, t0 = null, sx = 0;
+  /* Touch events drive touch screens (they behave the same in every mobile browser, including iOS Safari); pointer events drive mouse and pen. */
+  const down = (id,x,y) => {
+    ZOOM.pts.set(id,{x,y});
+    if(ZOOM.pts.size===1){ sx = x; ZOOM.moved = false; ZOOM.multi = false; t0 = {x:ZOOM.x, y:ZOOM.y, cx:x, cy:y}; }
+    if(ZOOM.pts.size===2){ ZOOM.multi = true; d0 = dist() || 1; s0 = ZOOM.s; m0 = mid(); t0 = {x:ZOOM.x, y:ZOOM.y}; }
+  };
+  const move = (id,x,y) => {
+    if(!ZOOM.pts.has(id)) return;
+    ZOOM.pts.set(id,{x,y});
+    if(ZOOM.pts.size===2){
+      const ns = Math.max(1, Math.min(8, s0*dist()/d0)), m1 = mid(), r = st.getBoundingClientRect();
+      const px0 = m0.x-(r.left+r.width/2), py0 = m0.y-(r.top+r.height/2), px1 = m1.x-(r.left+r.width/2), py1 = m1.y-(r.top+r.height/2);
+      const qx = (px0 - t0.x)/s0, qy = (py0 - t0.y)/s0;
+      ZOOM.s = ns; ZOOM.x = px1 - qx*ns; ZOOM.y = py1 - qy*ns; ZOOM.moved = true; zApply();
+    }else if(ZOOM.pts.size===1 && ZOOM.s>1){
+      ZOOM.x = t0.x + (x - t0.cx); ZOOM.y = t0.y + (y - t0.cy);
+      if(Math.abs(x-t0.cx)+Math.abs(y-t0.cy) > 4) ZOOM.moved = true; zApply();
+    }
+  };
+  const up = (id,x,y) => {
+    if(!ZOOM.pts.has(id)) return;
+    const was = ZOOM.pts.size; ZOOM.pts.delete(id);
+    if(was===2){ const left = [...ZOOM.pts.values()][0]; if(left){ t0 = {x:ZOOM.x, y:ZOOM.y, cx:left.x, cy:left.y}; } return; }
+    if(ZOOM.multi){ if(!ZOOM.pts.size) setTimeout(()=>{ ZOOM.multi = false; },0); return; }
+    const dx = x - sx;
+    if(ZOOM.s===1 && !ZOOM.moved && VIEW.gal && Math.abs(dx) > 50){ viewerStep(dx<0 ? 1 : -1); return; }   // swipe to the next image
+    if(!ZOOM.moved){   // a tap; two quick taps toggle zoom
+      const now = Date.now();
+      if(now - ZOOM.lastT < 320){ ZOOM.lastT = 0; ZOOM.s>1 ? (ZOOM.s = 1, zApply()) : zAt(x, y, 2.5); }
+      else ZOOM.lastT = now;
+    }
+  };
+  // touch screens
+  st.addEventListener('touchstart',e=>{ if(e.target.tagName!=='IMG' && !ZOOM.pts.size) return; e.preventDefault(); for(const t of e.changedTouches) down('t'+t.identifier, t.clientX, t.clientY); },{passive:false});
+  st.addEventListener('touchmove',e=>{ if(!ZOOM.pts.size) return; e.preventDefault(); for(const t of e.changedTouches) move('t'+t.identifier, t.clientX, t.clientY); },{passive:false});
+  const tend = e=>{ if(!ZOOM.pts.size) return; e.preventDefault(); for(const t of e.changedTouches) up('t'+t.identifier, t.clientX, t.clientY); };
+  st.addEventListener('touchend',tend,{passive:false});
+  st.addEventListener('touchcancel',e=>{ for(const t of e.changedTouches) up('t'+t.identifier, t.clientX, t.clientY); },{passive:false});
+  // iOS Safari reports pinches as gestures; keep the page itself from zooming
+  ['gesturestart','gesturechange','gestureend'].forEach(ev=>VIEW.root.addEventListener(ev,e=>e.preventDefault()));
+  // mouse and pen
+  st.addEventListener('pointerdown',e=>{ if(e.pointerType==='touch' || e.target.tagName!=='IMG') return; try{ st.setPointerCapture(e.pointerId); }catch(_){} down('p'+e.pointerId, e.clientX, e.clientY); });
+  st.addEventListener('pointermove',e=>{ if(e.pointerType==='touch') return; move('p'+e.pointerId, e.clientX, e.clientY); });
+  const pup = e=>{ if(e.pointerType==='touch') return; up('p'+e.pointerId, e.clientX, e.clientY); };
+  st.addEventListener('pointerup',pup); st.addEventListener('pointercancel',pup);
+  st.addEventListener('wheel',e=>{ if(e.target.tagName!=='IMG') return; e.preventDefault(); zAt(e.clientX, e.clientY, ZOOM.s*Math.exp(-e.deltaY*0.0015)); },{passive:false});
+  st.addEventListener('dblclick',e=>{ if(e.target.tagName!=='IMG') return; ZOOM.s>1 ? (ZOOM.s = 1, zApply()) : zAt(e.clientX, e.clientY, 2.5); });
+  addEventListener('resize',()=>{ if(!VIEW.root.hidden) zApply(); });
+})();
+['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>{ if(!fsEl() && VIEW.fs && !VIEW.root.hidden) closeViewer(); }));
+
+/* ---------- bento layout ---------- */
+const ROW = 4, GAP = 6;
+let colW = 230, cols = 1;
+function measureGrid(){
+  const cs = getComputedStyle($('grid'));
+  const tracks = cs.gridTemplateColumns.split(' ').map(parseFloat).filter(x=>x>0);
+  if(tracks.length){ cols = tracks.length; colW = tracks[0]; }
+}
+function layoutCard(el,p){
+  const m = metaOf(p);
+  const ar = m && m.w && m.h ? m.w/m.h : 0;            // width / height, 0 when unknown
+  const wide = ar >= 1.6 && cols >= 3;                  // panoramic media gets a double-width tile
+  const cs = wide ? 2 : 1;
+  let hw = ar ? 1/ar : 0.75;
+  hw = wide ? Math.min(Math.max(hw,0.42),1) : Math.min(Math.max(hw,0.66),1.7);
+  const w = cs*colW + (cs-1)*GAP;
+  const rows = Math.max(10, Math.round((w*hw + GAP)/(ROW+GAP)));
+  el.style.gridRow = 'span '+rows;
+  el.style.gridColumn = cs>1 ? 'span '+cs : '';
+}
+function relayoutAll(){
+  measureGrid();
+  for(const el of $('grid').children) if(el._p) layoutCard(el, el._p);
+}
+new ResizeObserver(()=>relayoutAll()).observe($('grid'));
+function showGallery(card,p,m){
+  const n = m.gl.length, i = card._gi || 0, name = m.gl[i];
+  const urls = [i===0 ? m.th : '', 'https://i.redd.it/'+name, 'https://preview.redd.it/'+name].filter(Boolean);
+  const t = card.querySelector('.thumb');
+  let img = t.querySelector('img');
+  if(!img){ img = document.createElement('img'); img.alt = ''; img.referrerPolicy = 'no-referrer'; t.prepend(img); }
+  const ph = t.querySelector('.ph'); if(ph) ph.remove();
+  let k = 0; img.onerror = () => { if(++k < urls.length) img.src = urls[k]; };
+  img.src = urls[0];
+  const b = card.querySelector('.badge.media'); if(b) b.textContent = (MEDIA_LABEL.gallery||'Gallery')+' '+(i+1)+'/'+n;
+}
+$('grid').addEventListener('click',e=>{
+  const ib = e.target.closest('button.ibtn');
+  if(ib){ const c = ib.closest('.card'), on = !c.classList.contains('info-open'); c.classList.toggle('info-open', on); ib.setAttribute('aria-pressed', on?'true':'false'); ib.setAttribute('aria-label', on?'Hide info':'Show info'); return; }
+  const sv = e.target.closest('button.save');
+  if(sv){ const card = sv.closest('.card'); if(card && card._p) toggleSave(card._p); return; }
+  const gn = e.target.closest('button.gnav');
+  if(gn){
+    const card = gn.closest('.card'), p = card && card._p, m = p && metaOf(p);
+    if(m && m.gl && m.gl.length > 1){ const n = m.gl.length; card._gi = ((card._gi||0) + (gn.classList.contains('gnext') ? 1 : -1) + n) % n; showGallery(card,p,m); }
+    return;
+  }
+  const fb = e.target.closest('button.fs');
+  if(fb){
+    const card = fb.closest('.card');
+    if(card && card._p){ const clip = card.querySelector('video.clip'); openViewer(card._p, {t: clip ? clip.currentTime : 0}); }
+    return;
+  }
+  const ln = e.target.closest('a[data-open]');
+  if(ln && e.button===0 && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey){
+    const card = ln.closest('.card'), p = card && card._p;
+    if(p && chainOf(p).length && !RESOLVED.has(p.id)){
+      // not checked yet: open the tab now (so it isn't blocked), then send it to a working copy
+      e.preventDefault();
+      const w = window.open('','_blank');
+      if(w){ try{ w.opener = null; w.document.title = 'Checking...'; w.document.body.style.cssText = 'font:16px system-ui;padding:24px'; w.document.body.textContent = 'Checking for a working copy...'; }catch(_){} }
+      resolveTarget(p).then(r=>{
+        const to = (r.dead||r.unknown) ? recHref(p) : r.href;
+        if(w && !w.closed) w.location.href = to; else toast('Pop-up blocked. Click again to open the checked link.');
+      });
+      return;
+    }
+  }
+  const st = e.target.closest('button.star');
+  if(st){
+    const id = st.dataset.id, on = !FAVS.has(id), card = st.closest('.card');
+    setStar(card && card._p || POSTS.find(x=>x.id===id), on);
+    st.setAttribute('aria-pressed', on?'true':'false'); st.textContent = on ? '\u2605' : '\u2606';
+    updateFavCount();
+    if(state.fav) refresh(); else updateSummary();
+    return;
+  }
+  const s = e.target.closest('button.sub');
+  if(s){ state.sub = s.dataset.sub; $('subsel').value = state.sub; refresh(); window.scrollTo({top:0}); return; }
+  const r = e.target.closest('button.reveal');
+  if(r){ r.previousElementSibling.classList.toggle('show'); r.textContent = r.previousElementSibling.classList.contains('show') ? 'Blur' : 'Reveal'; }
+});
+
+function renderMore(){
+  const grid = $('grid'), end = Math.min(list.length, shown+PAGE), frag = document.createDocumentFragment();
+  for(let k=shown;k<end;k++){ const p=list[k]; let el=cardEls.get(p.id); if(!el){ el=buildCard(p); cardEls.set(p.id,el);} frag.appendChild(el); }
+  grid.appendChild(frag); shown = end; updateMore();
+}
+function refresh(){
+  measureGrid();
+  list = sorted(POSTS.filter(p=>matches(p)));
+  $('grid').replaceChildren(); shown = 0;
+  if(!list.length){ $('grid').innerHTML = '<div class="empty">'+(MODE==='sub' ? (FEED.loading ? 'Loading...' : 'No posts match these filters.') : (POSTS.length ? 'No saved posts match these filters.' : 'Your list is empty. Sign in to load it from your account, use Open CSV, or switch to Subreddit and save posts you like.'))+'</div>'; updateMore(); }
+  else renderMore();
+  updateChips(); updateSummary();
+}
+new IntersectionObserver(es=>{ if(es[0].isIntersecting && shown<list.length) renderMore(); },{rootMargin:'900px'}).observe($('sentinel'));
+
+/* ---------- chips and summary ---------- */
+function chip(label,count,on,onClick){
+  const b = document.createElement('button');
+  b.type='button'; b.className='chip'; b.setAttribute('aria-pressed',on?'true':'false');
+  b.innerHTML = esc(label)+' <small>'+count.toLocaleString()+'</small>';
+  b.addEventListener('click',onClick); return b;
+}
+function toggle(set,v){ set.has(v)?set.delete(v):set.add(v); refresh(); }
+function updateChips(){
+  const cc = {}, mc = {}, kc = {};
+  for(const p of POSTS){
+    if(matches(p,'cat')) cc[p.cat]=(cc[p.cat]||0)+1;
+    if(matches(p,'kind')){ const k = kindOf(p); if(k) kc[k] = (kc[k]||0)+1; }
+    if(matches(p,'media')){ const m=mediaOf(p); mc[m]=(mc[m]||0)+1; if(isRec(p)) mc.recovered=(mc.recovered||0)+1; }
+  }
+  $('catChips').replaceChildren(...CAT_ORDER.filter(c=>cc[c]||state.cats.has(c)).map(c=>chip(c,cc[c]||0,state.cats.has(c),()=>toggle(state.cats,c))));
+  $('kindChips').replaceChildren(...KINDS.filter(([k])=>kc[k]||state.kinds.has(k)).map(([k,l])=>chip(l,kc[k]||0,state.kinds.has(k),()=>toggle(state.kinds,k))));
+  $('mediaChips').replaceChildren(...STATUS.filter(([k])=>mc[k]||state.media.has(k)).map(([k,l])=>chip(l,mc[k]||0,state.media.has(k),()=>toggle(state.media,k))));
+}
+function updateSummary(){
+  const active = state.cats.size||state.kinds.size||state.media.size||state.sub||state.q||state.fav||state.nsfw!=='hide'||!state.hideBroken||state.range!=='all';
+  $('barcount').textContent = list.length.toLocaleString()+' of '+POSTS.length.toLocaleString();
+  $('decktoggle').dataset.active = (active||state.hideBroken) ? '1' : '0';
+  $('summary').innerHTML = active ? list.length.toLocaleString()+' of '+POSTS.length.toLocaleString()+' posts <button class="clear" id="clr" type="button">Clear filters</button>' : '';
+  const c = $('clr'); if(c) c.onclick = ()=>{ state.cats.clear(); state.kinds.clear(); state.media.clear(); state.sub=''; state.q=''; state.fav=false; $('favonly').checked=false; if(state.range!=='all'){ setRange('all'); return; } state.nsfw='hide'; $('q').value=''; $('nsfw').value='hide'; $('nsfwonly').checked=false; prevNsfw='hide'; $('subsel').value=''; refresh(); };
+}
+
+/* ---------- hover and auto-play ---------- */
+const touchMQ = matchMedia('(hover: none)');
+const auto = {on:false, focus:touchMQ.matches}, playing = new Set(), MAX_AUTO = 18;
+let focused = null, focusCard = null; const viewSet = new Set(), cardView = new Set();
+const cardIO = new IntersectionObserver(es=>{ for(const e of es) e.isIntersecting ? cardView.add(e.target) : cardView.delete(e.target); if(auto.focus) schedFocus(); },{threshold:[0,.25,.5,.75,1]});   // on touch screens only the media nearest the middle of the screen plays
+function fmtTime(x){ x = Math.max(0,Math.floor(x||0)); return Math.floor(x/60)+':'+String(x%60).padStart(2,'0'); }
+function clearPlayUI(t){
+  cancelAnimationFrame(t._raf);
+  if(t._aud){ t._aud.pause(); t._aud.removeAttribute('src'); try{ t._aud.load(); }catch(e){} t._aud = null; }
+  t.querySelectorAll('.clip').forEach(c=>{ if(c.pause) c.pause(); c.remove(); });
+  const card = t.closest('.card');
+  if(card){ card.classList.remove('playing'); card.querySelectorAll('.ctl,.cprog').forEach(n=>n.remove()); }
+}
+/* ---------- sound: muted by default; one shared level for every clip, and only the clip you're on is audible ---------- */
+const VKEY = 'saved-posts-volume';
+const AUDIO = {muted:true, vol:1};
+try{ const v = parseFloat(localStorage.getItem(VKEY)); if(v>0 && v<=1) AUDIO.vol = v; }catch(e){}
+const saveVol = () => { try{ localStorage.setItem(VKEY, String(AUDIO.vol)); }catch(e){} };
+const SPK_ON = '<svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M2 6h2.5L8 3v10l-3.5-3H2z"/><path d="M10.4 5.6a3.4 3.4 0 010 4.8M12.4 3.6a6.2 6.2 0 010 8.8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
+const SPK_OFF = '<svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M2 6h2.5L8 3v10l-3.5-3H2z"/><path d="M10.5 6.2l3.5 3.6M14 6.2l-3.5 3.6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
+const audioUIs = new Set();
+const isAudible = t => auto.focus ? (auto.on ? t===focused : !!t._hover) : !!t._hover;
+function applyAudio(){
+  for(const u of audioUIs){
+    if(!u.el.isConnected){ if(u.aud) u.aud.pause(); audioUIs.delete(u); continue; }
+    const quiet = AUDIO.muted || !isAudible(u.t);
+    if(u.aud){
+      // Reddit video: the picture is silent, the sound is a separate file kept in step with it
+      const a = u.aud;
+      u.el.muted = true; a.volume = AUDIO.vol;
+      if(quiet){ if(!a.paused) a.pause(); a.muted = true; }
+      else {
+        a.muted = false;
+        if(a.paused && !u.el.paused){
+          try{ a.currentTime = u.el.currentTime; }catch(e){}
+          a.preload = 'auto';
+          a.play().catch(()=>{ a.muted = true; });
+        }
+      }
+    } else {
+      u.el.volume = AUDIO.vol;
+      if(u.el.muted !== quiet){
+        u.el.muted = quiet;
+        // some browsers pause a clip when it is unmuted without a fresh tap; fall back to silent playback
+        if(!quiet && u.el.paused && !u.t._userPaused) u.el.play().catch(()=>{ u.el.muted = true; });
+      }
+    }
+    const st = AUDIO.muted ? 'off' : 'on';
+    if(u.st !== st){ u.st = st; u.vol.innerHTML = AUDIO.muted ? SPK_OFF : SPK_ON; u.vol.setAttribute('aria-label', AUDIO.muted ? 'Unmute' : 'Mute'); }
+    u.volr.value = AUDIO.muted ? 0 : Math.round(AUDIO.vol*100);
+  }
+}
+/* The sound control only appears once we know this clip has sound. */
+function setupSound(t, el, ctl, entry){
+  const show = () => ctl.classList.add('has-sound');
+  const ab = t.dataset.ab, ha = t.dataset.ha;
+  if(ab){
+    const cands = [ab+'/DASH_AUDIO_128.mp4', ab+'/DASH_AUDIO_64.mp4', ab+'/DASH_audio.mp4'];
+    const a = document.createElement('audio');
+    a.preload = 'metadata'; a.loop = true; a.muted = true; a.src = cands[0];
+    let ci = 0;
+    a.addEventListener('error',()=>{ if(++ci < cands.length) a.src = cands[ci]; else { a.removeAttribute('src'); entry.aud = null; t._aud = null; } });
+    a.addEventListener('loadedmetadata',show);
+    entry.aud = a; t._aud = a;
+    return;
+  }
+  if(ha==='1'){ show(); return; }
+  if(ha==='0') return;
+  // unknown source: ask the browser whether the file carries an audio track
+  const has = () => {
+    if(el.mozHasAudio === true) return true;
+    if(el.audioTracks && el.audioTracks.length > 0) return true;
+    if(el.webkitAudioDecodedByteCount > 0) return true;
+    try{ const cs = (el.captureStream || el.mozCaptureStream); if(cs && cs.call(el).getAudioTracks().length > 0) return true; }catch(e){}
+    return false;
+  };
+  let tries = 0;
+  const iv = setInterval(()=>{
+    if(!ctl.isConnected){ clearInterval(iv); return; }
+    if(el.readyState >= 2 && has()){ show(); clearInterval(iv); }
+    else if(++tries > 14) clearInterval(iv);
+  },400);
+}
+function setMuted(m){ AUDIO.muted = m; if(!m && AUDIO.vol < 0.05){ AUDIO.vol = 0.6; saveVol(); } applyAudio(); }
+function buildControls(t, el, isGif){
+  const card = t.closest('.card'); if(!card) return;
+  card.querySelectorAll('.ctl,.cprog').forEach(n=>n.remove());
+  const ctl = document.createElement('div'); ctl.className = 'ctl';
+  ctl.innerHTML = '<button class="pp" type="button" aria-label="Pause">\u23F8</button>'
+    + (isGif ? '' : '<input class="seek" type="range" min="0" max="1000" step="1" value="0" aria-label="Seek"><span class="time">0:00</span><span class="volwrap"><span class="volfly"><input class="volr" type="range" min="0" max="100" step="1" value="0" aria-label="Volume"></span><button class="vol" type="button" aria-label="Unmute"></button></span>');
+  const pp = ctl.querySelector('.pp');
+  card.classList.add('playing'); card.appendChild(ctl);
+  const paint = () => {
+    const paused = isGif ? !!t._frozen : (el.paused && t._userPaused);
+    pp.textContent = paused ? '\u25B6' : '\u23F8'; pp.setAttribute('aria-label', paused ? 'Play' : 'Pause');
+    ctl.classList.toggle('paused', paused);
+  };
+  if(isGif){
+    pp.addEventListener('click',()=>{
+      if(t._frozen){ t._frozen.remove(); t._frozen = null; }
+      else{
+        const c = document.createElement('canvas'); c.className = 'clip';
+        c.width = el.naturalWidth || 1; c.height = el.naturalHeight || 1;
+        try{ c.getContext('2d').drawImage(el,0,0); }catch(_){ return; }
+        el.after(c); t._frozen = c;
+      }
+      paint();
+    });
+    return;
+  }
+  const prog = document.createElement('i'); prog.className = 'cprog'; card.appendChild(prog);
+  const seek = ctl.querySelector('.seek'), time = ctl.querySelector('.time');
+  const vol = ctl.querySelector('.vol'), volr = ctl.querySelector('.volr');
+  const entry = {t, el, vol, volr, st:'', aud:null};
+  audioUIs.add(entry);
+  setupSound(t, el, ctl, entry);
+  vol.addEventListener('click',()=>setMuted(!AUDIO.muted));
+  volr.addEventListener('input',()=>{
+    const v = volr.value/100;
+    if(v===0) AUDIO.muted = true; else { AUDIO.muted = false; AUDIO.vol = v; saveVol(); }
+    applyAudio();
+  });
+  applyAudio();
+  let scrubbing = false;
+  const sync = () => {
+    const d = el.duration;
+    if(d && isFinite(d)){
+      const f = el.currentTime/d;
+      if(!scrubbing) seek.value = Math.round(f*1000);
+      prog.style.width = (f*100)+'%';
+      time.textContent = fmtTime(el.currentTime)+' / '+fmtTime(d);
+    }
+  };
+  pp.addEventListener('click',()=>{
+    if(el.paused){ t._userPaused = false; el.play().catch(()=>{}); } else { t._userPaused = true; el.pause(); }
+    paint();
+  });
+  seek.addEventListener('input',()=>{ scrubbing = true; const d = el.duration; if(d && isFinite(d)){ el.currentTime = seek.value/1000*d; sync(); } });
+  seek.addEventListener('change',()=>{ scrubbing = false; });
+  ['play','pause','loadedmetadata','ended'].forEach(ev=>el.addEventListener(ev,()=>{ paint(); sync(); }));
+  el.addEventListener('pause',()=>{ if(entry.aud) entry.aud.pause(); });
+  el.addEventListener('play',applyAudio);
+  el.addEventListener('seeked',()=>{ if(entry.aud && !entry.aud.paused){ try{ entry.aud.currentTime = el.currentTime; }catch(e){} } });
+  const tick = () => { if(!ctl.isConnected) return; if(!el.paused || scrubbing) sync(); if(entry.aud && !entry.aud.paused && Math.abs(entry.aud.currentTime - el.currentTime) > 0.35){ try{ entry.aud.currentTime = el.currentTime; }catch(e){} } t._raf = requestAnimationFrame(tick); };
+  tick();
+}
+function startPlay(t){
+  const v = t.dataset.v;
+  if(!v || t._playing) return;
+  t._playing = true; t._userPaused = false;
+  if(v.startsWith('yt:')){
+    const id = v.slice(3), f = document.createElement('iframe');
+    f.className = 'clip yt'; f.setAttribute('tabindex','-1'); f.setAttribute('allow','autoplay; encrypted-media; picture-in-picture');
+    f.referrerPolicy = 'strict-origin-when-cross-origin';
+    f.src = 'https://www.youtube.com/embed/'+id+'?autoplay=1&mute=1&controls=0&loop=1&playlist='+id+'&playsinline=1&rel=0&modestbranding=1';
+    t.insertBefore(f, t.querySelector('.badge'));
+    return;
+  }
+  let el;
+  const isGif = /\.gif(\?|$)/i.test(v);
+  if(isGif){ el = document.createElement('img'); el.alt = ''; el.referrerPolicy = 'no-referrer'; el.src = v; }
+  else {
+    el = document.createElement('video');
+    el.muted = true; el.loop = true; el.playsInline = true; el.preload = 'auto'; el.src = v;
+    el.play().catch(()=>{});
+  }
+  el.className = 'clip';
+  el.addEventListener('error',()=>{
+    // try the next quality / file before giving up
+    const rest = (t.dataset.vc||'').split('|').filter(Boolean);
+    if(rest.length && !isGif){ t.dataset.v = rest.shift(); t.dataset.vc = rest.join('|'); el.src = t.dataset.v; el.play().catch(()=>{}); }
+    else clearPlayUI(t);
+  });
+  t.insertBefore(el, t.querySelector('.badge'));
+  buildControls(t, el, isGif);
+}
+function stopPlay(t){
+  if(!t._playing) return;
+  t._playing = false; t._userPaused = false; t._frozen = null;
+  clearPlayUI(t);
+}
+function syncPlay(t){
+  for(const x of [...playing]) if(!x.isConnected){ playing.delete(x); stopPlay(x); }   // never let discarded cards hold slots
+  for(const x of [...viewSet]) if(!x.isConnected) viewSet.delete(x);
+  if(focused && !focused.isConnected) focused = null;
+  let want, tracked;
+  if(auto.focus){ want = auto.on ? t===focused : !!t._hover; tracked = auto.on && t===focused; }
+  else { want = t._hover || (auto.on && t._inView && !(t.dataset.v||'').startsWith('yt:') && (playing.has(t) || playing.size < MAX_AUTO)); tracked = !t._hover || (auto.on && t._inView); }
+  if(want){ startPlay(t); if(tracked) playing.add(t); }
+  else { stopPlay(t); playing.delete(t); }
+  applyAudio();
+}
+const playIO = new IntersectionObserver(es=>{
+  for(const e of es){ e.target._inView = e.isIntersecting; e.isIntersecting ? viewSet.add(e.target) : viewSet.delete(e.target); if(!auto.focus) syncPlay(e.target); }
+  if(auto.focus){ pickFocus(); return; }
+  // a clip that scrolled away frees a slot for one still in view that was over the cap
+  if(auto.on && playing.size < MAX_AUTO) document.querySelectorAll('.thumb[data-v]').forEach(t=>{ if(t._inView && !t._playing) syncPlay(t); });
+},{threshold:0.5});
+/* Touch screens: play the one clip whose centre is closest to the middle of the visible area (below the filter bar). */
+let pfRaf = 0;
+function pickFocus(){
+  if(!auto.focus){ if(focusCard){ focusCard.classList.remove('is-focus'); focusCard = null; } return; }
+  for(const c of [...cardView]) if(!c.isConnected) cardView.delete(c);
+  const deck = document.querySelector('.deck'), top = deck ? Math.max(0, deck.getBoundingClientRect().bottom) : 0;
+  const bottom = innerHeight, mid = (top+bottom)/2;
+  const score = c => {
+    if(!c || !c.isConnected) return null;
+    const r = c.getBoundingClientRect(), vis = Math.min(r.bottom,bottom) - Math.max(r.top,top);
+    if(r.height <= 0 || vis < Math.min(r.height*0.5, (bottom-top)*0.4)) return null;
+    return Math.abs((r.top+r.bottom)/2 - mid);
+  };
+  let best = null, bd = Infinity;
+  for(const c of cardView){ const d = score(c); if(d!==null && d<bd){ bd = d; best = c; } }
+  // stick with the current tile unless another is clearly more central, so nothing flickers
+  if(focusCard && best && focusCard!==best){ const fd = score(focusCard); if(fd!==null && bd > fd-40) best = focusCard; }
+  if(best!==focusCard){ if(focusCard) focusCard.classList.remove('is-focus'); focusCard = best; if(best) best.classList.add('is-focus'); }
+  const t = best ? best.querySelector('.thumb[data-v]') : null;
+  if(t!==focused){ const old = focused; focused = t; if(old) syncPlay(old); if(t) syncPlay(t); }
+}
+const schedFocus = () => { if(pfRaf) return; pfRaf = requestAnimationFrame(()=>{ pfRaf = 0; pickFocus(); }); };
+addEventListener('scroll',schedFocus,{passive:true});
+addEventListener('resize',schedFocus);
+$('decktoggle') && $('decktoggle').addEventListener('click',()=>setTimeout(schedFocus,50));
+touchMQ.addEventListener && touchMQ.addEventListener('change',e=>{
+  auto.focus = e.matches; focused = null;
+  document.querySelectorAll('.thumb[data-v]').forEach(syncPlay); schedFocus();
+});
+function setHover(t,k,v){ t['_'+k] = v; t._hover = !!(t._mouse || t._focus); syncPlay(t); }
+function wirePlayable(t){
+  // Listen on the whole card so hovering the info overlay or the player controls keeps the clip playing.
+  const host = t.closest('.card') || t;
+  if(!host._pbound){
+    host._pbound = true;
+    const cur = () => host.querySelector('.thumb[data-v]');
+    host.addEventListener('mouseenter',()=>{ const x = cur(); if(x) setHover(x,'mouse',true); });
+    host.addEventListener('mouseleave',()=>{ const x = cur(); if(x) setHover(x,'mouse',false); });
+    host.addEventListener('focusin',()=>{ const x = cur(); if(x) setHover(x,'focus',true); });
+    host.addEventListener('focusout',e=>{ if(host.contains(e.relatedTarget)) return; const x = cur(); if(x) setHover(x,'focus',false); });
+  }
+  playIO.observe(t);
+  if(host.matches && host.matches(':hover')) setHover(t,'mouse',true);
+}
+/* Watchdog: the feed re-sorts and re-renders often, and a card that is detached and re-attached pauses its video without the observers noticing.
+   Every second, restart anything that should be playing but is paused, and start anything in view that should be playing but isn't. */
+setInterval(()=>{
+  if(document.hidden) return;
+  document.querySelectorAll('#grid .thumb[data-v]').forEach(t=>{
+    if(t._userPaused) return;
+    if(t._playing){
+      const v = t.querySelector('video.clip');
+      if(v && v.paused && !v.ended && v.readyState >= 2 && !t._frozen) v.play().catch(()=>{});
+    }else if(t._inView || t._hover || t===focused){
+      syncPlay(t);
+    }
+  });
+},1000);
+function releasePlayable(t){ t._hover = t._mouse = t._focus = false; t._inView = false; viewSet.delete(t); if(focused===t){ focused = null; schedFocus(); } stopPlay(t); playing.delete(t); playIO.unobserve(t); }
+(function(){
+  const box = $('autoplay'), KEY = 'saved-posts-autoplay';
+  const apply = on => { auto.on = on; box.checked = on; document.querySelectorAll('.thumb[data-v]').forEach(syncPlay); schedFocus(); };
+  let on = false; try{ const sv = localStorage.getItem(KEY); on = sv===null ? auto.focus : sv==='1'; }catch(e){ on = auto.focus; }   // touch screens default to on
+  auto.on = on; box.checked = on;
+  if(auto.focus) box.parentNode.firstChild.textContent = 'Auto-play focused media';
+  box.addEventListener('change',()=>{ apply(box.checked); try{ localStorage.setItem(KEY, box.checked?'1':'0'); }catch(e){} });
+})();
+
+/* ---------- controls ---------- */
+(function(){
+  const counts = {}; POSTS.forEach(p=>counts[p.sub]=(counts[p.sub]||0)+1);
+  const subs = Object.keys(counts).filter(s=>counts[s]>=3).sort((a,b)=>counts[b]-counts[a]||a.localeCompare(b));
+  $('subsel').innerHTML = '<option value="">All subreddits</option>' + subs.map(s=>'<option value="'+esc(s)+'">r/'+esc(s)+' ('+counts[s]+')</option>').join('');
+})();
+let qt; $('q').addEventListener('input',e=>{ clearTimeout(qt); qt=setTimeout(()=>{ state.q=e.target.value.trim().toLowerCase(); refresh(); },180); });
+function syncSortUI(){
+  const sel = $('sort');
+  for(const [v,ok] of [['hot',MODE==='sub'],['random',true],['saved',MODE==='csv']]){ const o = sel.querySelector('option[value='+v+']'); if(o){ o.hidden = !ok; o.disabled = !ok; } }
+  $('reshuffle').hidden = state.sort!=='random';
+  $('range').closest('label').hidden = MODE==='sub' && FEED.live===true && state.sort==='hot';   // the real hot feed has no date range
+}
+$('sort').addEventListener('change',e=>{ state.sort=e.target.value; if(state.sort==='random') state.seed = String(Date.now()); syncSortUI(); refresh(); window.scrollTo({top:0}); });
+function setRange(v){
+  state.range = v; $('range').value = v;
+  if(MODE==='sub' && FEED.subs.length) startSubMode(FEED.subs.map(x=>x.name), FEED.label);   // a new window means a new fetch
+  else { refresh(); window.scrollTo({top:0}); }
+}
+$('range').addEventListener('change',e=>setRange(e.target.value));
+$('shufflebtn').addEventListener('click',()=>{
+  state.sort = 'random'; state.seed = String(Date.now()+Math.random()); $('sort').value = 'random';
+  syncSortUI(); refresh(); window.scrollTo({top:0});
+});
+$('reshuffle').addEventListener('click',()=>{ state.seed = String(Date.now()+Math.random()); refresh(); window.scrollTo({top:0}); });
+let prevNsfw = 'hide';
+$('nsfw').addEventListener('change',e=>{ state.nsfw=e.target.value; $('nsfwonly').checked = state.nsfw==='only'; if(state.nsfw!=='only') prevNsfw = state.nsfw; refresh(); });
+$('nsfwonly').addEventListener('change',e=>{
+  state.nsfw = e.target.checked ? 'only' : prevNsfw;
+  $('nsfw').value = state.nsfw; refresh();
+});
+(function(){
+  const box = $('unblur'), KEY = 'saved-posts-unblur';
+  const apply = on => { document.body.classList.toggle('unblur', on); box.checked = on; };
+  let on = false; try{ on = localStorage.getItem(KEY)==='1'; }catch(e){}
+  apply(on);
+  box.addEventListener('change',()=>{ apply(box.checked); try{ localStorage.setItem(KEY, box.checked?'1':'0'); }catch(e){} });
+})();
+(function(){
+  const btn = $('decktoggle');
+  const apply = open => { document.body.classList.toggle('deck-collapsed', !open); btn.setAttribute('aria-expanded', open ? 'true' : 'false'); };
+  apply(false);
+  btn.addEventListener('click',()=>apply(document.body.classList.contains('deck-collapsed')));
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape' && !e.defaultPrevented && !document.body.classList.contains('deck-collapsed')){ apply(false); btn.focus(); }
+  });
+})();
+(function(){
+  const sel = $('theme'), KEY = 'saved-posts-theme';
+  let v = 'system'; try{ v = localStorage.getItem(KEY) || 'system'; }catch(e){}
+  if(!['system','light','dark'].includes(v)) v = 'system';
+  sel.value = v;
+  sel.addEventListener('change',()=>{
+    const x = sel.value;
+    if(x==='system') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', x);
+    try{ localStorage.setItem(KEY, x); }catch(e){}
+  });
+})();
+(function(){
+  const sel = $('infomode'), KEY = 'saved-posts-infomode';
+  const apply = v => { document.body.classList.toggle('info-hover', v==='hover'); document.body.classList.toggle('info-off', v==='off'); sel.value = v; };
+  const dflt = matchMedia('(hover: none)').matches ? 'off' : 'hover';   // desktop: info on hover; touch: hidden behind an (i) button
+  let v = dflt;
+  try{ v = localStorage.getItem(KEY) || dflt; }catch(e){}
+  if(!['show','hover','off'].includes(v)) v = dflt;
+  apply(v);
+  sel.addEventListener('change',()=>{ apply(sel.value); try{ localStorage.setItem(KEY, sel.value); }catch(e){} });
+})();
+(function(){
+  const box = $('hidebroken'), KEY = 'saved-posts-hidebroken';
+  let on = true; try{ const sv = localStorage.getItem(KEY); if(sv!==null) on = sv==='1'; }catch(e){}
+  state.hideBroken = on; box.checked = on;
+  box.addEventListener('change',()=>{ state.hideBroken = box.checked; try{ localStorage.setItem(KEY, box.checked?'1':'0'); }catch(e){} refresh(); });
+})();
+updateDeadCount();
+function syncStars(){
+  for(const el of cardEls.values()){
+    const b = el.querySelector('button.star'); if(!b) continue;
+    const on = FAVS.has(b.dataset.id);
+    b.setAttribute('aria-pressed', on?'true':'false'); b.textContent = on ? '\u2605' : '\u2606';
+  }
+}
+$('favonly').addEventListener('change',e=>{ state.fav = e.target.checked; refresh(); });
+updateFavCount();
+$('subsel').addEventListener('change',e=>{ state.sub=e.target.value; refresh(); });
+if(matchMedia('(max-width:560px)').matches) $('size').value = $('size').max;
+$('size').addEventListener('input',e=>{ document.documentElement.style.setProperty('--card',e.target.value+'px'); relayoutAll(); });
+
+/* ---------- live metadata from Reddit ---------- */
+function pickThumb(s){
+  const pv = s.preview && s.preview.images && s.preview.images[0];
+  if(pv){ const rs = pv.resolutions||[]; const r = rs.find(x=>x.width>=320)||rs[rs.length-1]||pv.source; if(r&&r.url) return r.url; }
+  if(s.media_metadata){
+    const k = Object.keys(s.media_metadata)[0], mm = k && s.media_metadata[k];
+    if(mm && mm.p && mm.p.length){ const r = mm.p.find(x=>x.x>=320)||mm.p[mm.p.length-1]; if(r&&r.u) return r.u; }
+  }
+  return /^https?:/.test(s.thumbnail||'') ? s.thumbnail : '';
+}
+function mediaType(s,d,rec){
+  if(!rec && d.removed_by_category) return 'removed';
+  const u = (s.url_overridden_by_dest||s.url||'').toLowerCase();
+  if(s.is_gallery || /reddit\.com\/gallery\//.test(u)) return 'gallery';
+  const rv = s.media && s.media.reddit_video;
+  const pvi = s.preview && s.preview.images && s.preview.images[0];
+  if(rv && rv.is_gif) return 'gif';
+  if(/\.(gif|gifv)(\?|$)|redgifs\.com|gfycat\.com/.test(u) || (pvi && pvi.variants && pvi.variants.gif)) return 'gif';
+  if(s.is_video || s.post_hint==='hosted:video' || s.post_hint==='rich:video' || rv || /youtube\.com|youtu\.be|vimeo\.com|streamable\.com|v\.redd\.it/.test(u)) return 'video';
+  if(s.post_hint==='image' || /\.(jpe?g|png|webp)(\?|$)/.test(u) || s.domain==='i.redd.it') return 'image';
+  if(s.is_self) return 'text';
+  return 'link';
+}
+function playableFromUrl(u){
+  u = /^https?:/.test(u||'') ? u : '';
+  if(/\.gifv(\?|$)/i.test(u)) return u.replace(/\.gifv(\?.*)?$/i,'.mp4');
+  if(/\.(mp4|webm)(\?|$)/i.test(u) || /\.gif(\?|$)/i.test(u)) return u;
+  return '';
+}
+function pickVideo(s){ return pickVideoRaw(s).replace(/&amp;/g,'&'); }
+function pickVideoRaw(s){
+  const rv = (s.media && s.media.reddit_video) || (s.secure_media && s.secure_media.reddit_video);
+  if(rv && rv.fallback_url) return rv.fallback_url;
+  const pr = s.preview;
+  if(pr && pr.reddit_video_preview && pr.reddit_video_preview.fallback_url) return pr.reddit_video_preview.fallback_url;
+  const pv = pr && pr.images && pr.images[0], vr = pv && pv.variants;
+  if(vr && vr.mp4 && vr.mp4.source && vr.mp4.source.url) return vr.mp4.source.url;
+  const direct = playableFromUrl(s.url_overridden_by_dest || s.url);
+  if(direct) return direct;
+  if(vr && vr.gif && vr.gif.source && vr.gif.source.url) return vr.gif.source.url;
+  return '';
+}
+function pickDims(s){
+  const pv = s.preview && s.preview.images && s.preview.images[0];
+  if(pv && pv.source && pv.source.width) return [pv.source.width, pv.source.height];
+  const rv = (s.media && s.media.reddit_video) || (s.secure_media && s.secure_media.reddit_video);
+  if(rv && rv.width) return [rv.width, rv.height];
+  if(s.media_metadata){ const k = Object.keys(s.media_metadata)[0], mm = k && s.media_metadata[k]; if(mm && mm.s && mm.s.x) return [mm.s.x, mm.s.y]; }
+  return [0,0];
+}
+const YT_RE = /(?:youtube\.com\/(?:watch\?(?:[^#]*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/i;
+const GAL_EXT = {'image/jpg':'jpg','image/jpeg':'jpg','image/png':'png','image/gif':'gif','image/webp':'webp'};
+function slim(d,rec){
+  const s = (d.crosspost_parent_list && d.crosspost_parent_list[0]) || d;
+  const type = mediaType(s,d,rec);
+  const u = (s.url_overridden_by_dest || s.url || '').replace(/&amp;/g,'&');
+  const useLink = s.is_self || s.domain==='v.redd.it' || type==='removed' || !/^https?:/.test(u);
+  const oe = (s.media && s.media.oembed) || (s.secure_media && s.secure_media.oembed) || null;
+  const oth = oe && /^https?:/.test(oe.thumbnail_url||'') ? oe.thumbnail_url.replace(/&amp;/g,'&') : '';
+  const gm = /media\.redgifs\.com\/([A-Za-z0-9]+)-/.exec(oth);
+  /* Reddit serves video and audio as separate files; both live next to each other. */
+  const rv = (s.media && s.media.reddit_video) || (s.secure_media && s.secure_media.reddit_video);
+  const vm = /v\.redd\.it\/([A-Za-z0-9]+)/i.exec(u);
+  const rb = rv && rv.fallback_url ? rv.fallback_url.replace(/&amp;/g,'&').replace(/\/[^\/?]+(\?.*)?$/,'') : (vm ? 'https://v.redd.it/'+vm[1] : '');
+  const ab = rb && !(rv && rv.is_gif) && !(rv && rv.has_audio===false) ? rb : '';
+  const ym = YT_RE.exec(u) || (oe && /youtube/i.test(oe.provider_name||'') ? /embed\/([A-Za-z0-9_-]{11})/.exec(oe.html||'') : null);
+  let gl;
+  if(s.gallery_data && s.gallery_data.items && s.media_metadata){
+    gl = s.gallery_data.items.map(it=>{ const mm = s.media_metadata[it.media_id]; return mm ? it.media_id+'.'+(GAL_EXT[mm.m]||'jpg') : null; }).filter(Boolean).slice(0,40);
+    if(!gl.length) gl = undefined;
+  }
+  const rs = (/redgifs\.com\/(?:ifr|watch)\/([A-Za-z0-9]+)/i.exec((oe && oe.html) || '') || [])[1];
+  const rd = /reveddit\.com\/(?:v|r)\/[A-Za-z0-9_]+\/comments\/([a-z0-9]+)/i.exec(u);   // a link post pointing at a Reveddit page
+  const pvu = ((s.preview && s.preview.images && s.preview.images[0] && s.preview.images[0].source && s.preview.images[0].source.url) || '').replace(/&amp;/g,'&');
+  let [w,h] = pickDims(s); if(!w && ym){ w = 1280; h = 720; }
+  return {t:d.title||'', o:d.over_18?1:0, th:pickThumb(s).replace(/&amp;/g,'&') || oth, g:gm?gm[1]:undefined, rs:(!gm && rs) ? rs.toLowerCase() : undefined, pv:/^https?:/.test(pvu) ? pvu : undefined, ab:ab||undefined, rb:rb||undefined, yt:ym?ym[1]:undefined, gl, rd:rd?rd[1]:undefined,
+    m:type, u:(useLink || rd)?'':u, n:d.num_comments||0, s:d.score||0, a:d.author||'', c:d.created_utc||0, rec:rec||undefined, v:pickVideo(s), w, h};
+}
+async function fetchBatch(ids){
+  /* Ask each archive in turn; later sources are only asked for ids the earlier ones lacked. */
+  let remaining = ids.slice(), out = [], last, anyOk = false;
+  for(const [label,url] of SOURCES){
+    if(!remaining.length) break;
+    try{
+      let data;
+      try{ data = (await timed(url(remaining), 60000, 'json')).data || []; }
+      catch(err){ if(err.status===429){ const e = new Error(label+' asked to slow down'); e.rate = true; throw e; } throw new Error(label+': '+err.message); }
+      anyOk = true;
+      const got = new Set(data.map(d=>d.id));
+      out = out.concat(data);
+      remaining = remaining.filter(i=>!got.has(i));
+    }catch(e){ last=e; if(e.rate && !anyOk) throw e; }
+  }
+  if(!anyOk) throw last;
+  return out;
+}
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+let loading = false, missing = 0;
+async function loadAll(){
+  if(loading) return; loading = true;
+  const gen = loadGen;
+  const todo = POSTS.filter(p=>!META[p.id]);
+  POSTS.filter(p=>p.del && !META[p.id]).forEach(p=>META[p.id]={t:'',o:0,th:'',m:'removed',u:'',n:0,s:0,a:'',c:0,miss:1});
+  const queue = todo.filter(p=>!p.del);
+  const total = POSTS.length; let done = total-queue.length;
+  const setProgress = (msg,err)=>{ $('loadText').innerHTML = (err?'<span class="err">'+msg+'</span>':msg); $('loadBar').style.width = (done/total*100)+'%'; };
+  setProgress(done===total ? 'Previews loaded ('+total.toLocaleString()+')' : 'Loading previews '+done.toLocaleString()+' / '+total.toLocaleString());
+  if(done===total){ loading = false; metaReady(); await recoverAll(); return; }
+  let chunkFails = 0, skipped = 0;
+  for(let k=0;k<queue.length;k+=100){
+    if(gen!==loadGen) return;
+    const chunk = queue.slice(k,k+100);
+    let data = null, tries = 0;
+    while(!data && tries<4){
+      try{ data = await fetchBatch(chunk.map(p=>p.id)); if(gen!==loadGen) return; }
+      catch(e){
+        if(gen!==loadGen) return;
+        tries++;
+        if(e.rate && tries<4){ setProgress('Archive asked to slow down. Waiting 30 seconds...'); await sleep(30000); }
+        else if(tries>=4 || !e.rate){
+          if(tries>=2 && ++chunkFails < 3){ data = []; skipped += chunk.length; break; }   // skip this batch (retried next visit), keep going
+          if(tries>=2){
+            setProgress('Could not reach the Reddit archives ('+esc(e.message)+'). Showing titles only.',true);
+            const b=document.createElement('button'); b.textContent='Retry'; b.onclick=()=>{ loading=false; loadAll(); };
+            $('loadText').appendChild(document.createElement('br')); $('loadText').appendChild(b);
+            loading = false; recoverAll(); return;
+          }
+          await sleep(1500);
+        }
+      }
+    }
+    if(data.length) chunkFails = 0;
+    const got = new Set();
+    for(const d of data){
+      got.add(d.id);
+      /* archive copy has no usable title -> treat as removed so the recovery pass can try other sources */
+      META[d.id] = badTitle(d.title) ? {t:'',o:d.over_18?1:0,th:'',m:'removed',u:'',n:0,s:0,a:'',c:0,miss:1} : slim(d);
+    }
+    /* Not in any archive yet (usually very recent saves): leave as "Not loaded" with the CSV title, retried next visit. */
+    for(const p of chunk) if(!got.has(p.id)) missing++;
+    done += chunk.length; saveCache();
+    setProgress('Loading previews '+done.toLocaleString()+' / '+total.toLocaleString());
+    onMeta(chunk);
+    await sleep(500);
+  }
+  setProgress('Previews loaded ('+(total-missing).toLocaleString()+' of '+total.toLocaleString()+')'+(missing?'. '+missing+' not in the archives yet, showing titles only.':''));
+  loading = false;
+  metaReady();
+  await recoverAll();
+}
+/* ---------- recovering removed posts ---------- */
+const REMOVED_META = () => ({t:'',o:0,th:'',m:'removed',u:'',n:0,s:0,a:'',c:0,miss:1});
+const badTitle = t => !t || /^\[?\s*(deleted|removed)( by user| by moderator)?\s*\]?$/i.test(String(t).trim());
+const esc2re = s => s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+/* Every archive request has a hard time limit (covering the body too), and repeated stalls are counted so a hung service can't freeze recovery. */
+const NET = {stalls:0};
+/* Archive APIs rate-limit (HTTP 429). Each host gets a minimum gap between requests, a shared cool-down when it pushes back
+   (honouring Retry-After, otherwise 8s, 16s, 32s... up to 90s), and a few automatic retries. The countdown shows in the pause pill. */
+const APIH = {
+  'api.pullpush.io':{gap:1600, until:0, last:0, strikes:0, name:'PullPush'},
+  'arctic-shift.photon-reddit.com':{gap:350, until:0, last:0, strikes:0, name:'Arctic Shift'}
+};
+const apiHost = u => APIH[hostOf(u)] || null;
+async function apiGate(h){
+  const now = Date.now(), slot = Math.max(now, h.last + h.gap);
+  h.last = slot;                                   // reserve a start time so parallel callers queue behind each other
+  for(;;){
+    const t = Math.max(slot, h.until), left = t - Date.now();
+    if(left <= 0) return;
+    await sleep(Math.min(400, left));              // short naps, so "Retry now" takes effect quickly
+  }
+}
+async function apiRetry(url, once){
+  const h = apiHost(url);
+  if(!h) return once();
+  for(let attempt=0; ; attempt++){
+    await apiGate(h);
+    try{
+      const out = await once();
+      h.strikes = Math.max(0, h.strikes - 1);
+      return out;
+    }catch(e){
+      if((e.status===429 || e.status===503) && attempt < 3){
+        h.strikes = Math.min(h.strikes+1, 5);
+        const wait = Math.min(90, e.retryAfter > 0 ? e.retryAfter : 4 * Math.pow(2, h.strikes));
+        h.until = Math.max(h.until, Date.now() + wait*1000);
+        h.gap = Math.min(h.gap * 1.5, 6000);   // and ask for less often from now on
+        h.lastNote = h.name; startPauseTicker(); pauseUI();
+        continue;
+      }
+      if(e.status===429) e.message = h.name+' is rate limiting requests (HTTP 429). Wait a minute and retry.';
+      throw e;
+    }
+  }
+}
+const apiWaitLeft = () => Math.max(0, ...Object.values(APIH).map(h=>Math.ceil((h.until-Date.now())/1000)));
+async function timed(url, ms, kind){ return apiRetry(url, () => timed1(url, ms, kind)); }
+async function timed1(url, ms, kind){
+  const c = new AbortController(), t = setTimeout(()=>c.abort(), ms);
+  try{
+    const r = await fetch(url,{signal:c.signal});
+    if(!r.ok){ const e = new Error('HTTP '+r.status); e.status = r.status; e.retryAfter = parseInt(r.headers.get('retry-after'),10) || 0; throw e; }
+    const out = kind==='text' ? await r.text() : await r.json();
+    NET.stalls = 0; return out;
+  }catch(e){
+    if(c.signal.aborted){ NET.stalls++; throw new Error('timed out after '+Math.round(ms/1000)+'s'); }
+    throw e;
+  }finally{ clearTimeout(t); }
+}
+const getJson = url => timed(url, 15000, 'json');
+const archiveSources = [
+  ['Arctic Shift', ids => getJson('https://arctic-shift.photon-reddit.com/api/posts/ids?ids='+ids.join(',')).then(j=>j.data||[])],
+  ['PullPush',     ids => getJson('https://api.pullpush.io/reddit/search/submission/?ids='+ids.join(',')).then(j=>j.data||[])]
+];
+function urlType(u){
+  u = (u||'').toLowerCase();
+  if(!u) return 'text';
+  if(/\.(gif|gifv)(\?|$)|redgifs\.com|gfycat\.com/.test(u)) return 'gif';
+  if(/youtube\.com|youtu\.be|vimeo\.com|streamable\.com|v\.redd\.it/.test(u)) return 'video';
+  if(/imgur\.com\/(a|gallery)\//.test(u) || /reddit\.com\/gallery\//.test(u)) return 'gallery';
+  if(/\.(jpe?g|png|webp)(\?|$)|i\.redd\.it|i\.imgur\.com|imgur\.com\/[a-z0-9]+$/.test(u)) return 'image';
+  return 'link';
+}
+function parseSnapshot(html,p){
+  const doc = new DOMParser().parseFromString(html,'text/html');
+  const meta = n => { const e = doc.querySelector('meta[property="'+n+'"],meta[name="'+n+'"]'); return (e && e.getAttribute('content')) || ''; };
+  let title = '', url = '', thumb = '', nsfw = null;
+  const th = doc.getElementById('thing_t3_'+p.id) || doc.querySelector('.thing[data-fullname="t3_'+p.id+'"]');
+  if(th){
+    const a = th.querySelector('a.title'); title = a ? a.textContent : '';
+    url = th.getAttribute('data-url') || '';
+    nsfw = th.getAttribute('data-nsfw')==='true' ? 1 : 0;
+    const im = th.querySelector('.thumbnail img'); thumb = im ? (im.getAttribute('src')||'') : '';
+  }
+  if(!title){
+    title = meta('og:title') || doc.title || '';
+    title = title.replace(new RegExp('\\s*[:|-]\\s*(r/)?'+esc2re(p.sub)+'\\s*$','i'),'').replace(/\s*-\s*Reddit\s*$/i,'');
+  }
+  title = title.trim();
+  if(badTitle(title)) return null;
+  if(!thumb) thumb = meta('og:image');
+  if(thumb.startsWith('//')) thumb = 'https:'+thumb;
+  if(!/^https?:/.test(thumb) || /redditstatic|\/icon|sharing/.test(thumb)) thumb = '';
+  if(url.startsWith('/') || /reddit\.com\/r\/[^/]+\/comments\//.test(url)) url = '';
+  if(nsfw===null) nsfw = (p.cat==='Adult' || p.sub.toLowerCase().startsWith('u_')) ? 1 : 0;
+  return {t:title,o:nsfw,th:thumb,m:urlType(url),u:url,n:0,s:0,a:'',c:0,rec:'Wayback',v:playableFromUrl(url)};
+}
+async function waybackRecover(p){
+  for(const host of ['old.reddit.com','www.reddit.com']){
+    let rows;
+    try{
+      rows = await getJson('https://web.archive.org/cdx/search/cdx?url='+encodeURIComponent(host+'/r/'+p.sub+'/comments/'+p.id+'/')
+        +'&matchType=prefix&output=json&fl=timestamp,original&filter=statuscode:200&limit=8');
+    }catch(e){ continue; }
+    const hits = rows.slice(1).filter(r=>{ try{ const parts = new URL(r[1]).pathname.split('/').filter(Boolean); return parts.length <= 5; }catch(e){ return false; } }).slice(0,2);
+    for(const [ts,orig] of hits){
+      try{
+        const html = await timed('https://web.archive.org/web/'+ts+'id_/'+orig, 20000, 'text');
+        const m = parseSnapshot(html, p);
+        if(m){ m.wb = 'https://web.archive.org/web/'+ts+'/'+orig; return m; }
+      }catch(e){}
+      await sleep(400);
+    }
+    await sleep(300);
+  }
+  return null;
+}
+async function recoverAll(){
+  const gen = loadGen; recovering = true;
+  try{ await recoverInner(gen); } finally{ if(gen===loadGen) recovering = false; }
+}
+async function recoverInner(gen){
+  const now = Date.now(), recText = $('recText');
+  const removed = () => POSTS.filter(p=>{ const m = META[p.id]; return m && m.m==='removed' && !m.rec; });
+  let todo = removed().filter(p=>!(META[p.id].rt && now-META[p.id].rt < 7*864e5));
+  const counts = {};
+  const status = msg => { recText.textContent = msg; };
+  if(!todo.length){
+    const n = POSTS.filter(p=>isRec(p)).length;
+    if(n) status('Recovered '+n+' removed posts from archives');
+    return;
+  }
+  const total = todo.length;
+  const found = [];
+  for(const [label,fetcher] of archiveSources){
+    if(!todo.length) break;
+    status('Checking '+label+' for '+todo.length+' removed posts...');
+    for(let k=0;k<todo.length;k+=100){
+      if(gen!==loadGen) return;
+      let data;
+      try{ data = await fetcher(todo.slice(k,k+100).map(p=>p.id)); }
+      catch(e){ status(label+' unavailable ('+e.message+'), moving on'); await sleep(1200); break; }
+      for(const d of data){
+        if(badTitle(d.title)) continue;
+        META[d.id] = slim(d,label);
+        counts[label] = (counts[label]||0)+1; found.push(d.id);
+      }
+      await sleep(600);
+    }
+    todo = todo.filter(p=>!(META[p.id].rec));
+    saveCache(); onMeta(POSTS.filter(p=>found.includes(p.id)));
+  }
+  let i = 0; NET.stalls = 0;
+  for(const p of todo){
+    if(gen!==loadGen) return;
+    i++;
+    status('Searching Wayback Machine '+i+' / '+todo.length+'. Recovered so far: '+found.length+' of '+total);
+    if(NET.stalls >= 6){ status('The Wayback Machine is not responding, so I skipped the remaining '+(todo.length-i+1)+' posts. They will be tried again next visit.'); saveCache(); onMeta(POSTS.filter(q=>found.includes(q.id))); return; }
+    const m = await Promise.race([waybackRecover(p), sleep(45000).then(()=>null)]);
+    if(m){ META[p.id] = m; counts.Wayback = (counts.Wayback||0)+1; found.push(p.id); onMeta([p]); }
+    else META[p.id].rt = Date.now();
+    if(i%10===0) saveCache();
+    await sleep(500);
+  }
+  saveCache();
+  const parts = Object.entries(counts).map(([k,v])=>k+' '+v).join(', ');
+  status('Recovered '+found.length+' of '+total+' removed posts'+(parts?' ('+parts+')':'')+'. The rest are not in any archive I can reach.');
+  onMeta(POSTS.filter(p=>found.includes(p.id)));
+}
+
+function onMeta(chunk){
+  updateDeadCount();
+  const dependsOnMeta = state.media.size || state.kinds.size || state.nsfw!=='hide' || state.q || state.sort!=='saved' || state.hideBroken || state.range!=='all';
+  if(dependsOnMeta){ refresh(); return; }
+  for(const p of chunk){ const el = cardEls.get(p.id); if(el) fillCard(el,p); }
+  updateChips();
+}
+
+/* ================= data source, CSV library, saving ================= */
+let MODE = 'csv', recovering = false;
+const BM_OFF = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M4 2.5h8v11L8 10.5l-4 3z"/></svg>';
+const BM_ON  = '<svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M4 2.5h8v11L8 10.5l-4 3z"/></svg>';
+
+function parseCsv(text){
+  text = String(text||'').replace(/^﻿/,'');
+  const rows = []; let row = [], f = '', q = false;
+  for(let i=0;i<text.length;i++){
+    const c = text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){ f += '"'; i++; } else q = false; } else f += c; }
+    else if(c==='"') q = true;
+    else if(c===','){ row.push(f); f = ''; }
+    else if(c==='\n' || c==='\r'){ if(c==='\r' && text[i+1]==='\n') i++; row.push(f); f = ''; if(row.length>1 || row[0]!=='') rows.push(row); row = []; }
+    else f += c;
+  }
+  if(f!=='' || row.length){ row.push(f); rows.push(row); }
+  return rows;
+}
+/* ---------- data scheme ----------
+   File columns: id, permalink, starred, updated, deleted
+     updated  milliseconds since 1970 of the last change to that post's record (blank in older files, read as 0)
+     deleted  1 marks a tombstone: the post was removed on purpose, and the row stays so other copies of the file learn about it
+   Every post has one record, live or tombstone. Merging two copies keeps, per post, the record with the later `updated`;
+   on an exact tie a tombstone beats a live row (a delete is never undone by accident), and two live rows keep the star if either has it.
+   Older files without these columns still open: all their rows count as live with updated=0, so they can add posts and stars
+   but can never bring back a post that has a tombstone. */
+function markDirty(...ids){ const r = LIB.cur; if(!r) return; const d = new Set(r.dirty||[]); ids.forEach(i=>d.add(i)); r.dirty = [...d]; }
+const nowT = prev => Math.max(Date.now(), (prev||0)+1);   // always later than what we already know, even if a clock runs slow
+function pickRec(a, b){
+  if(!a) return b; if(!b) return a;
+  let w, l;
+  if(a.t!==b.t){ w = a.t>b.t ? a : b; l = w===a ? b : a; }
+  else if(!!a.del!==!!b.del){ w = a.del ? a : b; l = w===a ? b : a; }
+  else{ const o = Object.assign({}, a); if(!a.del){ o.starred = !!(a.starred||b.starred); } if(!o.perma) o.perma = b.perma; return o; }
+  if(!w.perma && l.perma) return Object.assign({}, w, {perma:l.perma});
+  return w;
+}
+function csvToRows(text){
+  const t = parseCsv(text);
+  if(!t.length) return {rows:[], tombs:new Map()};
+  const head = t[0].map(h=>h.trim().toLowerCase());
+  let ii = head.indexOf('id'), pi = head.indexOf('permalink');
+  const si = head.findIndex(h=>h==='starred' || h==='star' || h==='favorite' || h==='favourite');
+  const ui = head.indexOf('updated'), di = head.indexOf('deleted');
+  if(pi<0) pi = head.indexOf('url'); if(pi<0) pi = head.indexOf('link');
+  let start = 1;
+  if(ii<0 && pi<0){ ii = 0; pi = 1; start = 0; }
+  const recs = new Map(), order = [];
+  for(let r=start;r<t.length;r++){
+    const row = t[r], perma = (row[pi]||'').trim();
+    let id = ii>=0 ? (row[ii]||'').trim() : '';
+    if(!id){ const m = PERMA_RE.exec(perma); id = m ? m[2] : ''; }
+    id = id.toLowerCase();
+    if(!/^[a-z0-9]{4,10}$/.test(id)) continue;
+    const rec = {id, perma,
+      starred: si>=0 && /^(1|true|yes|y|x|★)$/i.test((row[si]||'').trim()),
+      t: ui>=0 ? (Number((row[ui]||'').trim()) || 0) : 0,
+      del: di>=0 && /^(1|true|yes|y|x)$/i.test((row[di]||'').trim())};
+    if(!recs.has(id)) order.push(id);
+    recs.set(id, pickRec(recs.get(id), rec));   // duplicate rows inside one file collapse the same way
+  }
+  const rows = [], tombs = new Map();
+  for(const id of order){ const r = recs.get(id); if(r.del) tombs.set(id,{t:r.t, perma:r.perma}); else rows.push({id, perma:r.perma, starred:!!r.starred, t:r.t}); }
+  return {rows, tombs};
+}
+const TOMBS = new Map();   // id -> {t, perma} for posts deleted on purpose
+function rowsToCsv(rows, tombs){
+  rows = rows || ROWS; tombs = tombs || TOMBS;
+  const q = v => /[",\r\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v;
+  const lines = rows.map(r=>q(r.id)+','+q(r.perma||'')+','+(r.starred?'1':'')+','+(r.t||'')+',');
+  const dead = [...tombs].sort((a,b)=>b[1].t-a[1].t).map(([id,x])=>q(id)+','+q(x.perma||'')+',,'+(x.t||'')+',1');
+  const all = lines.concat(dead);
+  return 'id,permalink,starred,updated,deleted\r\n' + all.join('\r\n') + (all.length ? '\r\n' : '');
+}
+/* Merge two copies. local and remote are {rows, tombs}. Returns the merged set plus a report of what changed on the local side. */
+function mergeSets(local, remote){
+  const L = new Map(), R = new Map(), order = [];
+  const put = (m, id, rec) => m.set(id, rec);
+  for(const r of local.rows){ put(L, r.id, {id:r.id, perma:r.perma, starred:!!r.starred, t:r.t||0, del:false}); order.push(r.id); }
+  for(const [id,x] of local.tombs){ put(L, id, {id, perma:x.perma, starred:false, t:x.t||0, del:true}); if(!order.includes(id)) order.push(id); }
+  const added = [];
+  for(const r of remote.rows) put(R, r.id, {id:r.id, perma:r.perma, starred:!!r.starred, t:r.t||0, del:false});
+  for(const [id,x] of remote.tombs) put(R, id, {id, perma:x.perma, starred:false, t:x.t||0, del:true});
+  const rep = {added:[], already:0, starsChanged:0, removedHere:[], skippedDeleted:[], tombsLearned:0};
+  const out = new Map();
+  for(const id of order){ const a = L.get(id), b = R.get(id); out.set(id, b ? pickRec(a, b) : a); }
+  const fresh = [];
+  for(const [id,b] of R){
+    if(L.has(id)) continue;
+    out.set(id, b); fresh.push(b);
+  }
+  for(const [id,b] of R){
+    const a = L.get(id), m = out.get(id);
+    if(!a){ if(m.del) rep.tombsLearned++; else rep.added.push(id); continue; }
+    if(!a.del && !b.del){ rep.already++; if(m.starred!==a.starred) rep.starsChanged++; }
+    else if(!a.del && b.del && m.del) rep.removedHere.push(id);
+    else if(a.del && !b.del && m.del) rep.skippedDeleted.push(id);
+    else if(a.del && !b.del && !m.del) rep.added.push(id);   // re-saved on the other copy after it was deleted here
+  }
+  fresh.sort((x,y)=>y.t-x.t);
+  const rows = [], tombs = new Map();
+  const emit = m => { if(m.del) tombs.set(m.id,{t:m.t, perma:m.perma}); else rows.push({id:m.id, perma:m.perma, starred:!!m.starred, t:m.t}); };
+  for(const f of fresh.filter(x=>x.t>0)) emit(f);       // posts new from the other copy go to the front, newest first
+  for(const id of order) emit(out.get(id));
+  for(const f of fresh.filter(x=>!(x.t>0))) emit(f);    // undated ones go to the end
+  return {rows, tombs, report:rep};
+}
+const sameState = (r1, t1, r2, t2) => {
+  if(r1.length!==r2.length || t1.size!==t2.size) return false;
+  const m = new Map(r2.map(r=>[r.id,r]));
+  for(const r of r1){ const o = m.get(r.id); if(!o || !!o.starred!==!!r.starred || (o.t||0)!==(r.t||0)) return false; }
+  for(const [id,x] of t1){ const o = t2.get(id); if(!o || (o.t||0)!==(x.t||0)) return false; }
+  return true;
+};
+/* storage: IndexedDB library of CSVs, optionally linked to a real file (File System Access API) */
+const LIB = {db:null, cur:null, list:[]};
+const FSA = typeof window.showOpenFilePicker === 'function';
+const idbOpen = () => new Promise((res,rej)=>{
+  const r = indexedDB.open('saved-posts-browser',1);
+  r.onupgradeneeded = () => { const d = r.result; d.createObjectStore('csv',{keyPath:'id'}); d.createObjectStore('kv'); };
+  r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+});
+const idbReq = (store, mode, fn) => new Promise((res,rej)=>{
+  const tx = LIB.db.transaction(store, mode), rq = fn(tx.objectStore(store));
+  tx.oncomplete = () => res(rq && rq.result); tx.onerror = tx.onabort = () => rej(tx.error);
+});
+async function persistRec(rec){
+  if(LIB.db){ try{ await idbReq('csv','readwrite',s=>s.put(rec)); return true; }catch(e){} }
+  try{ localStorage.setItem('saved-posts-csv-fallback', JSON.stringify({id:rec.id, name:rec.name, text:rec.text, updated:rec.updated})); return true; }catch(e){ return false; }
+}
+async function libAll(){ if(!LIB.db) return LIB.cur ? [LIB.cur] : []; try{ return await idbReq('csv','readonly',s=>s.getAll()); }catch(e){ return []; } }
+let statusT;
+function csvStatus(msg, kind){
+  const el = $('csvStatus'); el.textContent = msg; el.dataset.kind = kind || '';
+  clearTimeout(statusT); if(kind!=='warn') statusT = setTimeout(()=>{ if(el.textContent===msg) csvInfo(); }, 6000);
+}
+function csvInfo(){
+  const r = LIB.cur; if(!r) return;
+  const where = r.handle ? (r.synced ? 'linked to a file on disk; changes are written to it' : 'linked file not connected; changes are kept in this browser only') : 'stored in this browser';
+  $('csvStatus').textContent = ROWS.length.toLocaleString()+' saved posts in "'+r.name+'" ('+where+').'+(r.cloud && SESSION ? ' Synced with your account.' : '');
+  $('csvStatus').dataset.kind = r.handle && !r.synced ? 'warn' : '';
+  $('csvReconnect').hidden = !(r.handle && !r.synced);
+  $('csvSync').hidden = !((r.handle && r.synced) || (r.cloud && SESSION));
+}
+async function renderLibrary(){
+  LIB.list = await libAll();
+  const sel = $('csvSel');
+  sel.innerHTML = LIB.list.map(r=>'<option value="'+esc(r.id)+'">'+esc(r.name)+'</option>').join('');
+  if(LIB.cur) sel.value = LIB.cur.id;
+  csvInfo();
+}
+async function activate(rec){
+  if(rec.handle){
+    try{
+      if(await rec.handle.queryPermission({mode:'readwrite'}) === 'granted'){ const f = await rec.handle.getFile(); rec.text = await f.text(); rec.lastMod = f.lastModified; rec.synced = true; }
+      else rec.synced = false;
+    }catch(e){ rec.synced = false; }
+  }
+  LIB.cur = rec;
+  const {rows, tombs} = csvToRows(rec.text);
+  ROWS.length = 0; ROWSET.clear(); TOMBS.clear();
+  rows.forEach(r=>{ ROWS.push(r); ROWSET.add(r.id); });
+  tombs.forEach((x,id)=>TOMBS.set(id,x));
+  FAVS.clear(); rows.forEach(r=>{ if(r.starred) FAVS.add(r.id); });
+  if(LIB.db){ try{ await idbReq('kv','readwrite',s=>s.put(rec.id,'last')); }catch(e){} }
+  await renderLibrary();
+}
+async function initData(){
+  let rec = null;
+  try{ LIB.db = await idbOpen(); }catch(e){ LIB.db = null; }
+  if(LIB.db){
+    const last = await idbReq('kv','readonly',s=>s.get('last')).catch(()=>null);
+    if(last) rec = await idbReq('csv','readonly',s=>s.get(last)).catch(()=>null);
+    if(!rec){ const all = await libAll(); rec = all[0] || null; }
+  } else { try{ rec = JSON.parse(localStorage.getItem('saved-posts-csv-fallback')||'null'); }catch(e){} }
+  if(!rec){ rec = {id:'builtin', name:'My saved posts', text:SEED_CSV, handle:null, updated:Date.now()}; await persistRec(rec); }
+  await activate(rec);
+  try{
+    if(localStorage.getItem('saved-posts-favs-migrated')!=='1'){
+      const old = JSON.parse(localStorage.getItem(FKEY)||'[]'); let n = 0;
+      for(const id of old){ const r = ROWS.find(x=>x.id===String(id).toLowerCase()); if(r && !r.starred){ r.starred = true; r.t = nowT(r.t); FAVS.add(r.id); n++; } }
+      localStorage.setItem('saved-posts-favs-migrated','1');
+      if(n){ await commit(); csvStatus('Moved '+n+' starred posts from this browser into the CSV.'); }
+    }
+  }catch(e){}
+}
+let commitChain = Promise.resolve();
+/* Replace the in-memory state with a merged set, and refresh the page if anything visible changed. */
+function applyMerged(m, note){
+  const changed = !sameState(ROWS, TOMBS, m.rows, m.tombs);
+  ROWS.length = 0; ROWSET.clear(); TOMBS.clear(); FAVS.clear();
+  m.rows.forEach(r=>{ ROWS.push(r); ROWSET.add(r.id); if(r.starred) FAVS.add(r.id); });
+  m.tombs.forEach((x,id)=>TOMBS.set(id,x));
+  if(changed && LIB.cur && LIB.cur.cloud) LIB.cur.needFull = true;   // the account has not seen these changes yet
+  if(changed && MODE==='csv') startCsvMode(); else if(changed){ syncSaveButtons(); }
+  if(changed && note) csvStatus(note);
+  return changed;
+}
+async function fileAccess(rec, prompt){
+  let perm = await rec.handle.queryPermission({mode:'readwrite'});
+  if(perm!=='granted' && prompt) perm = await rec.handle.requestPermission({mode:'readwrite'}).catch(()=>'denied');
+  return perm==='granted';
+}
+/* Read the linked file (which a cloud-sync folder may have changed from another device), merge it into memory, and write the merged result back. */
+async function syncLinked(rec, prompt){
+  if(!await fileAccess(rec, prompt)) { rec.synced = false; return false; }
+  const f = await rec.handle.getFile(), text = await f.text();
+  let note = '';
+  if(f.lastModified !== rec.lastMod || text !== rec.text){
+    const remote = csvToRows(text), res = mergeSets({rows:ROWS, tombs:TOMBS}, remote), r = res.report;
+    const bits = [];
+    if(r.added.length) bits.push(r.added.length+' new');
+    if(r.removedHere.length) bits.push(r.removedHere.length+' removed');
+    if(r.starsChanged) bits.push(r.starsChanged+' star changes');
+    note = bits.length ? 'Synced from "'+rec.name+'": '+bits.join(', ')+'.' : '';
+    applyMerged(res, note);
+  }
+  rec.text = rowsToCsv(ROWS, TOMBS); rec.updated = Date.now();
+  if(rec.text !== text){
+    const w = await rec.handle.createWritable(); await w.write(rec.text); await w.close();
+    rec.lastMod = (await rec.handle.getFile()).lastModified;
+  } else rec.lastMod = f.lastModified;
+  rec.synced = true;
+  return true;
+}
+function commit(){
+  const rec = LIB.cur; rec.text = rowsToCsv(ROWS, TOMBS); rec.updated = Date.now();
+  commitChain = commitChain.then(async()=>{
+    await persistRec(rec);
+    let where = 'Saved in this browser.', warn = '';
+    if(rec.handle){
+      try{ if(await syncLinked(rec, true)){ where = 'Saved to "'+rec.name+'" on disk.'; } else { rec.synced = false; warn = 'linked file not connected'; } }catch(e){ rec.synced = false; warn = 'linked file not connected'; }
+    }
+    if(rec.cloud && SESSION){
+      try{ await syncCloud(rec); where = (rec.handle && !warn ? where+' ' : '') + 'Synced to your account.'; }
+      catch(e){ warn = (warn ? warn+'; ' : '')+'account sync failed ('+(e.message||'offline')+'), will retry'; }
+    }
+    await persistRec(rec);
+    if(warn) csvStatus('Saved in this browser. '+warn+'.','warn'); else csvStatus(where);
+    csvInfo();
+  });
+  return commitChain;
+}
+/* Pick up changes made elsewhere (another device through your cloud folder or your account) when you return to the page. */
+let lastAutoSync = 0;
+function autoSync(force){
+  const rec = LIB.cur;
+  const file = rec && rec.handle, cloud = rec && rec.cloud && SESSION;
+  if(!rec || !(file || cloud) || document.hidden || MODE!=='csv') return Promise.resolve();
+  if(!force && Date.now() - lastAutoSync < 15000) return Promise.resolve();
+  lastAutoSync = Date.now();
+  commitChain = commitChain.then(async()=>{
+    if(file){ try{ if(!await syncLinked(rec, false)) rec.synced = false; }catch(e){} }
+    if(cloud){ try{ await syncCloud(rec); }catch(e){ acctMsg('Could not reach your account: '+(e.message||'offline'),'warn'); } }
+    await persistRec(rec); csvInfo();
+  });
+  return commitChain;
+}
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) autoSync(); });
+addEventListener('focus',()=>autoSync());
+setInterval(()=>autoSync(),60000);
+
+/* ---------- accounts (Supabase: sign-in, plus a per-user table that only its owner can read or write) ---------- */
+const CFG = window.APP_CONFIG || {};
+const CLOUD_ON = !!(CFG.supabaseUrl && CFG.supabaseAnonKey);
+const SB = (CFG.supabaseUrl||'').replace(/\/+$/,'');
+const SKEY = 'saved-posts-session';
+let SESSION = null;
+try{ SESSION = JSON.parse(localStorage.getItem(SKEY)||'null'); }catch(e){}
+const saveSession = () => { try{ SESSION ? localStorage.setItem(SKEY, JSON.stringify(SESSION)) : localStorage.removeItem(SKEY); }catch(e){} };
+function acctMsg(t, kind){ const el = $('acMsg'); if(!el) return; el.textContent = t || ''; el.dataset.kind = kind || ''; }
+function setSession(j){
+  if(!j || !j.access_token){ return false; }
+  SESSION = {access_token:j.access_token, refresh_token:j.refresh_token, expires_at:j.expires_at || (Math.floor(Date.now()/1000) + (j.expires_in||3600)), uid:(j.user && j.user.id) || (SESSION && SESSION.uid), email:(j.user && j.user.email) || (SESSION && SESSION.email) || ''};
+  saveSession(); return true;
+}
+async function sbJson(res){ let j = null; try{ j = await res.json(); }catch(e){} if(!res.ok){ const e = new Error((j && (j.msg || j.error_description || j.message || j.error)) || ('HTTP '+res.status)); e.status = res.status; throw e; } return j; }
+const sbAuth = (path, body) => fetch(SB+'/auth/v1/'+path, {method:'POST', headers:{apikey:CFG.supabaseAnonKey, 'Content-Type':'application/json'}, body:JSON.stringify(body)}).then(sbJson);
+async function sbToken(){
+  if(!SESSION) throw new Error('not signed in');
+  if(SESSION.expires_at - 60 > Date.now()/1000) return SESSION.access_token;
+  try{ if(!setSession(await sbAuth('token?grant_type=refresh_token', {refresh_token:SESSION.refresh_token}))) throw new Error('refresh failed'); }
+  catch(e){ if(e.status===400 || e.status===401 || e.status===403){ SESSION = null; saveSession(); acctRender(); acctMsg('Your sign-in expired. Please sign in again.','warn'); } throw e; }
+  return SESSION.access_token;
+}
+async function sbRest(path, opts){
+  const tok = await sbToken();
+  const res = await fetch(SB+'/rest/v1/'+path, Object.assign({}, opts, {headers:Object.assign({apikey:CFG.supabaseAnonKey, Authorization:'Bearer '+tok, 'Content-Type':'application/json'}, (opts && opts.headers) || {})}));
+  return res;
+}
+const recToWire = (r, del) => del ? {id:r.id, permalink:r.perma||'', starred:false, updated:r.t||0, deleted:true} : {id:r.id, permalink:r.perma||'', starred:!!r.starred, updated:r.t||0, deleted:false};
+/* Download what changed in the account since last time, merge it into this list, then upload what this device changed. */
+let cloudBusy = false;
+async function syncCloud(rec){
+  if(!CLOUD_ON || !SESSION || cloudBusy) return false;
+  cloudBusy = true;
+  try{
+    if(rec.cloudUser && rec.cloudUser!==SESSION.uid){ rec.cloudCursor = null; rec.needFull = true; }
+    rec.cloudUser = SESSION.uid;
+    const full = !rec.cloudCursor || rec.needFull;
+    const remoteRows = [], remoteTombs = new Map(), remoteMap = new Map();
+    let maxS = '', serverDate = '';
+    for(let off=0;;off+=1000){
+      const q = 'saved_posts?select=id,permalink,starred,updated,deleted,synced_at&order=synced_at.asc,id.asc&limit=1000&offset='+off + (!full ? '&synced_at=gte.'+encodeURIComponent(rec.cloudCursor) : '');
+      const res = await sbRest(q);
+      serverDate = serverDate || res.headers.get('date') || '';
+      const rows = await sbJson(res);
+      for(const x of rows){
+        if(x.synced_at > maxS) maxS = x.synced_at;
+        const w = {id:x.id, perma:x.permalink||'', starred:!!x.starred, t:Number(x.updated)||0, del:!!x.deleted};
+        remoteMap.set(w.id, w);
+        if(w.del) remoteTombs.set(w.id,{t:w.t, perma:w.perma}); else remoteRows.push({id:w.id, perma:w.perma, starred:w.starred, t:w.t});
+      }
+      if(rows.length < 1000) break;
+    }
+    const res = mergeSets({rows:ROWS, tombs:TOMBS}, {rows:remoteRows, tombs:remoteTombs}), r = res.report;
+    const bits = []; if(r.added.length) bits.push(r.added.length+' new'); if(r.removedHere.length) bits.push(r.removedHere.length+' removed'); if(r.starsChanged) bits.push(r.starsChanged+' star changes');
+    applyMerged(res, bits.length ? 'Synced from your account: '+bits.join(', ')+'.' : '');
+    // what to upload
+    const toSend = [];
+    const cur = new Map(); ROWS.forEach(x=>cur.set(x.id, recToWire(x,false))); TOMBS.forEach((x,id)=>cur.set(id, recToWire({id, perma:x.perma, t:x.t}, true)));
+    if(full){
+      for(const [id,w] of cur){ const o = remoteMap.get(id); if(!o || o.t!==w.updated || o.del!==w.deleted || (!w.deleted && o.starred!==w.starred)) toSend.push(w); }
+    } else for(const id of (rec.dirty||[])){ const w = cur.get(id); if(w) toSend.push(w); }
+    for(let i=0;i<toSend.length;i+=500){
+      const res2 = await sbRest('rpc/merge_posts', {method:'POST', body:JSON.stringify({rows:toSend.slice(i,i+500)})});
+      await sbJson(res2);
+    }
+    rec.dirty = []; rec.needFull = false;
+    const base = maxS || (serverDate ? new Date(new Date(serverDate).getTime() - 120000).toISOString() : new Date(Date.now() - 300000).toISOString());
+    rec.cloudCursor = base;
+    return true;
+  } finally { cloudBusy = false; }
+}
+function acctRender(){
+  const on = CLOUD_ON;
+  $('acct').hidden = !on;
+  if(!on) return;
+  $('acctOut').hidden = !!SESSION; $('acctIn').hidden = !SESSION;
+  $('acWho').textContent = SESSION ? 'Signed in as '+(SESSION.email || 'your account')+'. Your list syncs across devices.' : '';
+  $('acGh').hidden = !((CFG.providers||[]).includes('github'));
+  $('csvTools').classList.toggle('has-cloud', !!SESSION);
+}
+async function linkAccount(){
+  const rec = LIB.cur; if(!rec || !SESSION) return;
+  if(rec.cloudUser && rec.cloudUser!==SESSION.uid){
+    const d = await confirmDialog({title:'Link this list to a different account?', paras:['This list on this device was synced with another account. Combining it with "'+SESSION.email+'" would add those posts to this account.'], ok:'Combine'});
+    if(d!=='ok'){ SESSION = null; saveSession(); acctRender(); return; }
+  }
+  rec.cloud = true; rec.needFull = true; rec.cloudCursor = null;
+  acctMsg('Syncing...');
+  try{ await syncCloud(rec); await persistRec(rec); acctMsg('Synced with your account. '+ROWS.length.toLocaleString()+' posts.'); }
+  catch(e){ acctMsg('Signed in, but sync failed: '+(e.message||'offline'),'warn'); }
+  csvInfo();
+}
+async function doSign(kind){
+  const email = $('acEmail').value.trim(), password = $('acPass').value;
+  if(!email || !password){ acctMsg('Enter your email and password.','warn'); return; }
+  if(kind==='up' && password.length < 8){ acctMsg('Use a password of at least 8 characters.','warn'); return; }
+  acctMsg(kind==='up' ? 'Creating account...' : 'Signing in...');
+  try{
+    const j = await sbAuth(kind==='up' ? 'signup' : 'token?grant_type=password', {email, password});
+    $('acPass').value = '';
+    if(setSession(j)){ acctRender(); await linkAccount(); }
+    else acctMsg('Account created. Check your email to confirm it, then sign in.');
+  }catch(e){ acctMsg(e.message || 'Could not sign in.','warn'); }
+}
+$('acIn').onclick = () => doSign('in');
+$('acUp').onclick = () => doSign('up');
+$('acPass').addEventListener('keydown',e=>{ if(e.key==='Enter') doSign('in'); });
+$('acForgot').onclick = async () => {
+  const email = $('acEmail').value.trim(); if(!email){ acctMsg('Enter your email first.','warn'); return; }
+  try{ await sbAuth('recover', {email}); acctMsg('If that email has an account, a reset link is on its way.'); }catch(e){ acctMsg(e.message,'warn'); }
+};
+$('acGh').onclick = () => { location.href = SB+'/auth/v1/authorize?provider=github&redirect_to='+encodeURIComponent(location.origin+location.pathname); };
+$('acSync').onclick = async () => { acctMsg('Syncing...'); await autoSync(true); acctMsg('Synced.'); };
+$('acOut').onclick = async () => {
+  const d = await confirmDialog({title:'Sign out?', paras:['Your list stays on your account. Signing out stops syncing on this device.'], ok:'Sign out', option:'Also remove the list from this browser (for a shared computer)'});
+  if(d!=='ok') return;
+  const wipe = $('cOpt').checked;
+  try{ if(SESSION) await fetch(SB+'/auth/v1/logout', {method:'POST', headers:{apikey:CFG.supabaseAnonKey, Authorization:'Bearer '+SESSION.access_token}}); }catch(e){}
+  SESSION = null; saveSession();
+  const rec = LIB.cur;
+  if(rec){ rec.cloud = false; rec.cloudCursor = null; rec.dirty = []; }
+  if(wipe && rec){
+    rec.text = 'id,permalink,starred,updated,deleted\r\n'; rec.handle = null; rec.cloudUser = null;
+    for(const k of ['saved-posts-meta-v7','saved-posts-health-v1','saved-posts-imgfail-v2','saved-posts-favs']){ try{ localStorage.removeItem(k); }catch(e){} }
+    await persistRec(rec); await activate(rec); startCsvMode();
+  } else if(rec) await persistRec(rec);
+  acctRender(); acctMsg('Signed out.'); csvInfo();
+};
+/* returning from "Continue with GitHub": the tokens arrive in the address after the # */
+async function takeOAuthReturn(){
+  if(!CLOUD_ON || !/access_token=/.test(location.hash)) return false;
+  const h = new URLSearchParams(location.hash.slice(1));
+  history.replaceState(null, '', location.pathname + location.search);
+  if(!h.get('access_token')) return false;
+  const j = {access_token:h.get('access_token'), refresh_token:h.get('refresh_token'), expires_at:Number(h.get('expires_at')) || undefined, expires_in:Number(h.get('expires_in')) || 3600};
+  try{ const u = await fetch(SB+'/auth/v1/user', {headers:{apikey:CFG.supabaseAnonKey, Authorization:'Bearer '+j.access_token}}).then(sbJson); j.user = u; }catch(e){}
+  return setSession(j);
+}
+async function pickCsv(forMerge){
+  if(FSA){
+    try{
+      const opts = {types:[{description:'CSV files', accept:{'text/csv':['.csv','.txt']}}]};
+      if(!forMerge) opts.mode = 'readwrite';
+      const [h] = await window.showOpenFilePicker(opts);
+      const f = await h.getFile();
+      return {name:f.name, text:await f.text(), handle: forMerge ? null : h};
+    }catch(e){ if(e && e.name==='AbortError') return null; }
+  }
+  return new Promise(res=>{
+    const inp = $('csvfile');
+    inp.onchange = async () => { const f = inp.files[0]; inp.value = ''; res(f ? {name:f.name, text:await f.text(), handle:null} : null); };
+    inp.click();
+  });
+}
+function download(name, text){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text],{type:'text/csv'})); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+}
+function confirmDialog({title, paras, ok, extra, option}){
+  const d = $('confirm');
+  $('cTitle').textContent = title;
+  $('cBody').replaceChildren(...paras.map(t=>{ const p = document.createElement('p'); p.textContent = t; return p; }));
+  const ex = $('cExtra'); ex.hidden = !extra; ex.textContent = extra || '';
+  const ow = $('cOptWrap'), ob = $('cOpt'); ow.hidden = !option; ob.checked = false;
+  const setOk = () => { $('cOk').textContent = typeof ok==='function' ? ok(ob.checked) : ok; };
+  if(option){ $('cOptLbl').textContent = option; ob.onchange = setOk; }
+  setOk();
+  return new Promise(res=>{ d.returnValue = ''; d.addEventListener('close',()=>res(d.returnValue),{once:true}); d.showModal(); });
+}
+
+const makePost = (i,id,perma) => {
+  const m = PERMA_RE.exec(perma||''), sub = m ? m[1] : 'unknown', slug = m && m[3] ? m[3] : '';
+  let title = slug.replace(/_/g,' ').trim(); title = title.length>1 ? title[0].toUpperCase()+title.slice(1) : 'Untitled';
+  return {i, id, sub, title, del:/^(deleted_by_user|removed_by_moderator)$/i.test(slug)?1:0, cat:SUBCAT[sub.toLowerCase()]||'Other',
+    link: m ? 'https://www.reddit.com/r/'+sub+'/comments/'+id+'/' : 'https://www.reddit.com/comments/'+id+'/', perma};
+};
+function resetView(){
+  loadGen++; loading = false; missing = 0; recovering = false;
+  POSTS.length = 0; cardEls.clear(); playing.clear();
+  state.sub = ''; state.q = ''; $('q').value = '';
+  window.scrollTo({top:0});
+}
+function setBrand(){ const b = document.querySelector('.brand'); b.textContent = MODE==='csv' ? 'Saved' : (FEED.label ? 'm/'+FEED.label : 'r/'+FEED.subs.map(s=>s.name).join('+')); b.title = b.textContent; }
+function setSourceUI(){
+  $('srcCsv').setAttribute('aria-pressed', MODE==='csv'); $('srcSub').setAttribute('aria-pressed', MODE==='sub');
+  $('csvTools').hidden = MODE!=='csv'; $('subForm').hidden = MODE!=='sub';
+  setBrand(); updateMore();
+}
+function startCsvMode(){
+  MODE = 'csv'; resetView(); FEED.gen++;
+  for(const id in META) if(!ROWSET.has(id)) delete META[id];   // drop feed previews so they never reach the cache
+  ROWS.forEach((r,i)=>POSTS.push(makePost(i,r.id,r.perma)));
+  state.sort = 'saved'; $('sort').value = 'saved';
+  metaOK = false; syncSortUI();
+  setSourceUI(); refresh(); updateFavCount();
+  if(Object.keys(META).length) onMeta(POSTS);
+  loadAll();
+}
+function removePosts(ids){
+  const set = new Set(ids);
+  ids.forEach(id=>FAVS.delete(id));
+  for(let i=POSTS.length-1;i>=0;i--) if(set.has(POSTS[i].id)){ cardEls.delete(POSTS[i].id); POSTS.splice(i,1); }
+  updateDeadCount(); updateFavCount(); refresh(true);
+}
+function syncSaveButtons(){
+  for(const el of cardEls.values()){
+    const b = el.querySelector('button.save'); if(!b) continue;
+    const on = ROWSET.has(b.dataset.id);
+    b.setAttribute('aria-pressed', on?'true':'false'); b.innerHTML = on ? BM_ON : BM_OFF;
+    b.setAttribute('aria-label', on ? 'Remove from your CSV' : 'Save to your CSV'); b.title = b.getAttribute('aria-label');
+  }
+}
+/* Deleting leaves a tombstone, so merging with an older copy of the file can never bring the post back. */
+function deleteRows(ids){
+  const set = new Set(ids);
+  for(let i=ROWS.length-1;i>=0;i--){ const r = ROWS[i]; if(set.has(r.id)){ TOMBS.set(r.id,{t:nowT(r.t), perma:r.perma}); ROWS.splice(i,1); } }
+  ids.forEach(id=>{ ROWSET.delete(id); FAVS.delete(id); });
+  markDirty(...ids);
+}
+async function toggleSave(p){
+  if(ROWSET.has(p.id)){
+    const r = await confirmDialog({
+      title:'Delete this post from your CSV?',
+      paras:['"'+titleOf(p)+'" will be removed from "'+LIB.cur.name+'".',
+             'This is permanent and cannot be undone. It only edits the CSV; your saved posts on Reddit are not changed.'],
+      ok:'Delete permanently'});
+    if(r!=='ok') return;
+    deleteRows([p.id]);
+    await commit();
+    if(MODE==='csv') removePosts([p.id]); else syncSaveButtons();
+    toast('Deleted from "'+LIB.cur.name+'"');
+  } else {
+    ROWS.unshift({id:p.id, perma:p.perma || p.link, starred:false, t:nowT((TOMBS.get(p.id)||{}).t)}); TOMBS.delete(p.id); ROWSET.add(p.id); markDirty(p.id);
+    await commit(); syncSaveButtons();
+    toast('Saved to "'+LIB.cur.name+'"');
+  }
+}
+/* Exactly the posts the "Hide broken media" filter hides (isUnavailable), split by cause. */
+function brokenReason(p){
+  if(!isUnavailable(p)) return null;
+  const m = metaOf(p);
+  if(!m) return 'notfound';
+  if(m.m==='removed' && !m.rec) return 'removed';
+  return 'broken';
+}
+async function pruneBroken(){
+  if(MODE!=='csv') return;
+  if(!metaOK || recovering || loading){ toast('Wait for previews and recovery to finish first.'); return; }
+  const hit = {removed:[], notfound:[], broken:[]};
+  for(const p of POSTS){ const r = brokenReason(p); if(r) hit[r].push(p.id); }
+  const sure = hit.removed.length + hit.broken.length, total = sure + hit.notfound.length;
+  if(!total){ toast('No missing or broken posts found.'); return; }
+  let all;
+  for(;;){
+    const r = await confirmDialog({
+      title:'Delete missing and broken posts?',
+      paras:[total.toLocaleString()+' posts match the Hide broken media filter: '+hit.removed.length.toLocaleString()+' removed or deleted with nothing recovered, '+hit.broken.length.toLocaleString()+' whose media cannot be shown, and '+hit.notfound.length.toLocaleString()+' not found in any archive.',
+             'Posts not found in any archive are often recent saves that still exist on Reddit, so they are only deleted if you tick the box below.',
+             'Deleted posts are permanently removed from "'+LIB.cur.name+'". This cannot be undone. Your saved posts on Reddit are not changed.'],
+      option: hit.notfound.length ? 'Also delete the '+hit.notfound.length.toLocaleString()+' not found in any archive' : '',
+      ok: on => 'Delete '+(on ? total : sure).toLocaleString()+' posts', extra:'Export backup first'});
+    if(r==='extra'){ download('backup-'+LIB.cur.name.replace(/\.csv$/i,'')+'.csv', rowsToCsv(ROWS, TOMBS)); continue; }
+    if(r!=='ok') return;
+    all = [].concat(hit.removed, hit.broken, $('cOpt').checked ? hit.notfound : []);
+    break;
+  }
+  if(!all.length){ toast('Nothing selected to delete.'); return; }
+  deleteRows(all);
+  await commit(); removePosts(all);
+  toast('Deleted '+all.length.toLocaleString()+' posts from "'+LIB.cur.name+'"');
+}
+
+/* subreddit / multireddit feed: 100 posts per request round, only when asked */
+const FEED = {subs:[], loading:false, gen:0, relay:'', live:undefined, after:'', liveDone:false, rank:0, note:''};
+const ROUND = 100, MAX_SUBS = 25;
+function parseSubInput(raw){
+  const t = String(raw||'').trim().replace(/%2b/gi,'+');
+  if(!t) return {error:'Enter a subreddit, for example reddit.com/r/pics+aww.'};
+  const mm = /(?:^|\/)(?:user|u)\/([A-Za-z0-9_-]+)\/m\/([A-Za-z0-9_]+)/i.exec(t);
+  if(mm) return {multi:{user:mm[1], name:mm[2], key:(mm[1]+'/m/'+mm[2]).toLowerCase()}};
+  if(/(^|\/)m\/[^\/\s]+/i.test(t)) return {error:"Paste the full multireddit link, like reddit.com/user/name/m/multiname."};
+  const names = [];
+  for(const tok of t.split(/[\s,]+/).filter(Boolean)){
+    const m = /(?:^|\/)r\/([^\/?#]+)/i.exec(tok);
+    const part = m ? m[1] : tok.replace(/^https?:\/\//i,'').replace(/^(?:www\.|old\.|new\.|np\.)?reddit\.com\/?/i,'').split(/[\/?#]/)[0];
+    for(let n of part.split('+')){ n = n.trim(); if(n) names.push(n); }
+  }
+  const out = [], seen = new Set(), bad = [];
+  for(const n of names){
+    if(!/^[A-Za-z0-9_]{1,21}$/.test(n)){ bad.push(n); continue; }
+    if(/^(all|popular|random|friends|mod)$/i.test(n)){ bad.push(n+' (not available from archives)'); continue; }
+    if(!seen.has(n.toLowerCase())){ seen.add(n.toLowerCase()); out.push(n); }
+  }
+  if(bad.length) return {error:'Not a valid subreddit name: '+bad.join(', ')};
+  if(!out.length) return {error:'No subreddit names found.'};
+  if(out.length > MAX_SUBS) return {error:'Please use at most '+MAX_SUBS+' subreddits at a time.'};
+  return {subs:out};
+}
+function feedUrls(name, before, limit){
+  const after = state.range!=='all' ? Math.floor(Date.now()/1000 - RANGE_S[state.range]) : 0;
+  const e = encodeURIComponent(name);
+  const arctic = 'https://arctic-shift.photon-reddit.com/api/posts/search?subreddit='+e+'&limit='+limit+'&sort=desc'+(after ? '&after='+after : '');
+  const pull = 'https://api.pullpush.io/reddit/search/submission/?subreddit='+e+'&size='+limit+'&sort=desc&sort_type=created_utc'+(after ? '&after='+after : '');
+  const iso = before ? new Date(before*1000).toISOString().slice(0,19) : '';
+  return [['Arctic Shift', before ? [arctic+'&before='+before, arctic+'&before='+iso] : [arctic]], ['PullPush', before ? [pull+'&before='+before] : [pull]]];
+}
+async function feedPage(name, before, limit){
+  let last, anyOk = false;
+  for(const [label,urls] of feedUrls(name,before,limit)){
+    for(const url of urls){
+      try{
+        const j = await timed(url, 30000, 'json'), data = Array.isArray(j) ? j : (j.data||[]);
+        anyOk = true;
+        if(data.length || before) return data;
+        break;
+      }catch(e){ last = e; if(!e.message.startsWith(label)) e.message = label+': '+e.message; }
+    }
+  }
+  if(!anyOk) throw last;
+  return [];
+}
+async function feedSub(st, limit, gen){
+  let data;
+  try{ data = await feedPage(st.name, st.before, limit); }catch(e){ st.err = e.message || 'network error'; return 0; }
+  if(gen!==FEED.gen) return 0;
+  st.err = '';
+  let added = 0, oldest = Infinity;
+  const have = new Set(POSTS.map(p=>p.id));
+  for(const d of data){
+    if(!d || !d.id) continue;
+    if(d.created_utc && d.created_utc < oldest) oldest = d.created_utc;
+    if(have.has(d.id)) continue;
+    have.add(d.id);
+    const post = makePost(POSTS.length, d.id, 'https://www.reddit.com'+(d.permalink || '/r/'+(d.subreddit||st.name)+'/comments/'+d.id+'/'));
+    post.sub = d.subreddit || st.name; post.title = d.title || post.title; post.del = 0;
+    POSTS.push(post); META[d.id] = slim(d); added++;
+  }
+  st.n += added;
+  if(!data.length || !added || !isFinite(oldest)) st.done = true; else st.before = Math.floor(oldest);
+  return added;
+}
+const feedHasMore = () => FEED.live ? !FEED.liveDone : FEED.subs.some(s=>!s.done);
+function updateMore(){
+  const w = $('moreWrap'); if(!w) return;
+  const show = MODE==='sub' && FEED.subs.length && shown>=list.length && feedHasMore();
+  w.hidden = !show;
+  $('moreBtn').disabled = FEED.loading;
+  const onlyFailed = !FEED.live && FEED.subs.some(s=>s.err) && !FEED.subs.some(s=>!s.done && !s.err);
+  $('moreBtn').textContent = FEED.loading ? 'Loading...' : (onlyFailed ? 'Retry failed subreddits' : 'Load next '+ROUND);
+  $('moreNote').textContent = POSTS.length.toLocaleString()+' posts loaded';
+}
+/* Reddit's own hot feed, in Reddit's own order (several subreddits are asked for as one combined feed, exactly like r/a+b). */
+async function liveHotPage(names, after){
+  const path = '/r/'+names.map(encodeURIComponent).join('+')+'/hot.json?limit=100&raw_json=1'+(after ? '&after='+encodeURIComponent(after) : '');
+  const rel = '/relay/hot/'+names.map(encodeURIComponent).join('+')+(after ? '?after='+encodeURIComponent(after) : '');
+  /* Reddit does not allow web pages to read it directly, so the local relay (hot_relay.py) is tried too: first on this page's own address, then on localhost. */
+  const tries = [];
+  if(FEED.relay) tries.push(FEED.relay+rel);
+  else{
+    if(/^https?:$/.test(location.protocol)) tries.push(rel);
+    tries.push('http://localhost:8765'+rel, 'https://www.reddit.com'+path, 'https://old.reddit.com'+path);
+  }
+  let last;
+  for(const url of tries){
+    try{
+      const j = await timed(url, 20000, 'json');
+      if(j && j.data && Array.isArray(j.data.children)){ if(!/reddit\.com\//.test(url)) FEED.relay = url.slice(0, url.indexOf('/relay/')); return j.data; }
+      last = new Error('unexpected reply');
+    }catch(e){ if(!last || !(e instanceof TypeError) || last instanceof TypeError) last = last && !(last instanceof TypeError) ? last : e; }
+  }
+  throw last;
+}
+async function feedLive(gen){
+  const names = FEED.subs.map(s=>s.name);
+  const data = await liveHotPage(names, FEED.after);
+  if(gen!==FEED.gen) return;
+  const have = new Set(POSTS.map(p=>p.id));
+  let added = 0;
+  for(const c of data.children){
+    const d = c && c.data; if(!d || !d.id || have.has(d.id)) continue;
+    have.add(d.id);
+    const post = makePost(POSTS.length, d.id, 'https://www.reddit.com'+(d.permalink || '/r/'+(d.subreddit||names[0])+'/comments/'+d.id+'/'));
+    post.sub = d.subreddit || names[0]; post.title = d.title || post.title; post.del = 0; post.rank = FEED.rank++;
+    POSTS.push(post); META[d.id] = slim(d); added++;
+  }
+  FEED.after = data.after || ''; FEED.liveDone = !FEED.after || !data.children.length;
+  FEED.subs.forEach(s=>{ s.err = ''; });
+  return added;
+}
+async function feedRound(){
+  if(MODE!=='sub' || FEED.loading) return;
+  if(FEED.live===true && FEED.liveDone) return;
+  const gen = FEED.gen, todo = FEED.subs.filter(s=>!s.done);
+  if(!todo.length && FEED.live!==true) return;
+  FEED.loading = true; todo.forEach(s=>s.err=''); updateMore();
+  if(FEED.live!==false){
+    $('loadText').textContent = 'Loading the hot feed from Reddit...'; $('loadBar').style.width = '10%';
+    try{
+      await feedLive(gen);
+      if(gen!==FEED.gen) return;
+      FEED.live = true; FEED.loading = false; syncSortUI();
+      $('loadText').textContent = POSTS.length.toLocaleString()+' posts loaded from Reddit\'s hot feed';
+      $('loadBar').style.width = '100%'; refresh(true); return;
+    }catch(e){
+      if(gen!==FEED.gen) return;
+      if(FEED.live===true){   // it worked before: report the failure but keep the feed live so the button retries
+        FEED.loading = false; $('loadText').innerHTML = '<span class="err">Reddit: '+esc(e.message||'request failed')+'. Try again in a moment.</span>'; updateMore(); return;
+      }
+      FEED.live = false; syncSortUI();
+      FEED.note = 'Could not read Reddit\'s hot feed from this page ('+(e instanceof TypeError ? 'blocked by the browser' : (e.message||'failed'))+'), so this is an approximation built from the archives. To get the real hot feed, run hot_relay.py (python hot_relay.py) and open http://localhost:8765.';
+    }
+  }
+  const limit = Math.min(100, Math.max(4, Math.ceil(ROUND/todo.length)));
+  $('loadText').textContent = 'Loading '+(todo.length>3 ? todo.length+' subreddits' : todo.map(s=>'r/'+s.name).join(', '))+'...';
+  $('loadBar').style.width = '5%';
+  let idx = 0, doneCount = 0, tick = null;
+  const worker = async () => {
+    while(idx < todo.length && gen===FEED.gen){
+      await feedSub(todo[idx++], limit, gen);
+      doneCount++; $('loadBar').style.width = Math.max(5, Math.round(doneCount/todo.length*100))+'%';
+      if(gen===FEED.gen && !tick) tick = setTimeout(()=>{ tick = null; refresh(true); },250);
+    }
+  };
+  await Promise.all([worker(),worker(),worker()]);
+  if(gen!==FEED.gen) return;
+  clearTimeout(tick); FEED.loading = false;
+  const failed = FEED.subs.filter(s=>s.err);
+  $('loadText').innerHTML = (FEED.note ? '<span class="err">'+esc(FEED.note)+'</span> ' : '') + (failed.length ? '<span class="err">'+failed.map(s=>'r/'+esc(s.name)+': '+esc(s.err)).join(', ')+'</span>' : POSTS.length.toLocaleString()+' posts loaded');
+  $('loadBar').style.width = '100%';
+  refresh(true);
+}
+function startSubMode(subs, label){
+  MODE = 'sub'; resetView(); FEED.gen++; FEED.loading = false; FEED.label = label || '';
+  FEED.subs = subs.map(name=>({name, before:null, done:false, n:0, err:''}));
+  FEED.live = undefined; FEED.after = ''; FEED.liveDone = false; FEED.rank = 0; FEED.note = '';
+  state.sort = 'hot'; $('sort').value = 'hot';
+  metaOK = true; syncSortUI(); $('recText').textContent = '';
+  setSourceUI(); refresh();
+  feedRound();
+}
+
+$('srcCsv').addEventListener('click',()=>{ if(MODE!=='csv') startCsvMode(); else setSourceUI(); });   // also undoes a Subreddit click that was never submitted
+$('srcSub').addEventListener('click',()=>{ if(MODE!=='sub'){ $('subForm').hidden = false; $('csvTools').hidden = true; $('srcSub').setAttribute('aria-pressed','true'); $('srcCsv').setAttribute('aria-pressed','false'); $('subUrl').focus(); } });
+/* Custom multireddits: Reddit does not let a web page read their member list, so try once, then ask for the names and remember them. */
+const MKEY = 'saved-posts-multis';
+const MULTIS = (()=>{ try{ return JSON.parse(localStorage.getItem(MKEY)||'{}'); }catch(e){ return {}; } })();
+const saveMultis = () => { try{ localStorage.setItem(MKEY, JSON.stringify(MULTIS)); }catch(e){} };
+async function tryResolveMulti(mu){
+  for(const host of ['https://www.reddit.com','https://old.reddit.com']){
+    try{
+      const r = await fetch(host+'/api/multi/user/'+encodeURIComponent(mu.user)+'/m/'+encodeURIComponent(mu.name)+'.json');
+      if(!r.ok) continue;
+      const j = await r.json(), subs = ((j.data||j).subreddits||[]).map(x=>x.name||x).filter(Boolean);
+      if(subs.length) return subs;
+    }catch(e){}
+  }
+  return null;
+}
+let pendingMulti = null;
+const askMulti = (mu, msg) => { pendingMulti = mu; $('multiAsk').hidden = false; $('multiLbl').textContent = msg; $('multiNames').focus(); };
+$('subForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  $('subErr').textContent = '';
+  // second step: names for a multireddit we could not look up
+  if(!$('multiAsk').hidden && pendingMulti && $('multiNames').value.trim()){
+    const r2 = parseSubInput($('multiNames').value);
+    if(r2.error || r2.multi){ $('subErr').textContent = r2.error || 'Enter plain subreddit names here, like pics+aww.'; return; }
+    MULTIS[pendingMulti.key] = r2.subs; saveMultis();
+    const mu = pendingMulti; pendingMulti = null; $('multiAsk').hidden = true; $('multiNames').value = '';
+    startSubMode(r2.subs, mu.name); return;
+  }
+  const r = parseSubInput($('subUrl').value);
+  if(r.error){ $('subErr').textContent = r.error; $('multiAsk').hidden = true; return; }
+  if(r.multi){
+    const mu = r.multi;
+    if(MULTIS[mu.key]){ $('multiAsk').hidden = true; startSubMode(MULTIS[mu.key], mu.name); return; }
+    $('subErr').textContent = 'Looking up '+mu.name+'...';
+    const subs = await tryResolveMulti(mu);
+    $('subErr').textContent = '';
+    if(subs){ MULTIS[mu.key] = subs.slice(0,MAX_SUBS); saveMultis(); startSubMode(MULTIS[mu.key], mu.name); return; }
+    askMulti(mu, 'Reddit does not let web pages read the member list of "'+mu.name+'". Enter its subreddits once (for example pics+aww+earthporn) and it will be remembered for this link.');
+    return;
+  }
+  $('multiAsk').hidden = true; pendingMulti = null;
+  startSubMode(r.subs);
+});
+$('moreBtn').addEventListener('click',()=>feedRound());
+$('csvSel').addEventListener('change',async()=>{
+  const rec = LIB.list.find(r=>r.id===$('csvSel').value); if(!rec) return;
+  await activate(rec); startCsvMode();
+});
+$('csvOpen').addEventListener('click',async()=>{
+  const r = await pickCsv(false); if(!r) return;
+  const {rows} = csvToRows(r.text);
+  if(!rows.length){ csvStatus('No posts found in that file. It needs an id and permalink column.','warn'); return; }
+  const rec = {id:'csv-'+Date.now().toString(36), name:r.name, text:r.text, handle:r.handle, updated:Date.now(), synced:!!r.handle};
+  await persistRec(rec); await activate(rec); startCsvMode();
+  csvStatus('Opened "'+r.name+'" with '+rows.length.toLocaleString()+' posts.');
+});
+$('csvMerge').addEventListener('click',async()=>{
+  const r = await pickCsv(true); if(!r) return;
+  const remote = csvToRows(r.text);
+  if(!remote.rows.length && !remote.tombs.size){ csvStatus('No posts found in that file. It needs an id and permalink column.','warn'); return; }
+  const res = mergeSets({rows:ROWS, tombs:TOMBS}, remote), rep = res.report;
+  const lines = [rep.added.length.toLocaleString()+' new posts will be added, and '+rep.already.toLocaleString()+' were already here (duplicates are skipped).'];
+  if(rep.starsChanged) lines.push(rep.starsChanged+' star changes carried over.');
+  if(rep.removedHere.length) lines.push(rep.removedHere.length.toLocaleString()+' posts here were deleted more recently in that file, so they will be removed.');
+  if(rep.skippedDeleted.length) lines.push(rep.skippedDeleted.length.toLocaleString()+' posts in that file were deleted here earlier, so they are skipped rather than added back.');
+  let restore = false;
+  if(!rep.added.length && !rep.starsChanged && !rep.removedHere.length && !rep.skippedDeleted.length && res.tombs.size===TOMBS.size){ csvStatus('Nothing new to merge: "'+r.name+'" matches "'+LIB.cur.name+'".'); return; }
+  if(rep.added.length || rep.removedHere.length || rep.skippedDeleted.length){
+    const d = await confirmDialog({title:'Merge "'+r.name+'" into "'+LIB.cur.name+'"?', paras:lines, ok:'Merge',
+      option: rep.skippedDeleted.length ? 'Also restore the '+rep.skippedDeleted.length.toLocaleString()+' posts I deleted earlier' : ''});
+    if(d!=='ok') return;
+    restore = rep.skippedDeleted.length && $('cOpt').checked;
+  }
+  if(restore){
+    const back = new Set(rep.skippedDeleted);
+    for(const id of back){ const x = res.tombs.get(id); if(!x) continue; res.tombs.delete(id); res.rows.unshift({id, perma:x.perma||'', starred:false, t:nowT(x.t)}); }
+  }
+  applyMerged(res); await commit(); startCsvMode();
+  csvStatus('Merged "'+r.name+'": '+rep.added.length.toLocaleString()+' added'+(rep.removedHere.length?', '+rep.removedHere.length+' removed':'')+(rep.skippedDeleted.length ? (restore ? ', '+rep.skippedDeleted.length+' restored' : ', '+rep.skippedDeleted.length+' kept deleted') : '')+'.');
+});
+$('csvExport').addEventListener('click',()=>{ download(/\.csv$/i.test(LIB.cur.name) ? LIB.cur.name : LIB.cur.name+'.csv', rowsToCsv(ROWS, TOMBS)); csvStatus('Exported '+ROWS.length.toLocaleString()+' posts'+(TOMBS.size ? ' and '+TOMBS.size.toLocaleString()+' deletion records' : '')+'.'); });
+$('csvPrune').addEventListener('click',()=>pruneBroken());
+$('csvSync').addEventListener('click',async()=>{ await autoSync(true); csvStatus('Synced with "'+LIB.cur.name+'".'); });
+$('csvReconnect').addEventListener('click',async()=>{
+  const rec = LIB.cur; if(!rec || !rec.handle) return;
+  try{
+    if(await rec.handle.requestPermission({mode:'readwrite'}) === 'granted'){ await activate(rec); startCsvMode(); csvStatus('Reconnected to "'+rec.name+'".'); }
+    else csvStatus('Permission was not granted.','warn');
+  }catch(e){ csvStatus('Could not reconnect: '+e.message,'warn'); }
+});
+(async()=>{
+  $('loadText').textContent = 'Opening your CSV...';
+  const returned = await takeOAuthReturn();
+  await initData();
+  acctRender();
+  startCsvMode();
+  if(returned) linkAccount(); else if(SESSION && LIB.cur && LIB.cur.cloud) autoSync(true);
+})();
+
+</script>
+</body>
+</html>
