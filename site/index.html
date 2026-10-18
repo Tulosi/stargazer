@@ -1498,6 +1498,7 @@ const cardIO = new IntersectionObserver(es=>{ for(const e of es) e.isIntersectin
 function fmtTime(x){ x = Math.max(0,Math.floor(x||0)); return Math.floor(x/60)+':'+String(x%60).padStart(2,'0'); }
 function clearPlayUI(t){
   cancelAnimationFrame(t._raf);
+  if(t._ytMsg){ removeEventListener('message',t._ytMsg); t._ytMsg = null; }
   if(t._aud){ t._aud.pause(); t._aud.removeAttribute('src'); try{ t._aud.load(); }catch(e){} t._aud = null; }
   t.querySelectorAll('.clip').forEach(c=>{ if(c.pause) c.pause(); c.remove(); });
   const card = t.closest('.card');
@@ -1647,7 +1648,19 @@ function startPlay(t){
     const id = v.slice(3), f = document.createElement('iframe');
     f.className = 'clip yt'; f.setAttribute('tabindex','-1'); f.setAttribute('allow','autoplay; encrypted-media; picture-in-picture');
     f.referrerPolicy = 'strict-origin-when-cross-origin';
-    f.src = 'https://www.youtube.com/embed/'+id+'?autoplay=1&mute=1&controls=0&loop=1&playlist='+id+'&playsinline=1&rel=0&modestbranding=1';
+    // No loop=1&playlist=: that turns the clip into a one-item playlist and YouTube paints previous / pause / next buttons over the picture.
+    // Looping is done by asking the player to restart when it reports that it ended.
+    f.src = 'https://www.youtube.com/embed/'+id+'?autoplay=1&mute=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&playsinline=1&rel=0&modestbranding=1&enablejsapi=1';
+    const talk = o => { try{ f.contentWindow.postMessage(JSON.stringify(o),'https://www.youtube.com'); }catch(e){} };
+    const onMsg = e => {
+      if(e.source !== f.contentWindow){ if(!f.isConnected) removeEventListener('message',onMsg); return; }
+      let d; try{ d = typeof e.data==='string' ? JSON.parse(e.data) : e.data; }catch(x){ return; }
+      if(d && ((d.event==='onStateChange' && d.info===0) || (d.event==='infoDelivery' && d.info && d.info.playerState===0))){
+        talk({event:'command',func:'seekTo',args:[0,true]}); talk({event:'command',func:'playVideo',args:[]});
+      }
+    };
+    addEventListener('message',onMsg); t._ytMsg = onMsg;
+    f.addEventListener('load',()=>talk({event:'listening',id:1,channel:'widget'}));
     t.insertBefore(f, t.querySelector('.badge'));
     return;
   }

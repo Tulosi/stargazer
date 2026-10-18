@@ -21,6 +21,11 @@ with sync_playwright() as p:
     pg.click('#decktoggle')
     ev(SEED); pg.wait_for_timeout(800)
     check('Browse column appears once there are posts', ev("$('browseCol').hidden") is False)
+    pg.hover('article.card[data-id="ytyt11"] .thumb'); pg.wait_for_timeout(700)
+    csrc = ev("(document.querySelector('article.card[data-id=\"ytyt11\"] iframe.clip')||{}).src") or ''
+    check('card preview has no playlist (so no prev/pause/next overlay)', csrc.startswith('https://www.youtube.com/embed/') and 'playlist=' not in csrc and 'controls=0' in csrc)
+    check('card preview iframe ignores the pointer (clicks go to the card)', ev("getComputedStyle(document.querySelector('article.card[data-id=\"ytyt11\"] iframe.clip')).pointerEvents")=='none')
+    pg.mouse.move(2, 2); pg.wait_for_timeout(300)
     pg.dispatch_event('article.card[data-id="ytyt11"] button.fs', 'click'); pg.wait_for_timeout(600)
     src = ev("(document.querySelector('#viewer iframe.vyt')||{}).src")
     check('full screen embeds the YouTube player', src.startswith('https://www.youtube.com/embed/dQw4w9WgXcQ') and 'autoplay=1' in src)
