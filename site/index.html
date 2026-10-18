@@ -6,7 +6,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src * data: blob:; media-src * data: blob:; connect-src *; frame-src https://www.youtube.com https://www.redgifs.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <script src="config.js"></script>
 <meta name="referrer" content="no-referrer">
-<title>Saved</title>
+<title>Stargazer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
@@ -287,7 +287,7 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
 <section class="deck" aria-label="Search and filters">
   <div class="deck-in">
     <div class="deck-bar">
-      <span class="brand">Saved</span>
+      <span class="brand">Stargazer</span>
       <label class="search">
         <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.6"/><path d="M10.6 10.6L14 14"/></svg>
         <input id="q" type="search" placeholder="Search titles, subreddits, authors" aria-label="Search">
@@ -2510,7 +2510,7 @@ function resetView(){
   state.sub = ''; state.q = ''; $('q').value = '';
   window.scrollTo({top:0});
 }
-function setBrand(){ const b = document.querySelector('.brand'); b.textContent = MODE==='csv' ? 'Saved' : (FEED.label ? 'm/'+FEED.label : 'r/'+FEED.subs.map(s=>s.name).join('+')); b.title = b.textContent; }
+function setBrand(){ const b = document.querySelector('.brand'); b.textContent = MODE==='csv' ? 'Stargazer' : (FEED.label ? 'm/'+FEED.label : 'r/'+FEED.subs.map(s=>s.name).join('+')); b.title = b.textContent; }
 function setSourceUI(){
   $('srcCsv').setAttribute('aria-pressed', MODE==='csv'); $('srcSub').setAttribute('aria-pressed', MODE==='sub');
   $('csvTools').hidden = MODE!=='csv'; $('subForm').hidden = MODE!=='sub';

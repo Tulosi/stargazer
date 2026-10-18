@@ -1,4 +1,4 @@
-# Saved Posts Browser: public site with accounts (free)
+# Stargazer: public site with accounts (free)
 
 GitHub Pages serves the page. Supabase (free plan) provides sign-in and stores each person's list.
 Nothing personal is in this folder: the list starts empty and fills from your account.

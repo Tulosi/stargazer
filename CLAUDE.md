@@ -1,4 +1,4 @@
-# Saved Posts Browser
+# Stargazer
 
 A single-file web page (`site/index.html`, no build step, no dependencies) that shows saved Reddit posts as a bento gallery.
 Hosted on GitHub Pages. Accounts and storage come from Supabase (free plan). The page is public; the data is not.
