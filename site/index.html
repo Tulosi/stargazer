@@ -806,7 +806,7 @@ function startImg(img, attempt){
       // Wait a moment before condemning anything: if a wave of failures turns out to be rate limiting, retry later instead.
       setTimeout(()=>{
         if(!img.isConnected || el._p!==p) return;
-        if((reason==='slow' || throttled()) && (attempt||0) < 2){ setTimeout(()=>{ if(img.isConnected) startImg(img,(attempt||0)+1); }, 20000); return; }
+        if((reason==='slow' || throttled() || !anyImgOK) && (attempt||0) < 3){ setTimeout(()=>{ if(img.isConnected) startImg(img,(attempt||0)+1); }, anyImgOK ? 20000 : 6000*((attempt||0)+1)); return; }   // nothing has loaded yet this visit: the connection is probably still waking up, so try again rather than give up
         img.remove(); markImgFail(p); if(img._rescue) img._rescue();
       }, 8000);
     };
@@ -2439,6 +2439,7 @@ const idbReq = (store, mode, fn) => new Promise((res,rej)=>{
   tx.oncomplete = () => res(rq && rq.result); tx.onerror = tx.onabort = () => rej(tx.error);
 });
 async function persistRec(rec){
+  if(rec===LIB.cur) rec.text = rowsToCsv(ROWS, TOMBS);   // memory is the truth (a cloud sync changes it without touching rec.text)
   if(LIB.db){ try{ await idbReq('csv','readwrite',s=>s.put(rec)); return true; }catch(e){} }
   try{ localStorage.setItem('saved-posts-csv-fallback', JSON.stringify({id:rec.id, name:rec.name, text:rec.text, updated:rec.updated})); return true; }catch(e){ return false; }
 }
