@@ -26,6 +26,8 @@ with sync_playwright() as p:
     pg.keyboard.press('Escape'); pg.wait_for_timeout(100)
     pg.click('#rvw'); pg.wait_for_timeout(250)
     check('Review opens the Filters panel and it stays open', not ev("document.body.classList.contains('deck-collapsed')"))
+    ev("document.getElementById('rvw').click()"); pg.wait_for_timeout(250)   # on a wide screen the open panel covers the button; on phones it stays reachable above the sheet
+    check('Review again closes it', ev("document.body.classList.contains('deck-collapsed')"))
     pg.keyboard.press('Escape'); pg.wait_for_timeout(100)
     check('notes hidden until hover', not pg.is_visible('#stats .st em'))
     pg.hover('#stats .st'); pg.wait_for_timeout(150)

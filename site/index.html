@@ -1756,7 +1756,7 @@ function updateSummary(){
   dt.dataset.active = active ? '1' : '0';
   $('summary').innerHTML = hidden ? '<b>'+hidden.toLocaleString()+'</b> hidden by filters <button class="clear" id="rvw" type="button">Review</button>'+(active ? ' <button class="clear" id="clr" type="button">Clear filters</button>' : '')
     : (active ? list.length.toLocaleString()+' of '+POSTS.length.toLocaleString()+' posts <button class="clear" id="clr" type="button">Clear filters</button>' : '');
-  const rv = $('rvw'); if(rv) rv.onclick = () => { if(document.body.classList.contains('deck-collapsed')) $('decktoggle').click(); };
+  const rv = $('rvw'); if(rv) rv.onclick = () => $('decktoggle').click();   // a toggle: opens the Filters panel, or closes it if it is already open
   const c = $('clr'); if(c) c.onclick = ()=>{ state.cats.clear(); state.kinds.clear(); state.media.clear(); state.sub=''; state.q=''; state.fav=false; $('favonly').checked=false; state.showText=false; $('showtext').checked=false; if(state.range!=='all'){ setRange('all'); return; } $('q').value=''; window.markSearchBtn&&markSearchBtn(); $('subsel').value=''; setNsfw('hide'); };
 }
 
