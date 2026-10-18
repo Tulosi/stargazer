@@ -277,9 +277,10 @@ body.unblur .reveal{display:none!important}
 .nsfwb{background:rgba(12,12,14,.26);color:rgba(255,255,255,.36);box-shadow:none;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 /* 18+ toggle: off = glass button with faint text, shown only while the card is hovered or in focus; on = glass button with full white text and a white ring, always visible. Hovering previews the other state (an X for removing the mark). */
 .nsfwb[aria-pressed=false]:hover{background:rgba(12,12,14,.26);color:#fff}
-.nsfwb[aria-pressed=true]::before,.nsfwb[aria-pressed=false]:hover::before{content:"";position:absolute;inset:0;border-radius:50%;padding:2px;background:linear-gradient(135deg,var(--g1),var(--g2),var(--g3));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+.nsfwb[aria-pressed=true]::before,.nsfwb[aria-pressed=false]:hover::before{content:"";position:absolute;inset:0;border-radius:50%;padding:2px;background:rgba(255,255,255,.5);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
 .save.nsfwb[aria-pressed=true]{background:rgba(12,12,14,.26);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#fff;box-shadow:none}
 .save.nsfwb[aria-pressed=true]:hover{background:rgba(12,12,14,.5);color:#fff}
+.nsfwb[aria-pressed=true] svg text,.nsfwb[aria-pressed=false]:hover svg text{fill:url(#nsfwGrad)}
 .nsfwb[aria-pressed=true]:hover svg{opacity:0}
 .nsfwb[aria-pressed=true]:hover::after{content:"";position:absolute;inset:0;margin:auto;width:14px;height:14px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M3.5 3.5l9 9M12.5 3.5l-9 9'/%3E%3C/svg%3E") center/contain no-repeat}
 body .card .nsfwb[aria-pressed=false]{opacity:0!important;pointer-events:none!important}
@@ -716,6 +717,7 @@ body.layout-list .badges{display:contents}
 <dialog id="confirm"><form method="dialog"><h3 id="cTitle"></h3><div id="cBody"></div><label id="cOptWrap" class="toggle" hidden><span id="cOptLbl"></span><input type="checkbox" id="cOpt"></label><div class="btnrow" style="justify-content:flex-end;margin-top:18px"><button class="pill" id="cExtra" value="extra" hidden></button><button class="pill" value="cancel" autofocus>Cancel</button><button class="pill danger" id="cOk" value="ok"></button></div></form></dialog>
 <div id="pausebar" role="status" aria-live="polite" hidden><span class="pdot"></span><span id="pauseTxt"></span><button type="button" id="pauseSkip" title="Retry now">Retry now</button></div>
 <button id="totop" type="button" aria-label="Back to top" title="Back to top" hidden><svg viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 10L8 5.5l4.5 4.5"/></svg></button>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><linearGradient id="nsfwGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:color-mix(in srgb,var(--g1) 55%,#fff)"/><stop offset=".5" style="stop-color:color-mix(in srgb,var(--g2) 55%,#fff)"/><stop offset="1" style="stop-color:color-mix(in srgb,var(--g3) 55%,#fff)"/></linearGradient></defs></svg>
 <div id="selbar" role="toolbar" aria-label="Selected posts" hidden>
   <b id="selcount">0 selected</b>
   <button type="button" class="pill" data-a="star">Star</button>
