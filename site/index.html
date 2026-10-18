@@ -487,12 +487,16 @@ const titleOf = p => (metaOf(p) && metaOf(p).t) || p.title;
 const isRec = p => !!(metaOf(p) && metaOf(p).rec);
 function matchesMedia(p){ const m = mediaOf(p); for(const k of state.media){ if(k===m || (k==='recovered' && isRec(p))) return true; } return false; }
 const mediaOf = p => p.del ? 'removed' : (metaOf(p) ? metaOf(p).m : 'pending');
-function isNsfw(p){
+/* A person can override the automatic NSFW guess for a saved post. The choice rides in the permalink as ?nsfw=1 (force on) or ?nsfw=0 (force off),
+   so the CSV columns and the database stay as they are and the choice syncs like any other edit. No mark means the automatic guess. */
+const nsfwMark = p => { const m = /[?&]nsfw=([01])(?:&|$)/.exec(p.perma || ''); return m ? m[1]==='1' : null; };
+function baseNsfw(p){
   if(p.cat==='Adult') return true;
   const m = metaOf(p);
   if(m) return !!m.o;
   return p.sub.toLowerCase().startsWith('u_');
 }
+function isNsfw(p){ const k = nsfwMark(p); return k===null ? baseNsfw(p) : k; }
 /* Where a card should go when the original post is gone: the archive copy it was recovered from. */
 function recHref(p){
   const m = metaOf(p);
@@ -761,7 +765,8 @@ function fillCard(el,p){
     + '<div class="meta"><button class="sub" type="button" data-sub="'+esc(p.sub)+'">r/'+esc(p.sub)+'</button>'+stats
     + (note ? '<span class="note'+(dead?' dead':'')+'">'+esc(note)+'</span>' : '')+'</div>'
     + '<div class="actions"><a class="btn primary" data-open href="'+esc(href)+'" target="_blank" rel="noopener noreferrer">Open source</a>'
-    + '<a class="btn" href="'+esc(recHref(p))+'" target="_blank" rel="noopener noreferrer">Comments</a></div>'
+    + '<a class="btn" href="'+esc(recHref(p))+'" target="_blank" rel="noopener noreferrer">Comments</a>'
+    + '<button class="btn nsfwbtn" type="button"'+(ROWSET.has(p.id) ? '' : ' hidden')+' aria-pressed="'+(nsfw?'true':'false')+'" title="Override the automatic NSFW label for this saved post">'+(nsfw ? 'Not NSFW' : 'Mark NSFW')+'</button></div>'
     + (removed ? '<div class="arch"><span>Archives:</span><a href="'+esc('https://web.archive.org/web/'+WB_TS+'/https://old.reddit.com/r/'+p.sub+'/comments/'+p.id+'/')+'" target="_blank" rel="noopener noreferrer">Wayback</a>'
         + '<a href="'+esc('https://arctic-shift.photon-reddit.com/api/posts/ids?ids='+p.id)+'" target="_blank" rel="noopener noreferrer">Arctic Shift</a></div>' : '')
     + '</div>';
@@ -1295,6 +1300,8 @@ function showGallery(card,p,m){
 $('grid').addEventListener('click',e=>{
   const ib = e.target.closest('button.ibtn');
   if(ib){ const c = ib.closest('.card'), on = !c.classList.contains('info-open'); c.classList.toggle('info-open', on); ib.setAttribute('aria-pressed', on?'true':'false'); ib.setAttribute('aria-label', on?'Hide info':'Show info'); return; }
+  const nb = e.target.closest('button.nsfwbtn');
+  if(nb){ const card = nb.closest('.card'); if(card && card._p) toggleNsfw(card._p); return; }
   const sv = e.target.closest('button.save');
   if(sv){ const card = sv.closest('.card'); if(card && card._p) toggleSave(card._p); return; }
   const gn = e.target.closest('button.gnav');
@@ -2538,6 +2545,7 @@ function syncSaveButtons(){
     const on = ROWSET.has(b.dataset.id);
     b.setAttribute('aria-pressed', on?'true':'false'); b.innerHTML = on ? BM_ON : BM_OFF;
     b.setAttribute('aria-label', on ? 'Remove from your CSV' : 'Save to your CSV'); b.title = b.getAttribute('aria-label');
+    const nbn = el.querySelector('button.nsfwbtn'); if(nbn) nbn.hidden = !on;
   }
 }
 /* Deleting leaves a tombstone, so merging with an older copy of the file can never bring the post back. */
@@ -2546,6 +2554,18 @@ function deleteRows(ids){
   for(let i=ROWS.length-1;i>=0;i--){ const r = ROWS[i]; if(set.has(r.id)){ TOMBS.set(r.id,{t:nowT(r.t), perma:r.perma}); ROWS.splice(i,1); } }
   ids.forEach(id=>{ ROWSET.delete(id); FAVS.delete(id); });
   markDirty(...ids);
+}
+async function toggleNsfw(p){
+  const r = ROWS.find(x=>x.id===p.id); if(!r) return;
+  const want = !isNsfw(p), base = baseNsfw(p);
+  let perma = (r.perma || p.link).replace(/[?&]nsfw=[01]/, '');
+  if(perma.includes('&') && !perma.includes('?')) perma = perma.replace('&','?');
+  if(want !== base) perma += (perma.includes('?') ? '&' : '?') + 'nsfw=' + (want ? '1' : '0');   // only store a mark when it differs from the automatic guess
+  r.perma = perma; r.t = nowT(r.t); markDirty(p.id); p.perma = perma;
+  const el = cardEls.get(p.id); if(el) fillCard(el, p);
+  refresh(true);
+  await commit();
+  toast(want ? 'Marked NSFW' : 'Marked not NSFW');
 }
 async function toggleSave(p){
   if(ROWSET.has(p.id)){

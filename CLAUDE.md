@@ -16,6 +16,7 @@ Hosted on GitHub Pages. Accounts and storage come from Supabase (free plan). The
 3. **Data scheme** (CSV and database): `id, permalink, starred, updated, deleted`. `updated` is the ms time of the last change to that post; `deleted=1` is a tombstone that is kept forever.
    Merge rule, in `pickRec` / `mergeSets` in the page and in `merge_posts` in SQL (keep them identical): newer `updated` wins; on a tie a tombstone beats a live row; two live ties keep the star if either has it.
    A post with a tombstone must never be revived by an older copy.
+   A manual NSFW override is stored in the permalink as `?nsfw=1` / `?nsfw=0` (see `nsfwMark`, `toggleNsfw`); no mark means the automatic guess. Keep it in the permalink so the columns and the database schema do not change.
 4. Every edit must stamp the record (`nowT`) and call `markDirty`; deletions go through `deleteRows`.
 5. The page must keep working with no `config.js` values (accounts hidden) and from `file://`.
 
