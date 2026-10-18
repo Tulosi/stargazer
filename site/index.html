@@ -711,6 +711,23 @@ $('pauseSkip').onclick = () => { for(const k in APIH) APIH[k].until = 0; IMGQ.un
 const throttled = () => IMGQ.until > Date.now() - 20000;
 const hostLast = c => c.map((u,i)=>[u,i]).sort((x,y)=>((HOSTPAUSE[hostOf(x[0])]||0) > Date.now()) - ((HOSTPAUSE[hostOf(y[0])]||0) > Date.now()) || x[1]-y[1]).map(x=>x[0]);
 
+/* Imgur (and some mirrors) answer a deleted picture with a stock "if you are looking for an image, it was probably deleted" image instead of an error.
+   Recognise it by its exact size (161x81) or, when the browser lets us read pixels, by comparing a 24x12 grey thumbnail to the stock picture. */
+const GONE_REF = (h=>{ const a = []; for(let i=0;i<h.length;i+=2) a.push(parseInt(h.substr(i,2),16)); return a; })("00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000095e0e19191605251f1f27231a222d2b1d27302b17080000094d285b3d62156c5061284b55465b515359274e4d0200000000190800010001000100010000000010330001000000000006050114060404050500121204020504000000000000000679452861525c735b7b0b32376f4d68600000000000000001190a060e08122a4b1518070a0c0a1813000000000000000000000015000c09140000150412050400150000000000000963514f54476157532e417550785c76554d0000000000000843162b2a202d2a272a242c202b1f3023270a00000000000000000000000000000000000000000000000000000000");
+let goneCv;
+function isGonePic(im){
+  const w = im.naturalWidth, h = im.naturalHeight;
+  if(w===161 && h===81) return true;
+  if(!w || w>800 || h>600) return false;
+  try{
+    goneCv = goneCv || document.createElement('canvas'); goneCv.width = 24; goneCv.height = 12;
+    const cx = goneCv.getContext('2d', {willReadFrequently:true}); cx.drawImage(im,0,0,24,12);
+    const d = cx.getImageData(0,0,24,12).data; let sum = 0;
+    for(let i=0;i<288;i++){ const lum = (d[i*4]*.299 + d[i*4+1]*.587 + d[i*4+2]*.114); sum += Math.abs(lum - GONE_REF[i]); }
+    return sum/288 < 14;
+  }catch(e){ return false; }   // pixels of other sites' images cannot be read; the size check above is all we have then
+}
+
 /* Try candidates in order: the next one starts when one errors, or after a short wait if one is just slow. Losers are cancelled.
    cb(url, element, reason) where reason is 'failed' (every source errored) or 'slow' (nothing answered in time). */
 function loadFirst(cands, stagger, cb){
@@ -726,7 +743,7 @@ function loadFirst(cands, stagger, cb){
     started++;
     const im = new Image(); im.referrerPolicy = 'no-referrer'; probes.push(im);
     const bad = () => { failed++; noteImgFail(cands[i]); if(failed>=cands.length) finish(null,null,'failed'); else start(started); };
-    im.onload = () => { if(/imgur\.com/.test(cands[i]) && im.naturalWidth===161 && im.naturalHeight===81) bad(); else finish(cands[i], im); };
+    im.onload = () => { if(isGonePic(im)) bad(); else finish(cands[i], im); };
     im.onerror = bad;
     im.src = cands[i];
     timers.push(setTimeout(()=>start(i+1), stagger));
@@ -945,7 +962,7 @@ function probeImage(url){
     const im = new Image(); im.referrerPolicy = 'no-referrer'; let done = false;
     const fin = v => { if(done) return; done = true; clearTimeout(t); im.onload = im.onerror = null; res(v); };
     const t = setTimeout(()=>fin(null),15000);
-    im.onload = ()=>fin(!(/imgur\.com/.test(url) && im.naturalWidth===161 && im.naturalHeight===81) && im.naturalWidth>0);
+    im.onload = ()=>fin(!isGonePic(im) && im.naturalWidth>0);
     im.onerror = ()=>fin(false);
     im.src = url;
   });
@@ -1232,7 +1249,7 @@ async function openViewer(p, opts){
     im.addEventListener('load',()=>{
       if(won || tok!==VIEW.token || im._done) return;
       const w = im.naturalWidth, h2 = im.naturalHeight;
-      if(w <= 2 || h2 <= 2 || (/imgur\.com/.test(url) && w===161 && h2===81)){ bad(); return; }   // blank pixel or Imgur's "removed" picture
+      if(w <= 2 || h2 <= 2 || isGonePic(im)){ bad(); return; }   // blank pixel or Imgur's "removed" picture
       im._done = true; settle(im);
     });
     timers.push(setTimeout(()=>{ if(!won && !im._done && k < urls.length && tok===VIEW.token) next(); }, 6000));
