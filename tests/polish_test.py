@@ -19,8 +19,8 @@ with sync_playwright() as p:
     ev(SEED % ('nsfw01', '?nsfw=1', 0)); ev(SEED % ('safe01', '', 0))
     ev('state.hideBroken=false; state.nsfw="show"'); ev('startCsvMode()'); pg.wait_for_timeout(1500)
     on = 'article.card[data-id=nsfw01]'; off = 'article.card[data-id=safe01]'
-    check('on: tooltip says Unmark as NSFW', ev("document.querySelector('%s .nsfwb').title" % on) == 'Unmark as NSFW')
-    check('off: tooltip says Mark as NSFW', ev("document.querySelector('%s .nsfwb').title" % off) == 'Mark as NSFW')
+    check('on: tooltip says Unmark as 18+', ev("document.querySelector('%s .nsfwb').title" % on) == 'Unmark as 18+')
+    check('off: tooltip says Mark as 18+', ev("document.querySelector('%s .nsfwb').title" % off) == 'Mark as 18+')
     gc = lambda sel, prop: ev("getComputedStyle(document.querySelector('%s .nsfwb'))['%s']" % (sel, prop))
     check('on: glass button, gradient 18+, half-white ring', gc(on, 'backgroundColor') == 'rgba(12, 12, 14, 0.26)' and 'nsfwGrad' in ev("getComputedStyle(document.querySelector('%s .nsfwb text')).fill" % on) and ev("getComputedStyle(document.querySelector('%s .nsfwb'),'::before').backgroundColor" % on) == 'rgba(255, 255, 255, 0.5)')
     check('on: stays visible with the card at rest', gc(on, 'opacity') == '1')

@@ -43,7 +43,7 @@ with sync_playwright() as p:
     pg.click('#nsfwseg [data-m=blur]'); pg.wait_for_timeout(400)
     check('Blurred: both shown, still blurred', has('aaaa11') and has('bbbb22') and not unb())
     pg.click('#nsfwseg [data-m=show]'); pg.wait_for_timeout(400)
-    check('Uncensored: both shown, unblurred', has('aaaa11') and has('bbbb22') and unb())
+    check('Show: both shown, unblurred', has('aaaa11') and has('bbbb22') and unb())
     pg.click('#nsfwseg [data-m=only]'); pg.wait_for_timeout(400)
     check('Only: just NSFW', sum(1 for i in ('aaaa11','bbbb22') if has(i))==1 and unb())
     pg.click('#nsfwseg [data-m=hide]'); pg.wait_for_timeout(300)
