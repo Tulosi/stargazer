@@ -527,10 +527,34 @@ body.layout-list .meta>*{flex:none}
 body.layout-list .star,body.layout-list .fs,body.layout-list .save{top:50%;margin-top:-15px}
 body.layout-list .badges{display:contents}
 @media (min-width:721px){body.layout-list .badges .badge.tag{position:absolute;top:50%;margin-top:-10px;right:166px}}
-@media (pointer:coarse){
-  body.layout-list .info{padding-right:200px}
-  body.layout-list .star,body.layout-list .fs,body.layout-list .save{margin-top:-20px}
-}
+@media (pointer:coarse) and (min-width:721px){body.layout-list .info{padding-right:200px}}   /* phones fold the buttons into one, so they keep their own, narrower padding */
+@media (pointer:coarse){body.layout-list .star,body.layout-list .fs,body.layout-list .save{margin-top:-20px}}
+/* ---- List layout, redesigned: calm rows with a small square thumbnail on the left, text on a solid surface, purple/magenta accents ---- */
+body.layout-list .card{background:var(--surface);border:1px solid var(--line);transition:background .15s,border-color .15s}
+body.layout-list .card:hover,body.layout-list .card:focus-within{background:var(--surface-2);border-color:color-mix(in srgb,var(--g2) 40%,var(--line))}
+body.layout-list .card::after{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 3px 3px 0;background:linear-gradient(180deg,var(--g1),var(--g2),var(--g3));opacity:0;transition:opacity .15s;pointer-events:none}
+body.layout-list .card:hover::after,body.layout-list .card:focus-within::after,body.layout-list .card.sel::after{opacity:1}
+body.layout-list .thumb{inset:auto;left:10px;top:50%;margin-top:-32px;width:64px;height:64px;border-radius:9px;background:var(--surface-2)}
+body.layout-list .thumb img,body.layout-list .thumb .still{filter:none;transform:none}
+body.layout-list .thumb.nsfw img,body.layout-list .thumb.nsfw .still{filter:blur(9px);transform:scale(1.25)}
+body.layout-list .thumb .ph{padding:0;background:linear-gradient(135deg,color-mix(in srgb,var(--g1) 34%,var(--surface-2)),color-mix(in srgb,var(--g3) 30%,var(--surface-2)))}
+body.layout-list .thumb .ph::before{content:"";width:22px;height:22px;opacity:.55;background:var(--ink);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M5 7h14M5 12h14M5 17h9'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M5 7h14M5 12h14M5 17h9'/%3E%3C/svg%3E") center/contain no-repeat}
+body.layout-list .info,body.layout-list .card.info-open .info,body.layout-list .card.btns-open .info{padding-left:86px;background:none;color:var(--ink)}
+body.layout-list .title{font:600 14px/1.35 var(--font);text-shadow:none}
+body.layout-list .title a{color:var(--ink)}
+body.layout-list .meta{color:var(--muted);margin-top:3px}
+body.layout-list .meta .sub{color:var(--sel);font-weight:600}
+body.layout-list .meta .note,body.layout-list .meta .note.dead{color:var(--muted)}
+body.layout-list .badges .badge.tag{background:color-mix(in srgb,var(--g3) 16%,transparent);color:var(--hot);-webkit-backdrop-filter:none;backdrop-filter:none;font-weight:600}
+body.layout-list .star,body.layout-list .fs,body.layout-list .save,body.layout-list .morebtn{background:var(--surface-2);color:var(--muted);-webkit-backdrop-filter:none;backdrop-filter:none}
+body.layout-list .card:hover .star,body.layout-list .card:hover .fs,body.layout-list .card:hover .save{background:color-mix(in srgb,var(--ink) 9%,var(--surface-2))}
+body.layout-list .star:hover,body.layout-list .fs:hover,body.layout-list .save:hover,body.layout-list .morebtn:hover{background:color-mix(in srgb,var(--ink) 14%,var(--surface-2));color:var(--ink)}
+body.layout-list .star[aria-pressed=true]{color:var(--hot)}
+body.layout-list .save[aria-pressed=true]:not(.nsfwb){color:var(--sel)}
+body.layout-list .nsfwb[aria-pressed=true]{color:var(--hot);background:var(--surface-2)}
+body.layout-list .nsfwb[aria-pressed=true] svg text,body.layout-list .nsfwb[aria-pressed=false]:hover svg text{fill:var(--hot)}
+body.layout-list .nsfwb[aria-pressed=true]::before,body.layout-list .nsfwb[aria-pressed=false]:hover::before{background:color-mix(in srgb,var(--hot) 55%,transparent)}
+body.layout-list .nsfwb[aria-pressed=true]:hover::after{filter:invert(1)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
 #pausebar{position:fixed;left:50%;bottom:64px;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:10px;padding:9px 10px 9px 14px;border-radius:999px;background:var(--panel,#1c1c1f);color:var(--text,#eee);border:1px solid var(--line,rgba(128,128,128,.35));box-shadow:0 6px 24px rgba(0,0,0,.35);font-size:13px;max-width:calc(100vw - 24px)}
