@@ -21,13 +21,13 @@ Deno.serve(async (req: Request) => {
   const base = { 'user-agent': ua, referer: 'https://www.redgifs.com/', origin: 'https://www.redgifs.com' };
   try {
     const a = await fetch('https://api.redgifs.com/v2/auth/temporary', { headers: base });
-    if (!a.ok) return json({ error: 'auth ' + a.status }, 502);
+    if (!a.ok) return json({ error: 'auth ' + a.status + ' ' + (await a.text()).slice(0, 120) }, 502);
     const token = (await a.json()).token;
     if (!token) return json({ error: 'no token' }, 502);
     const q = new URLSearchParams({ ids: ids.join(','), 'user-agent': ua });
     if (ip) q.set('user-addr', ip);
     const r = await fetch(`https://api.redgifs.com/v2/gifs?${q}`, { headers: { ...base, authorization: 'Bearer ' + token } });
-    if (!r.ok) return json({ error: 'gifs ' + r.status }, 502);
+    if (!r.ok) return json({ error: 'gifs ' + r.status + ' ' + (await r.text()).slice(0, 120) }, 502);
     const gifs = ((await r.json()).gifs || []).map((g: any) => ({
       id: g.id, hasAudio: !!g.hasAudio, width: g.width || 0, height: g.height || 0,
       urls: { hd: g.urls?.hd, sd: g.urls?.sd, poster: g.urls?.poster, thumbnail: g.urls?.thumbnail },

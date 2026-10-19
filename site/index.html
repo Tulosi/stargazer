@@ -1543,7 +1543,7 @@ async function rgFetchMany(slugs){
     if(!CLOUD_ON) throw e;
     // ask the Supabase helper function (supabase/functions/redgifs) to do the lookup instead
     const r = await fetch(CFG.supabaseUrl.replace(/\/$/,'')+'/functions/v1/redgifs?ids='+encodeURIComponent(slugs.join(',')));
-    if(!r.ok) throw new Error('helper '+r.status);
+    if(!r.ok){ let d = ''; try{ d = (await r.json()).error || ''; }catch(e){} throw new Error('helper '+r.status+(d ? ': '+d : '')); }   // the helper says which RedGifs step failed
     j = await r.json();
   }
   const out = {}, list = j.gifs || [];
