@@ -9,7 +9,7 @@ Hosted on GitHub Pages. Accounts and storage come from Supabase (free plan). The
 - `supabase/functions/redgifs/index.ts`  optional Edge Function (deployed by hand, Verify JWT off): looks RedGifs clips up for the page when the browser cannot reach the RedGifs API ("Failed to fetch"). The page tries RedGifs directly first, then this helper.
 - `tools/hot_relay.py`  optional local relay that lets the page read Reddit's real hot feed (browsers cannot call Reddit directly).
 - `.github/workflows/`  `pages.yml` deploys `site/`; `keepalive.yml` pings Supabase so the free project is not paused.
-- `tests/`  Playwright checks (`merge_test.py`, `nsfw_test.py`, `panels_test.py`, `lists_test.py`, `reset_test.py`, `viewer_yt_test.py`, `wayback_test.py`, `gone_pic_test.py`, `audio_test.py`, `unload_test.py`, `cloud_reload_test.py`, `first_load_test.py`, `stats_test.py`, `intro_test.py`, `nav_test.py`, `view_test.py`, `sound_follow_test.py`, `layout_test.py`, `merge_prompt_test.py`, `localmeta_test.py`, `imgpause_test.py`, `rg_embed_test.py`, `polish_test.py`, `regrab_test.py`, `review_test.py`, `header_test.py`, `tilesize_test.py`).
+- `tests/`  Playwright checks (`merge_test.py`, `nsfw_test.py`, `panels_test.py`, `lists_test.py`, `reset_test.py`, `viewer_yt_test.py`, `wayback_test.py`, `gone_pic_test.py`, `audio_test.py`, `unload_test.py`, `cloud_reload_test.py`, `first_load_test.py`, `stats_test.py`, `intro_test.py`, `nav_test.py`, `view_test.py`, `sound_follow_test.py`, `layout_test.py`, `merge_prompt_test.py`, `localmeta_test.py`, `imgpause_test.py`, `rg_embed_test.py`, `polish_test.py`, `regrab_test.py`, `review_test.py`, `header_test.py`, `tilesize_test.py`, `seenimg_test.py`).
 
 ## Rules that must not be broken
 1. **No personal data in the repo.** No saved-post lists, no CSV files, no subreddit lists from a real account, no keys other than the Supabase anon key. `.gitignore` blocks `*.csv` and `local/`.
@@ -28,7 +28,7 @@ Hosted on GitHub Pages. Accounts and storage come from Supabase (free plan). The
 - Layouts (Filters panel, `LAYOUT` / `layoutCard` / `paintLayout`): **Masonry** (default, best for media), **Grid** (equal squares) and **List** (short rows on a solid surface with a small square thumbnail on the left and the text beside it, purple/magenta accents, no playback or media controls, card info shown by default; the card-info choice is remembered per layout, see `applyInfoMode`).
 - The page is one file on purpose. Search by function name (`syncCloud`, `mergeSets`, `fillCard`, `openViewer`, ...).
 - Archive APIs (Arctic Shift, PullPush, Wayback) are rate limited; requests go through `timed()` / `apiRetry()` with per-host spacing and back-off. Do not add direct `fetch` calls to them.
-- Images load through the `IMGQ` queue (limits concurrency, pauses on bursts of failures, shows a countdown).
+- Images load through the `IMGQ` queue (limits concurrency, pauses on bursts of failures, shows a countdown). Pictures that loaded before (`SEEN`, short hashes in `saved-posts-seenimg`) skip the queue's pacing so a refresh shows them at once from the browser cache.
 - Touch screens use touch events for pinch/zoom in the viewer; mouse and pen use pointer events.
 - Test by loading the page in Playwright with network routes mocked (see `tests/`). There is no live access to Reddit or the archives from the dev sandbox.
 

@@ -1070,18 +1070,27 @@ function loadFirst(cands, stagger, cb){
   start(0);
   timers.push(setTimeout(()=>finish(null,null,'slow'), 60000));
 }
+/* Pictures that loaded before are very likely still in the browser's own cache, so they skip the polite one-at-a-time queue and appear straight away (after a refresh, or when a list is redrawn). Only short hashes are kept, never the addresses. */
+const SEEN = (()=>{ let a = []; try{ a = JSON.parse(localStorage.getItem('saved-posts-seenimg')||'[]'); if(!Array.isArray(a)) a = []; }catch(e){ a = []; } return new Set(a); })();
+const imgKey = u => { let h = 5381; for(let i=0;i<u.length;i++) h = ((h<<5)+h+u.charCodeAt(i))|0; return (h>>>0).toString(36)+u.length.toString(36); };
+let seenT = 0;
+function seenAdd(u){
+  if(!u) return; const k = imgKey(u); if(SEEN.has(k)) return;
+  SEEN.add(k); if(SEEN.size > 6000) SEEN.delete(SEEN.values().next().value);
+  clearTimeout(seenT); seenT = setTimeout(()=>{ try{ localStorage.setItem('saved-posts-seenimg', JSON.stringify([...SEEN])); }catch(e){} }, 1500);
+}
 const isArchiveUrl = u => /^https?:\/\/web\.archive\.org\//.test(u);
 const imgIO = new IntersectionObserver(es=>{ for(const e of es){ if(e.isIntersecting){ imgIO.unobserve(e.target); startImg(e.target); } } },{rootMargin:'400px 0px'});
 function startImg(img, attempt){
   const p = img._p, el = img._el, all = img._cands || [];
   if(img.tagName==='VIDEO'){ imgSlot(done=>startStill(img, done)); return; }
   const live = all.filter(u=>!isArchiveUrl(u)), arch = all.filter(isArchiveUrl);   // Wayback copies are only asked for once the real sources have all failed
-  imgSlot(done=>{
+  const run = done=>{
     if(!img.isConnected || el._p!==p){ done(); return; }
     const settle = (url, node, reason) => {
       if(!img.isConnected || el._p!==p){ done(); return; }
       if(url){
-        done(); anyImgOK = true; noteImgOK(); clearImgFail(p);
+        done(); anyImgOK = true; noteImgOK(); clearImgFail(p); seenAdd(url);
         node.alt = ''; node.referrerPolicy = 'no-referrer';
         img.replaceWith(node);                                  // reuse the element that already loaded, so the image isn't fetched twice
         const ph = node.parentNode && node.parentNode.querySelector('.ph'); if(ph) ph.remove();
@@ -1100,7 +1109,9 @@ function startImg(img, attempt){
       if(url || !arch.length || throttled()) settle(url, node, reason);
       else loadFirst(arch, 8000, settle);
     });
-  });
+  };
+  if(live.length && SEEN.has(imgKey(hostLast(live)[0]))) run(()=>{});   // seen before: no need to queue
+  else imgSlot(run);
 }
 /* No thumbnail but a video file: show its first frame as the still. */
 function startStill(v, done){
