@@ -7,7 +7,7 @@
 
 <p align="center">
   <a href="https://tulosi.github.io/stargazer/"><b>Open Stargazer</b></a> ·
-  <a href="https://tulosi.github.io/stargazer/stargazer.html"><b>Download the standalone page</b></a> ·
+  <a href="https://tulosi.github.io/stargazer/stargazer.zip"><b>Download the standalone page</b></a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="#faq">FAQ</a>
 </p>
@@ -69,9 +69,9 @@ What "local" does and does not mean:
 
 ## Download the standalone page
 
-Prefer to keep a copy that does not depend on any website? Open **[stargazer.html](https://tulosi.github.io/stargazer/stargazer.html)** and save it (right-click the link and choose *Save link as*, or press Ctrl/Cmd+S on the page). Keep the file anywhere and double-click it to open it in your browser. It is the exact same app as the hosted site, with no personal data in it, and it starts empty. With no account settings present, the sign-in section is simply hidden.
+Prefer to keep a copy that does not depend on any website? **[Download stargazer.zip](https://tulosi.github.io/stargazer/stargazer.zip)**, unzip it anywhere and double-click `stargazer.html` to open it in your browser. It is the exact same app as the hosted site, with no personal data in it, and it starts empty. With no account settings present, the sign-in section is simply hidden.
 
-The hosted site updates automatically; a saved file is a snapshot, so download it again when you want new features.
+The hosted site updates automatically; a downloaded copy is a snapshot, so download it again when you want new features.
 
 ## Optional: sync across devices with an account
 
