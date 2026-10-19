@@ -1158,7 +1158,7 @@ function startStill(v, done){
 }
 /* ---------- reader for posts recovered from an archive ----------
    The archives give us the post itself (title, text, author, score), so show that here instead of sending anyone to a raw archive address.
-   Comments are fetched on request from Arctic Shift, through the same rate-limited helper as everything else. */
+   Comment counts and the Comments button go to Reddit first (the thread is often still there); loading the comments from Arctic Shift is a fallback offered in the reader, through the same rate-limited helper as everything else. */
 const bodyOf = d => { const t = String(d.selftext||'').trim(); return !t || /^\[(removed|deleted)\]$/i.test(t) ? '' : t.slice(0,4000); };
 const fmtDate = c => new Date(c*1000).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
 let readerP = null;
@@ -1177,10 +1177,10 @@ function openReader(p){
   $('rdSrc').textContent = 'Recovered from '+m.rec+'. Reddit no longer shows this post.';
   readerFill(p);
   const lk = $('rdLinks'); lk.replaceChildren();
-  for(const [label,href] of [['Wayback Machine', recHref(p)], ['Reddit page', p.link]]){ const a = document.createElement('a'); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = label; lk.appendChild(a); }
+  for(const [label,href] of [['Comments on Reddit', p.link], ['Wayback Machine', recHref(p)]]){ const a = document.createElement('a'); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = label; lk.appendChild(a); }
   const cm = $('rdCm'); cm.replaceChildren();
   const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'pill';
-  btn.textContent = (m.n||0) > 0 ? 'Load comments ('+fmt(m.n)+') from the archive' : 'Look for comments in the archive';
+  btn.textContent = 'Reddit page gone? Load the comments from the archive';
   btn.onclick = () => readerComments(p, btn);
   cm.appendChild(btn);
   if(!d.open) d.showModal();
@@ -1225,7 +1225,7 @@ function fillCard(el,p){
   const removed = media==='removed' || (m && m.rec);
   const vs = dead ? [] : playSources(m), v0 = vs[0] || '';
   const gl = m && m.gl && m.gl.length > 1 ? m.gl : null;
-  const stats = m && !m.miss ? ((m.s||0) > 1 ? '<span>'+fmt(m.s)+' pts</span>' : '')+((m.n||0) > 0 ? '<a class="cm" href="'+esc(recHref(p))+'" target="_blank" rel="noopener noreferrer" title="Open the comments">'+fmt(m.n)+' comments</a>' : '') : '';
+  const stats = m && !m.miss ? ((m.s||0) > 1 ? '<span>'+fmt(m.s)+' pts</span>' : '')+((m.n||0) > 0 ? '<a class="cm" href="'+esc(p.link)+'" target="_blank" rel="noopener noreferrer" title="Open the comments on Reddit">'+fmt(m.n)+' comments</a>' : '') : '';
   const ph = '<div class="ph'+(!m && !dead ? ' pending' : '')+'" style="--h:'+hue(p.sub)+'"><span>r/'+esc(p.sub)+(dead?'<br><small>media unavailable</small>':'')+'</span></div>';
   el._p = p; el._gi = 0; el.classList.toggle('is-dead', dead);
   el.innerHTML =
@@ -1250,7 +1250,7 @@ function fillCard(el,p){
     + (m && m.c ? '<span class="dt">'+new Date(m.c*1000).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'})+'</span>' : '')
     + (note ? '<span class="note'+(dead?' dead':'')+'">'+esc(note)+'</span>' : '')+'</div>'
     + '<div class="actions"><a class="btn primary" data-open href="'+esc(href)+'" target="_blank" rel="noopener noreferrer">Open source</a>'
-    + '<a class="btn" href="'+esc(recHref(p))+'" target="_blank" rel="noopener noreferrer">Comments</a>'
+    + '<a class="btn" href="'+esc(p.link)+'" target="_blank" rel="noopener noreferrer">Comments</a>'
     + (!m && !dead ? '<a class="btn" href="https://www.reddit.com/comments/'+esc(p.id)+'" target="_blank" rel="noopener noreferrer">Open on Reddit</a><button class="btn retry1" type="button" data-id="'+esc(p.id)+'">Retry this one</button>' : '')
     + '</div>'
     + (removed ? '<div class="arch"><span>Archives:</span><a href="'+esc(wbPostHref(p))+'" target="_blank" rel="noopener noreferrer">Wayback</a></div>' : '')

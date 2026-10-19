@@ -35,12 +35,15 @@ with sync_playwright() as p:
       state.showText=true; document.getElementById('showtext').checked=true; onMeta(POSTS); refresh(); }""")
     pg.wait_for_timeout(600)
     card = lambda id: "#grid .card:has(a.cm)" 
-    # 1. comment count on a recovered post opens the reader
-    ev("""()=>{ [...document.querySelectorAll('#grid .card')].find(c=>c._p.id==='p00000').querySelector('a.cm').click(); }""")
+    # 0. the comment count and Comments button go to Reddit, not the reader
+    cmh = ev("""()=>{ const c=[...document.querySelectorAll('#grid .card')].find(c=>c._p.id==='p00000'); return [c.querySelector('a.cm').href, [...c.querySelectorAll('a.btn')].find(a=>a.textContent==='Comments').href]; }""")
+    check('comment count and Comments button link to the Reddit page', cmh[0]=='https://www.reddit.com/r/pics/comments/p00000/' and cmh[1]==cmh[0])
+    # 1. the title of a recovered text post (nothing else to open) opens the reader
+    ev("""()=>{ [...document.querySelectorAll('#grid .card')].find(c=>c._p.id==='p00000').querySelector('.title a').click(); }""")
     pg.wait_for_timeout(300)
-    check('comment count opens the reader', ev("document.getElementById('reader').open"))
+    check('title opens the reader', ev("document.getElementById('reader').open"))
     check('reader shows title, author and the saved text', 'Recovered with text' in pg.inner_text('#rdTitle') and 'dusk_walker' in pg.inner_text('#rdMeta') and 'Second paragraph.' in pg.inner_text('#rdBody'))
-    check('reader links are readable pages (Wayback, Reddit), not JSON', all(('web.archive.org' in u or 'www.reddit.com' in u) for u in ev("[...document.querySelectorAll('#rdLinks a')].map(a=>a.href)")))
+    check('reader links: Reddit comments first, then Wayback; never JSON', all(('web.archive.org' in u or 'www.reddit.com' in u) for u in ev("[...document.querySelectorAll('#rdLinks a')].map(a=>a.href)")))
     # 2. comments on request, as a tree
     pg.click('#rdCm button'); pg.wait_for_timeout(500)
     txt = pg.inner_text('#rdCm')
@@ -50,17 +53,17 @@ with sync_playwright() as p:
     check('close button closes the reader', not ev("document.getElementById('reader').open"))
     # 3. failure is graceful and retryable
     mode['comments'] = 'fail'
-    ev("""()=>{ [...document.querySelectorAll('#grid .card')].find(c=>c._p.id==='p00000').querySelector('a.cm').click(); }"""); pg.wait_for_timeout(300)
+    ev("""()=>{ [...document.querySelectorAll('#grid .card')].find(c=>c._p.id==='p00000').querySelector('.title a').click(); }"""); pg.wait_for_timeout(300)
     pg.click('#rdCm button'); pg.wait_for_timeout(1500)
     check('unreachable archive: message and a retry button', 'could not be reached' in pg.inner_text('#rdCm') and 'Try again' in pg.inner_text('#rdCm'))
     pg.keyboard.press('Escape'); pg.wait_for_timeout(200)
     # 4. text missing from an earlier recovery is fetched once
-    ev("""()=>{ [...document.querySelectorAll('#grid .card')].find(c=>c._p.id==='p00001').querySelector('a.cm').click(); }"""); pg.wait_for_timeout(900)
+    ev("""()=>{ [...document.querySelectorAll('#grid .card')].find(c=>c._p.id==='p00001').querySelector('.title a').click(); }"""); pg.wait_for_timeout(900)
     check('missing text is fetched from the archive', 'Late text from the archive' in pg.inner_text('#rdBody'))
     pg.keyboard.press('Escape'); pg.wait_for_timeout(200)
     # 5. a Wayback snapshot opens the snapshot, not the reader
-    h = ev("""()=>[...document.querySelectorAll('#grid .card')].find(c=>c._p.id==='p00002').querySelector('a.cm').href""")
-    check('Wayback-recovered post links straight to its snapshot', h.startswith('https://web.archive.org/web/2020/'))
+    h = ev("""()=>[...document.querySelectorAll('#grid .card')].find(c=>c._p.id==='p00002').querySelector('.title a').href""")
+    check('Wayback-recovered post: title links straight to its snapshot', h.startswith('https://web.archive.org/web/2020/'))
     check('no page errors', not errs)
     b.close()
 print('ALL PASS' if not bad else 'FAILED: ' + ', '.join(bad))
