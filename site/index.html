@@ -434,7 +434,8 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
 #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:50;background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font:500 12.5px var(--font);box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw}
 #toast.on{opacity:1}
 #toast.act.on{pointer-events:auto}
-.selbtn{margin-left:10px}
+.selbtn{margin-left:10px;min-height:30px;padding:0 14px;font-size:12.5px;font-weight:600}
+.selbtn[aria-pressed=true]{background:var(--sel);color:var(--sel-ink)}
 #selbar{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:60;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 8px;max-width:calc(100vw - 24px);padding:10px 12px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
 #selbar[hidden]{display:none}
 #selbar b{font-weight:600;font-size:13px;margin-right:4px}
@@ -722,7 +723,7 @@ body.layout-list .badges{display:contents}
       <div class="bar"><i id="loadBar"></i></div>
     </div>
     <div class="summary" id="summary"></div>
-    <button class="clear selbtn" id="selbtn" type="button" hidden>Select</button>
+    <button class="pill selbtn" id="selbtn" type="button" hidden>Bulk Actions</button>
   </div>
   <main class="grid" id="grid"></main>
   <div class="more" id="moreWrap" hidden><span id="moreNote"></span><button class="pill" id="moreBtn" type="button">Load next 100</button></div>
@@ -1972,12 +1973,13 @@ function selPaint(){
   document.querySelectorAll('.card.sel').forEach(c=>{ if(!SEL.ids.has(c.dataset.id)) c.classList.remove('sel'); });
   SEL.ids.forEach(id=>{ const c = cardEls.get(id); if(c) c.classList.add('sel'); });
   $('selcount').textContent = SEL.ids.size.toLocaleString()+' selected';
+  const sb = document.querySelector('#selbar [data-a=star]'); if(sb){ const ps = POSTS.filter(p=>SEL.ids.has(p.id)); sb.textContent = ps.length && ps.every(p=>FAVS.has(p.id)) ? 'Unstar' : 'Star'; }
   document.querySelectorAll('#selbar [data-a]').forEach(b=>{ if(['star','nsfw','sfw','del'].includes(b.dataset.a)) b.disabled = !SEL.ids.size; });
 }
 function selMode(on){
   SEL.on = on; if(!on) SEL.ids.clear();
   document.body.classList.toggle('selecting', on); $('selbar').hidden = !on;
-  $('selbtn').textContent = on ? 'Cancel' : 'Select';
+  $('selbtn').textContent = on ? 'Cancel' : 'Bulk Actions'; $('selbtn').setAttribute('aria-pressed', on?'true':'false');
   selPaint();
 }
 async function selAct(a){
@@ -1985,7 +1987,12 @@ async function selAct(a){
   if(a==='done'){ selMode(false); return; }
   if(a==='all'){ list.forEach(p=>SEL.ids.add(p.id)); selPaint(); return; }
   if(!n) return;
-  if(a==='star'){ ps.forEach(p=>{ const r = ROWS.find(x=>x.id===p.id); if(r){ r.starred = true; r.t = nowT(r.t); FAVS.add(p.id); markDirty(p.id); } }); updateFavCount(); refresh(true); await commit(); toast('Starred '+n+(n===1?' post':' posts')); return; }
+  if(a==='star'){
+    const on = !ps.every(p=>FAVS.has(p.id));   // all already starred: the button un-stars them
+    ps.forEach(p=>{ const r = ROWS.find(x=>x.id===p.id); if(r){ r.starred = on; r.t = nowT(r.t); if(on) FAVS.add(p.id); else FAVS.delete(p.id); markDirty(p.id); } });
+    syncStars(); updateFavCount(); selPaint(); refresh(true); await commit();
+    toast((on ? 'Starred ' : 'Unstarred ')+n+(n===1?' post':' posts')); return;
+  }
   if(a==='nsfw' || a==='sfw'){ ps.forEach(p=>markNsfw(p, a==='nsfw')); refresh(true); await commit(); toast((a==='nsfw' ? 'Marked ' : 'Unmarked ')+n+(n===1?' post':' posts')+' as NSFW'); return; }
   if(a==='del'){
     const keeps = ps.filter(p=>ROWSET.has(p.id)).map(p=>{ const r = ROWS.find(x=>x.id===p.id) || {}; return {id:p.id, perma:r.perma||p.perma||p.link, starred:!!r.starred}; });
