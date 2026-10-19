@@ -1573,11 +1573,9 @@ function updateAdvRg(){
 }
 function rgWarn(){
   updateAdvRg();
-  if(window._rgWarned) return; window._rgWarned = 1;
-  toast('Could not reach RedGifs, so some clips may play without sound. It will retry. Details: Source > Advanced.');
 }
 $('advRgRetry').addEventListener('click',()=>{
-  rgBlockedUntil = 0; rgDirectOff = 0; RG_ERR = ''; window._rgWarned = 0; updateAdvRg();
+  rgBlockedUntil = 0; rgDirectOff = 0; RG_ERR = ''; updateAdvRg();
   document.querySelectorAll('.card').forEach(c=>{ if(c._p) try{ rgWatch(c, c._p); }catch(e){} });
   toast('Retrying RedGifs sound lookups...');
 });
