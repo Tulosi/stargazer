@@ -23,6 +23,13 @@ with sync_playwright() as p:
         check('info mode %s: picture card still follows the setting' % mode, not ev(vis(':not(.is-text)')))
     ev("document.getElementById('infomode').value='show'; document.getElementById('infomode').dispatchEvent(new Event('change'))"); pg.wait_for_timeout(300)
     check('info mode show: both visible', ev(vis('.is-text')) and ev(vis(':not(.is-text)')))
+    # lavender tile with a picture-off mark for text posts that have no thumbnail
+    ev("document.getElementById('infomode').value='off'; document.getElementById('infomode').dispatchEvent(new Event('change'))"); pg.wait_for_timeout(300)
+    lav = ev("getComputedStyle(document.documentElement).getPropertyValue('--lav').trim()")
+    check('a lavender colour is defined', bool(lav))
+    check('text card tile is lavender, picture card is not', ev("(()=>{ const bg=e=>getComputedStyle(e).backgroundColor; const t=document.querySelector('.card.is-text .thumb .ph'), n=document.querySelector('.card:not(.is-text) .thumb .ph'); return bg(t)!==bg(n) && /rgb\\(2[0-9]{2}, 2[0-9]{2}, 2[0-9]{2}\\)|rgb\\(5[0-9], 5[0-9], 9[0-9]\\)/.test(bg(t)); })()"))
+    check('text card tile carries an icon, with no words written on it', ev("(()=>{ const t=document.querySelector('.card.is-text .thumb .ph'); const b=getComputedStyle(t,'::before'); return b.content!=='none' && b.maskImage!=='none' && getComputedStyle(t.querySelector('span')).display==='none'; })()"))
+    check('picture card placeholder has no icon', ev("getComputedStyle(document.querySelector('.card:not(.is-text) .thumb .ph'),'::before').content") in ('none', 'normal'))
     check('no page errors', not errs)
     b.close()
 print('ALL PASS' if not bad else 'FAILED: ' + ', '.join(bad))
