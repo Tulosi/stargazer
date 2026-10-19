@@ -266,7 +266,8 @@ body.previews-loading #loadText{color:var(--ink);font-weight:500}
 .thumb .clip{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:transparent;opacity:0;transition:filter .18s,transform .18s,opacity .25s}
 .thumb .clip.on{opacity:1}
 .thumb.nsfw img,.thumb.nsfw .still,.thumb.nsfw .clip{filter:blur(22px);transform:scale(1.12)}
-.card:hover .thumb.nsfw img,.card:hover .thumb.nsfw .still,.card:hover .thumb.nsfw .clip,.thumb.nsfw:focus-visible img,.thumb.nsfw:focus-visible .still,.thumb.nsfw:focus-visible .clip,.thumb.nsfw.show img,.thumb.nsfw.show .still,.thumb.nsfw.show .clip{filter:none;transform:none}
+@media (hover:hover){.card:hover .thumb.nsfw img,.card:hover .thumb.nsfw .still,.card:hover .thumb.nsfw .clip{filter:none;transform:none}}   /* mouse only: on touch screens a tap leaves the card "hovered", which kept Blur from re-blurring */
+.thumb.nsfw:focus-visible img,.thumb.nsfw:focus-visible .still,.thumb.nsfw:focus-visible .clip,.thumb.nsfw.show img,.thumb.nsfw.show .still,.thumb.nsfw.show .clip{filter:none;transform:none}
 body.unblur .thumb.nsfw img,body.unblur .thumb.nsfw .still,body.unblur .thumb.nsfw .clip{filter:none;transform:none}
 body.unblur .reveal{display:none!important}
 .card.is-dead .ph{filter:grayscale(.65)}
@@ -1226,6 +1227,7 @@ $('rdClose').addEventListener('click',()=>$('reader').close());
 $('reader').addEventListener('click',e=>{ if(e.target===$('reader')) $('reader').close(); });
 $('reader').addEventListener('close',()=>{ readerP = null; });
 
+const REVEALED = new Set();   // NSFW tiles revealed by hand (touch Reveal button); a card rebuild keeps them revealed
 function fillCard(el,p){
   const old = el.querySelector('.thumb'); if(old) releasePlayable(old);
   const m = metaOf(p), nsfw = isNsfw(p), media = mediaOf(p);
@@ -1266,6 +1268,7 @@ function fillCard(el,p){
     + (removed ? '<div class="arch"><span>Archives:</span><a href="'+esc(wbPostHref(p))+'" target="_blank" rel="noopener noreferrer">Wayback</a></div>' : '')
     + '</div>';
   const tEl = el.querySelector('.thumb'); if(tEl && tEl.dataset.v) wirePlayable(tEl);
+  if(nsfw && tEl && REVEALED.has(p.id)){ tEl.classList.add('show'); const rb = el.querySelector('.reveal'); if(rb) rb.textContent = 'Blur'; }
   // If every preview fails, look for a working full-size copy and show that instead.
   const rescue = () => {
     if(!(MEDIA_KINDS.has(media) && chainOf(p).length)) return;
@@ -2019,7 +2022,7 @@ $('grid').addEventListener('click',e=>{
     setSub(s.dataset.sub); window.scrollTo({top:0}); toast('Showing only r/'+state.sub+' posts. Click the name again to show all.', {label:'Show all', fn:()=>setSub('')}); return;
   }
   const r = e.target.closest('button.reveal');
-  if(r){ r.previousElementSibling.classList.toggle('show'); r.textContent = r.previousElementSibling.classList.contains('show') ? 'Blur' : 'Reveal'; }
+  if(r){ const on = r.previousElementSibling.classList.toggle('show'), id = r.closest('.card').dataset.id; r.textContent = on ? 'Blur' : 'Reveal'; if(on) REVEALED.add(id); else REVEALED.delete(id); }
 });
 
 function renderMore(){
@@ -2543,7 +2546,7 @@ $('shufflebtn').addEventListener('click',()=>{
 });
 $('reshuffle').addEventListener('click',()=>{ state.seed = String(Date.now()+Math.random()); refresh(); window.scrollTo({top:0}); });
 function setNsfw(m){
-  state.nsfw = m;
+  state.nsfw = m; REVEALED.clear();
   document.querySelectorAll('#nsfwseg .pill').forEach(x=>x.setAttribute('aria-pressed', x.dataset.m===m ? 'true' : 'false'));
   document.body.classList.toggle('unblur', m==='show'||m==='only');   // Uncensored and Only show NSFW tiles without the blur
   refresh();
