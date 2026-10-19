@@ -234,6 +234,8 @@ input[type=range]{width:100%;accent-color:var(--sel);margin:0}
 .load .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--g1),var(--g2),var(--g3));transition:width .3s}
 .load .bar i[style*="100%"]{opacity:0;transition:width .3s,opacity .5s .7s}
 .summary{white-space:nowrap}
+/* Phones: a long status message (recovery progress) gets its own full-width line; the filter summary and Bulk Actions share the line below it. */
+@media (max-width:720px){.status{flex-wrap:wrap;row-gap:8px}.load{flex:1 1 100%}.summary{flex:1 1 auto;min-width:0;white-space:normal}.selbtn{margin-left:auto}}
 
 /* ---- bento grid ---- */
 .card{container-type:inline-size}
