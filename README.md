@@ -14,6 +14,12 @@
 
 <p align="center">Free · No sign-up required · One page, no install · Works on desktop and phone</p>
 
+<p align="center">
+  <img src="docs/screenshots/gallery.jpg" alt="Stargazer's Masonry gallery in dark mode" width="900">
+</p>
+
+<p align="center"><sub>Screenshots use invented sample posts and generated artwork, not a real account.</sub></p>
+
 ---
 
 ## What it is
@@ -44,6 +50,19 @@ Stargazer turns that export into a visual gallery you can actually comb through.
 
 **Keep your data portable**
 - Everything lives in a plain CSV. **Open**, **Merge** and **Export** it any time. Merging is safe: the newer change wins, and a post you deleted is never brought back by an older copy.
+
+## A look around
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/list.jpg" alt="List view in two columns"><br><sub><b>List view</b>: compact rows that are easy to scan, in 1, 2, 3 or Auto columns.</sub></td>
+    <td width="50%"><img src="docs/screenshots/bulk.jpg" alt="Bulk Actions strip with four posts selected"><br><sub><b>Bulk Actions</b>: select many posts, then star, mark NSFW or delete them at once.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/filters.jpg" alt="The Filters panel"><br><sub><b>Filters</b>: layout, sort, time range, subreddit, NSFW handling and more.</sub></td>
+    <td width="50%" align="center"><img src="docs/screenshots/phone.jpg" alt="Stargazer on a phone" width="260"><br><sub><b>On your phone</b>: the same list with a thumb-friendly bottom bar.</sub></td>
+  </tr>
+</table>
 
 ## Quick start
 
