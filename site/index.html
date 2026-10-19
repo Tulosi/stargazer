@@ -2915,7 +2915,7 @@ async function recoverInner(gen){
   const removed = () => POSTS.filter(p=>{ const m = META[p.id]; return m && m.m==='removed' && !m.rec; });
   let todo = removed().filter(p=>!(META[p.id].rt && now-META[p.id].rt < 7*864e5));
   const counts = {};
-  const status = msg => { recText.textContent = msg; };
+  const status = msg => { if(gen===loadGen) recText.textContent = msg; };   // a recovery that outlives its list (unloaded, signed out) must not write into the next one
   if(!todo.length){
     const n = POSTS.filter(p=>isRec(p)).length;
     if(n) status('Recovered '+n+' removed posts from archives');
@@ -3479,7 +3479,7 @@ $('acOut').onclick = async () => {
     await activate({id:'builtin', name:'My saved posts', text:'id,permalink,starred,updated,deleted\r\n', handle:null, updated:Date.now()});   // nothing loaded, rather than rolling over to another cached list
     await persistRec(LIB.cur); startCsvMode();
   }
-  acctRender(); acctMsg('Signed out.'); csvInfo();
+  clearStatus(); acctRender(); acctMsg('Signed out.'); csvInfo();
 };
 /* returning from "Continue with GitHub": the tokens arrive in the address after the # */
 async function takeOAuthReturn(){
@@ -3538,8 +3538,13 @@ const makePost = (i,id,perma) => {
   return {i, id, sub, title, del:/^(deleted_by_user|removed_by_moderator)$/i.test(slug)?1:0, cat:SUBCAT[sub.toLowerCase()]||'Other',
     link: m ? 'https://www.reddit.com/r/'+sub+'/comments/'+id+'/' : 'https://www.reddit.com/comments/'+id+'/', perma};
 };
+/* Progress and result messages belong to one list: clear them whenever the list changes or goes away (unload, sign-out, switching source). */
+function clearStatus(){
+  $('recText').textContent = ''; $('loadText').textContent = ''; $('loadText').removeAttribute('title'); $('loadBar').style.width = '0';
+  const rs = $('recStop'); if(rs) rs.hidden = true;
+}
 function resetView(){
-  loadGen++; loading = false; missing = 0; recovering = false;
+  loadGen++; loading = false; missing = 0; recovering = false; clearStatus();
   POSTS.length = 0; cardEls.clear(); playing.clear();
   state.sub = ''; state.q = ''; $('q').value = ''; window.markSearchBtn&&markSearchBtn();
   window.scrollTo({top:0});
