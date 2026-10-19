@@ -12,6 +12,8 @@ jobs:
     environment: {name: github-pages, url: "${{ steps.d.outputs.page_url }}"}
     steps:
       - uses: actions/checkout@v4
+      # Offer the same page as a downloadable file (stargazer.html); built here so it can never drift from index.html.
+      - run: cp site/index.html site/stargazer.html
       - uses: actions/upload-pages-artifact@v3
         with: {path: site}
       - id: d
