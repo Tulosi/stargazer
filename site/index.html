@@ -702,9 +702,7 @@ body.layout-list .badges{display:contents}
           <summary><h2>Advanced</h2></summary>
           <span id="advRg" class="hint">RedGifs sound: no problems so far.</span>
           <button class="pill" id="advRgRetry" type="button">Retry sound lookups</button>
-          <div class="hint rghelp" id="advRgHelp" hidden><b>Fix RedGifs playback.</b> Your browser is blocking RedGifs, so clips play without sound or controls. Deploy the small helper in your own Supabase project and the page will use it automatically: <a href="https://github.com/Tulosi/stargazer/tree/main/supabase/functions/redgifs" target="_blank" rel="noopener noreferrer">setup steps</a>.</div>
-          <span class="hint">If your browser blocks RedGifs, an optional helper function in your own Supabase project can fetch the clips for this page (see supabase/functions/redgifs in the project).</span>
-        </details>
+</details>
       </div>
     </div>
   </div>
@@ -1420,7 +1418,6 @@ function rgApply(p,res){
 }
 function updateAdvRg(){
   const el = $('advRg'); if(!el) return;
-  const hp = $('advRgHelp'); if(hp) hp.hidden = !RG_ERR;
   el.textContent = RG_ERR ? 'RedGifs sound: last problem was "'+RG_ERR+'". Some clips may play without sound.' : 'RedGifs sound: no problems so far.';
 }
 function rgWarn(){

@@ -39,10 +39,8 @@ with sync_playwright() as p:
     check('layout hint is short', len(ev("document.getElementById('layouthint').textContent")) < 30)
     # theme lives in Source now
     check('Theme moved out of Filters into Source', ev("!!document.querySelector('#srcpanel #theme') && !document.querySelector('#panel #theme')"))
-    # RedGifs help appears only after a problem
-    check('RedGifs help hidden when fine', ev("document.getElementById('advRgHelp').hidden"))
-    ev("RG_ERR='Failed to fetch'; updateAdvRg()")
-    check('RedGifs help shows after an error', ev("!document.getElementById('advRgHelp').hidden"))
+    check('no developer-facing Supabase notice in Advanced', ev("!/supabase/i.test(document.getElementById('advBox').textContent)"))
+    check('Advanced keeps the status and retry button', ev("!!document.getElementById('advRg') && !!document.getElementById('advRgRetry')"))
     # stats note opens on tap
     ev("document.getElementById('stats').hidden=false")
     pg.dispatch_event('.stats .st', 'click'); pg.wait_for_timeout(100)
