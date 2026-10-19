@@ -193,7 +193,7 @@ body.deck-collapsed #panel,body.src-collapsed #srcpanel{display:none}
 .linkbtn{border:0;background:none;color:inherit;font:inherit;text-decoration:underline;cursor:pointer;padding:0 0 0 8px;opacity:.8}
 .linkbtn:hover{opacity:1}
 .linkbtn[hidden]{display:none}
-.linkbtn.quiet{padding:0;font-size:12px;color:var(--muted);opacity:.85;text-decoration-color:color-mix(in srgb,currentColor 35%,transparent);text-underline-offset:3px;justify-self:start;align-self:flex-start}
+.linkbtn.quiet{padding:0;font-size:12px;color:var(--muted);opacity:.85;text-decoration-color:color-mix(in srgb,currentColor 35%,transparent);text-underline-offset:3px;margin-left:auto}
 .linkbtn.quiet:hover,.linkbtn.quiet:focus-visible{color:var(--ink);opacity:1;text-decoration-color:currentColor}
 .lbl{font-size:12px;color:var(--muted)}
 .grp:has(.chips:empty){display:none}
@@ -757,8 +757,7 @@ body.layout-list .nsfwb[aria-pressed=true]:hover::after{filter:invert(1)}
           </div>
           <div class="grp" id="acctIn" hidden>
             <span id="acWho"></span>
-            <div class="btnrow"><button class="pill" id="acSync" type="button">Sync now</button><button class="pill" id="acOut" type="button">Sign out</button></div>
-            <button class="linkbtn quiet" id="acOthers" type="button">Sign out other devices</button>
+            <div class="btnrow"><button class="pill" id="acSync" type="button">Sync now</button><button class="pill" id="acOut" type="button">Sign out</button><button class="linkbtn quiet" id="acOthers" type="button">Sign out other devices</button></div>
           </div>
           <span id="acMsg"></span>
         </details>
