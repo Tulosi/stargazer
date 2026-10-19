@@ -691,7 +691,7 @@ body.layout-list .nsfwb[aria-pressed=true]:hover::after{filter:invert(1)}
             <button class="pill" type="button" data-m="only" aria-pressed="false">Only</button>
           </div>
         </div>
-        <label class="toggle" for="showtext" title="Posts that are only text, with no image or video">Show text posts<input id="showtext" type="checkbox"></label>
+        <label class="toggle" for="showtext" title="Posts that are only text, with no image or video">Show text posts <span id="textcount"></span><input id="showtext" type="checkbox"></label>
         <label class="toggle" for="favonly">Starred only <span id="favcount"></span><input id="favonly" type="checkbox"></label>
         <label class="toggle" for="hidebroken" title="Hides posts with no working thumbnail or media, including ones with nothing to display">Hide broken media <span id="deadcount"></span><input id="hidebroken" type="checkbox"></label>
         <label class="toggle" for="autoplay">Auto-play in view<input id="autoplay" type="checkbox"></label>
@@ -2058,9 +2058,10 @@ function chip(label,count,on,onClick){
 }
 function toggle(set,v){ set.has(v)?set.delete(v):set.add(v); refresh(); }
 function updateChips(){
-  const cc = {}, mc = {}, kc = {}; let nn = 0;
+  const cc = {}, mc = {}, kc = {}; let nn = 0, tn = 0;
   for(const p of POSTS){
     if(isNsfw(p)) nn++;
+    if(kindOf(p)==='text') tn++;
     if(matches(p,'cat')) cc[p.cat]=(cc[p.cat]||0)+1;
     if(matches(p,'kind')){ const k = kindOf(p); if(k) kc[k] = (kc[k]||0)+1; }
     if(matches(p,'media')){ const m=mediaOf(p); mc[m]=(mc[m]||0)+1; if(isRec(p)) mc.recovered=(mc.recovered||0)+1; }
@@ -2068,6 +2069,7 @@ function updateChips(){
   $('catChips').replaceChildren(...CAT_ORDER.filter(c=>cc[c]||state.cats.has(c)).map(c=>chip(c,cc[c]||0,state.cats.has(c),()=>toggle(state.cats,c))));
   $('kindChips').replaceChildren(...KINDS.filter(([k])=>kc[k]||state.kinds.has(k)).map(([k,l])=>chip(l,kc[k]||0,state.kinds.has(k),()=>toggle(state.kinds,k))));
   $('mediaChips').replaceChildren(...STATUS.filter(([k])=>mc[k]||state.media.has(k)).map(([k,l])=>chip(l,mc[k]||0,state.media.has(k),()=>toggle(state.media,k))));
+  $('textcount').textContent = tn ? '('+tn+')' : '';   // text posts in this list, whether or not they are switched on
   $('nsfwcount').textContent = nn ? '('+nn+')' : '';   // how many posts in this list count as NSFW (the automatic guess plus your own marks)
   $('browseCol').hidden = !($('catChips').childElementCount || $('kindChips').childElementCount || $('mediaChips').childElementCount);   // nothing to browse until something is loaded
 }

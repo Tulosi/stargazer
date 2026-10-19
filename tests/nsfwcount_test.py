@@ -23,6 +23,10 @@ with sync_playwright() as p:
     check('marking another post updates the count', txt() == 'NSFW (4)')
     ev("POSTS.forEach(p=>{ if(isNsfw(p)) toggleNsfw(p); }); refresh();"); pg.wait_for_timeout(500)
     check('count disappears at zero', txt() == 'NSFW')
+    # text posts count, shown beside the Show text posts toggle
+    ev("""()=>{ POSTS.slice(0,2).forEach(p=>{ META[p.id]={t:'Words '+p.id,o:0,th:'',m:'text',u:'',n:0,s:0,a:'',c:1700000000,w:0,h:0}; }); onMeta(POSTS); refresh(); }"""); pg.wait_for_timeout(500)
+    tt = lambda: ev("document.querySelector('label[for=showtext]').textContent.replace(/\\s+/g,' ').trim()")
+    check('Show text posts shows how many text posts there are', tt() == 'Show text posts (2)')
     check('no page errors', not errs)
     b.close()
 print('ALL PASS' if not bad else 'FAILED: ' + ', '.join(bad))
