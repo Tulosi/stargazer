@@ -3539,8 +3539,8 @@ async function pruneBroken(){
   for(;;){
     const r = await confirmDialog({
       title:'Remove dead posts?',
-      paras:[total.toLocaleString()+' posts match the Hide broken media filter: '+hit.removed.length.toLocaleString()+' removed or deleted with nothing recovered, '+hit.broken.length.toLocaleString()+' whose media cannot be shown, and '+hit.notfound.length.toLocaleString()+' not found in any archive.',
-             'Posts not found in any archive are often recent saves that still exist on Reddit, so they are only deleted if you tick the box below.',
+      paras:[total.toLocaleString()+' posts match the Hide broken media filter: '+hit.removed.length.toLocaleString()+' removed or deleted with nothing recovered, '+(hit.notfound.length ? hit.broken.length.toLocaleString()+' whose media cannot be shown, and '+hit.notfound.length.toLocaleString()+' not found in any archive.' : 'and '+hit.broken.length.toLocaleString()+' whose media cannot be shown.'),
+             ...(hit.notfound.length ? ['Posts not found in any archive are often recent saves that still exist on Reddit, so they are only deleted if you tick the box below.'] : []),
              'Deleted posts are permanently removed from "'+LIB.cur.name+'". This cannot be undone. Your saved posts on Reddit are not changed.'],
       option: hit.notfound.length ? 'Also delete the '+hit.notfound.length.toLocaleString()+' not found in any archive' : '',
       ok: on => 'Delete '+(on ? total : sure).toLocaleString()+' posts', extra:'Export backup first'});
