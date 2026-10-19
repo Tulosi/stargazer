@@ -755,7 +755,7 @@ body.layout-list .nsfwb[aria-pressed=true]:hover::after{filter:invert(1)}
           </div>
           <div class="grp" id="acctIn" hidden>
             <span id="acWho"></span>
-            <div class="btnrow"><button class="pill" id="acSync" type="button">Sync now</button><button class="pill" id="acOut" type="button">Sign out</button></div>
+            <div class="btnrow"><button class="pill" id="acSync" type="button">Sync now</button><button class="pill" id="acOut" type="button">Sign out</button><button class="pill" id="acOthers" type="button">Sign out other devices</button></div>
           </div>
           <span id="acMsg"></span>
         </details>
@@ -3480,6 +3480,17 @@ $('acOut').onclick = async () => {
     await persistRec(LIB.cur); startCsvMode();
   }
   clearStatus(); acctRender(); acctMsg('Signed out.'); csvInfo();
+};
+$('acOthers').onclick = async () => {
+  const d = await confirmDialog({title:'Sign out other devices?', paras:['Every other phone or computer signed in to this account will be signed out. They can still read what they already loaded for up to an hour, then ask for a password again. This device stays signed in.'], ok:'Sign out others'});
+  if(d!=='ok') return;
+  acctMsg('Signing out other devices...');
+  try{
+    const tok = await sbToken();
+    const r = await fetch(SB+'/auth/v1/logout?scope=others', {method:'POST', headers:{apikey:CFG.supabaseAnonKey, Authorization:'Bearer '+tok}});
+    if(!r.ok) await sbJson(r);
+    acctMsg('Other devices will be signed out within the hour. This one stays signed in.');
+  }catch(e){ acctMsg(e.message || 'Could not sign out other devices.','warn'); }
 };
 /* returning from "Continue with GitHub": the tokens arrive in the address after the # */
 async function takeOAuthReturn(){

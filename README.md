@@ -94,7 +94,7 @@ The hosted site updates automatically; a downloaded copy is a snapshot, so downl
 
 ## Optional: sync across devices with an account
 
-If you would rather have the same list on your phone and your computer, you can create a free account from the Source panel and your list syncs between devices. Saving, starring and deleting sync automatically, edits made offline upload when you reconnect, and **Sign out** can wipe the list from that browser (handy on shared computers). It is entirely optional; everything above works without it.
+If you would rather have the same list on your phone and your computer, you can create a free account from the Source panel and your list syncs between devices. Saving, starring and deleting sync automatically, edits made offline upload when you reconnect, **Sign out** can wipe the list from that browser (handy on shared computers), and **Sign out other devices** ends every other session if a phone or computer goes missing. It is entirely optional; everything above works without it.
 
 Want to run your own copy with your own account system? See the [self-hosting guide](docs/SELF-HOSTING.md).
 
