@@ -347,6 +347,8 @@ body.info-off .card .info,body.info-off .card .badge,body.info-off .card .ph spa
 body.info-off .card.info-open .info,body.info-off .card.info-open .badge{display:block}
 body.info-off .card.info-open .ph span{display:inline}
 .card.info-open .info{padding-right:46px}
+/* a text-only post has no picture to say what it is, so its title always shows in Masonry and Grid, whatever the card info setting */
+body:not(.layout-list) .card.is-text .info{display:block;opacity:1}
 .ibtn{display:none;position:absolute;right:8px;bottom:8px;z-index:5;width:30px;height:30px;place-items:center;border:0;border-radius:50%;padding:0;background:rgba(12,12,14,.26);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:rgba(255,255,255,.78);cursor:pointer}
 .ibtn:hover{background:rgba(12,12,14,.5);color:#fff}
 .ibtn[aria-pressed=true]{background:rgba(255,255,255,.78);color:#111}
@@ -1240,7 +1242,7 @@ function fillCard(el,p){
   const gl = m && m.gl && m.gl.length > 1 ? m.gl : null;
   const stats = m && !m.miss ? ((m.s||0) > 1 ? '<span>'+fmt(m.s)+' pts</span>' : '')+((m.n||0) > 0 ? '<a class="cm" href="'+esc(p.link)+'" target="_blank" rel="noopener noreferrer" title="Open the comments on Reddit">'+fmt(m.n)+' comments</a>' : '') : '';
   const ph = '<div class="ph'+(!m && !dead ? ' pending' : '')+'" style="--h:'+hue(p.sub)+'"><span>r/'+esc(p.sub)+(dead?'<br><small>media unavailable</small>':'')+'</span></div>';
-  el._p = p; el._gi = 0; el.classList.toggle('is-dead', dead);
+  el._p = p; el._gi = 0; el.classList.toggle('is-dead', dead); el.classList.toggle('is-text', media==='text');
   el.innerHTML =
     '<a class="thumb'+(nsfw?' nsfw':'')+'" data-open'+(v0 ? ' data-v="'+esc(v0)+'"'+(vs.length>1 ? ' data-vc="'+esc(vs.slice(1,7).join('|'))+'"' : '') : '')+(m && m.ab ? ' data-ab="'+esc(m.ab)+'"' : '')+(m && m.ha!==undefined ? ' data-ha="'+(m.ha?1:0)+'"' : '')+' href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" aria-label="Open: '+esc(titleOf(p))+'">'
     + (thumb ? ph + '<img referrerpolicy="no-referrer" alt="">' : (v0 && !/^(yt|rg):/.test(v0) ? ph + '<video class="still" muted playsinline preload="none"></video>' : ph))
