@@ -80,6 +80,7 @@ with sync_playwright() as p:
     check('Select button visible with a list open', ev("!document.getElementById('selbtn').hidden"))
     pg.dispatch_event('#selbtn', 'click'); pg.wait_for_timeout(200)
     check('selection bar appears', ev("!document.getElementById('selbar').hidden && document.body.classList.contains('selecting')"))
+    check('desktop: selection strip is docked under the top bar, not floating at the bottom', ev("(()=>{ const b=document.getElementById('selbar'), d=document.querySelector('.deck'); const r=b.getBoundingClientRect(), dr=d.getBoundingClientRect(); return getComputedStyle(b).position!=='fixed' && d.contains(b) && r.top < 200 && Math.abs(r.bottom-dr.bottom)<2 && r.width > innerWidth*0.9; })()"))
     pg.dispatch_event('#selbar [data-a=all]', 'click'); pg.wait_for_timeout(200)
     nsel = ev("SEL.ids.size"); check('Select all picks every listed post', nsel == ev("list.length") and nsel >= 2)
     pg.dispatch_event('#selbar [data-a=nsfw]', 'click'); pg.wait_for_timeout(700)

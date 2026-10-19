@@ -32,7 +32,7 @@ Hosted on GitHub Pages. Accounts and storage come from Supabase (free plan). The
 - Touch screens use touch events for pinch/zoom in the viewer; mouse and pen use pointer events.
 - Test by loading the page in Playwright with network routes mocked (see `tests/`). There is no live access to Reddit or the archives from the dev sandbox.
 
-- Deleting a single post (or several, via **Bulk Actions** mode) has no confirm for single deletes: it shows a toast with **Undo** (`toast(msg, {label, fn})`, `restoreRows`). Bulk delete asks once, then also offers Undo. Selection mode (`SEL`, `selMode`, `selAct`) acts on `list`; NSFW changes go through `markNsfw` (no commit) so many posts commit once.
+- Deleting a single post (or several, via **Bulk Actions** mode) has no confirm for single deletes: it shows a toast with **Undo** (`toast(msg, {label, fn})`, `restoreRows`). Bulk delete asks once, then also offers Undo. Selection mode (`SEL`, `selMode`, `selAct`) acts on `list`; its action bar `#selbar` lives inside `.deck`: on desktop a tinted strip under the top bar, on phones a fixed bottom sheet; NSFW changes go through `markNsfw` (no commit) so many posts commit once.
 - The Filters badge counts only settings changed from the defaults. Theme lives in the Source panel (Appearance). Layout is remembered per list (`saved-posts-layouts`, `applyListLayout`) with the global value as the default.
 - The viewer has previous/next **post** navigation (`viewerPost`, Up/Down or Left/Right arrows, swipe, bottom buttons) separate from the gallery's image arrows.
 
