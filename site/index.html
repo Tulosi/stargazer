@@ -98,6 +98,8 @@ button,select,input{font:inherit;color:inherit}
 .search{display:none}
 /* navigation: on wide screens the four buttons sit in the bar with labels and the search box is always there; on phones they form a bottom bar */
 .navbtns{display:contents}
+/* Before any data is loaded the stats strip is hidden; it normally supplies the auto margin that keeps the buttons on the right, so the first button takes over. */
+@media (min-width:721px){.stats[hidden]+.navbtns #srctoggle{margin-left:auto}}
 .nl{display:none}
 @media (min-width:721px){
   .search{display:block}
