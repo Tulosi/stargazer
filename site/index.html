@@ -904,11 +904,14 @@ const isApiUrl = u => /arctic-shift\.photon-reddit\.com\/api\/|api\.pullpush\.io
 const sourceOf = p => { const m = metaOf(p); return (m && m.u && !isApiUrl(m.u)) ? m.u : recHref(p); };
 
 /* ---------- filtering ---------- */
+/* state.sub is one subreddit ("pics") or several joined with + ("edmonton+alberta"), as typed in the search box */
+let subKey = null, subSetC = null;
+function subIn(s){ if(subKey!==state.sub){ subKey = state.sub; subSetC = new Set(state.sub.toLowerCase().split('+')); } return subSetC.has(s.toLowerCase()); }
 function matches(p, skip){
   if(skip!=='cat' && state.cats.size && !state.cats.has(p.cat)) return false;
   if(skip!=='media' && state.media.size && !matchesMedia(p)) return false;
   if(skip!=='kind' && state.kinds.size && !state.kinds.has(kindOf(p))) return false;
-  if(state.sub && p.sub!==state.sub) return false;
+  if(state.sub && !subIn(p.sub)) return false;
   if(state.fav && !FAVS.has(p.id)) return false;
   if(state.range!=='all' && !(MODE==='sub' && FEED.live===true && state.sort==='hot')){ const c = (metaOf(p)||{}).c; if(!c || c < Date.now()/1000 - RANGE_S[state.range]) return false; }
   if(state.hideBroken && isUnavailable(p)) return false;
@@ -2030,7 +2033,7 @@ function buildSubs(){
   const counts = {}; POSTS.forEach(p=>counts[p.sub]=(counts[p.sub]||0)+1);
   const subs = Object.keys(counts).filter(x=>counts[x]>=3 || x===state.sub).sort((x,y)=>counts[y]-counts[x]||x.localeCompare(y));
   if(state.sub && !(state.sub in counts)) subs.unshift(state.sub);
-  $('subsel').innerHTML = '<option value="">All subreddits</option>' + subs.map(x=>'<option value="'+esc(x)+'">r/'+esc(x)+(counts[x]?' ('+counts[x]+')':'')+'</option>').join('');
+  $('subsel').innerHTML = '<option value="">All subreddits</option>' + subs.map(x=>{ const n = x.includes('+') ? x.split('+').reduce((a,y)=>a+(counts[y]||0),0) : counts[x]; return '<option value="'+esc(x)+'">r/'+esc(x)+(n?' ('+n+')':'')+'</option>'; }).join('');
   $('subsel').value = state.sub;
 }
 function refresh(){
@@ -2506,12 +2509,18 @@ function releasePlayable(t){ t._hover = t._mouse = t._focus = false; t._inView =
 const boxText = () => (state.sub ? 'r/'+state.sub+' ' : '') + state.q;
 function syncBox(){ $('q').value = boxText(); window.markSearchBtn && markSearchBtn(); }
 function setSub(s){ state.sub = s||''; syncBox(); refresh(); }
-let qt; $('q').addEventListener('input',e=>{ clearTimeout(qt); qt=setTimeout(()=>{
-  let v = e.target.value, sub = '';
-  const m = v.match(/(^|\s)r\/([A-Za-z0-9_]+)(?=\s|$)/);
-  if(m){ const known = POSTS.find(p=>p.sub.toLowerCase()===m[2].toLowerCase()); if(known){ sub = known.sub; v = v.replace(m[0], ' '); } }
+function applyBox(){
+  let v = $('q').value, sub = '';
+  const canon = {}; POSTS.forEach(p=>{ canon[p.sub.toLowerCase()] = p.sub; });
+  for(const m of v.matchAll(/(^|\s)(r\/)?([A-Za-z0-9_]+(?:\+[A-Za-z0-9_]+)*)(?=\s|$)/g)){   // r/name, r/a+b, or a+b
+    const names = m[3].split('+');
+    if(!(m[2] || names.length>1) || !names.every(n=>canon[n.toLowerCase()])) continue;
+    sub = [...new Set(names.map(n=>canon[n.toLowerCase()]))].join('+'); v = v.replace(m[0], ' '); break;
+  }
   state.sub = sub; state.q = v.trim().toLowerCase(); refresh();
-},180); });
+}
+let qt; $('q').addEventListener('input',()=>{ clearTimeout(qt); qt=setTimeout(applyBox,180); });
+$('q').addEventListener('keydown',e=>{ if(e.key!=='Enter') return; clearTimeout(qt); applyBox(); if(state.sub) syncBox(); });   // Enter tidies a subreddit filter into the r/a+b form
 function syncSortUI(){
   const sel = $('sort');
   for(const [v,ok] of [['hot',MODE==='sub'],['random',true],['saved',MODE==='csv']]){ const o = sel.querySelector('option[value='+v+']'); if(o){ o.hidden = !ok; o.disabled = !ok; } }
