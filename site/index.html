@@ -135,6 +135,7 @@ button,select,input{font:inherit;color:inherit}
 .acctbox>summary{list-style:none;display:flex;align-items:center;gap:8px;cursor:pointer;padding:2px 0;min-height:32px}
 .acctbox>summary::-webkit-details-marker{display:none}
 .acctbox>summary h2{margin:0}
+.acctbox>summary .acico{flex:none;margin-right:-2px;color:color-mix(in srgb,var(--g1) 75%,var(--muted))}
 .acctbox>summary::after{content:"";margin-left:auto;width:7px;height:7px;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:rotate(45deg);transition:transform .2s}
 .acctbox[open]>summary::after{transform:rotate(-135deg)}
 .optbadge{font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted)}
@@ -664,7 +665,7 @@ body.layout-list .badges{display:contents}
           <span id="subErr" role="alert"></span>
         </form>
         <details class="grp acctbox" id="acct" hidden>
-          <summary><h2>Account</h2><span class="optbadge">Optional</span><span class="sumnote">sync across devices</span></summary>
+          <summary><svg class="acico" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="7" r="3.2"/><path d="M3.8 16.5c.6-3 3.1-4.8 6.2-4.8s5.6 1.8 6.2 4.8"/></svg><h2>Account</h2><span class="optbadge">Optional</span><span class="sumnote">sync across devices</span></summary>
           <div class="grp" id="acReset" hidden>
             <strong>Choose a new password</strong>
             <input id="acNew" class="field" type="password" placeholder="New password (8+ characters)" autocomplete="new-password" aria-label="New password">
