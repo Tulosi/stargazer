@@ -412,6 +412,21 @@ body.viewing{overflow:hidden}
 #viewer .vprev{left:max(12px,env(safe-area-inset-left))}
 #viewer .vnext{right:max(12px,env(safe-area-inset-right))}
 #viewer .vcount{position:absolute;bottom:calc(62px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:2;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.16);color:#fff;font-size:12.5px;font-variant-numeric:tabular-nums}
+dialog#reader{border:0;border-radius:18px;padding:20px 22px 22px;max-width:680px;width:calc(100% - 24px);max-height:86vh;overflow:auto;background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+dialog#reader::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+#reader .rdhead{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--muted);font-size:12.5px}
+#reader .rdhead p{margin:0}
+#rdClose{border:0;background:var(--surface-2);color:var(--ink);width:32px;height:32px;border-radius:50%;font-size:20px;line-height:1;cursor:pointer}
+#reader h3{margin:10px 0 4px;font-size:18px;line-height:1.3}
+#rdSrc{margin:0 0 6px;color:var(--muted);font-size:12.5px}
+#rdBody p{margin:10px 0;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5;font-size:14.5px}
+#rdBody p.muted,#rdCm .muted{color:var(--muted)}
+#rdLinks{display:flex;flex-wrap:wrap;gap:6px 14px;margin:14px 0 4px;font-size:13px}
+#rdLinks a{color:var(--sel)}
+#rdCm{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);font-size:13.5px}
+#rdCm .rc{margin:10px 0 0;padding-left:12px;border-left:2px solid color-mix(in srgb,var(--g2) 30%,var(--line))}
+#rdCm .rc .rh{color:var(--muted);font-size:12px}
+#rdCm .rc .rb{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.45;margin-top:2px}
 dialog#confirm{border:0;border-radius:18px;padding:24px;max-width:440px;width:calc(100% - 32px);background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
 dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 #confirm h3{margin:0 0 10px;font-size:17px;font-weight:600}
@@ -786,6 +801,7 @@ body.layout-list .nsfwb[aria-pressed=true]:hover::after{filter:invert(1)}
 </div>
 
 <div id="viewer" role="dialog" aria-modal="true" aria-label="Media viewer" hidden><button class="vnav vprev" type="button" aria-label="Previous image" hidden>&#8249;</button><button class="vnav vnext" type="button" aria-label="Next image" hidden>&#8250;</button><span class="vcount" hidden></span><div class="vposts"><button class="vpost vpp" type="button" aria-label="Previous post" title="Previous post (Up arrow)">&#8249; Previous post</button><button class="vpost vpn" type="button" aria-label="Next post" title="Next post (Down arrow)">Next post &#8250;</button></div><input class="vvol" type="range" min="0" max="100" step="1" value="0" aria-label="Volume" hidden><button class="vsound" type="button" aria-label="Unmute" hidden></button><button class="vclose" type="button" aria-label="Close">&#10005;</button><div class="vstage"></div></div>
+<dialog id="reader" aria-labelledby="rdTitle"><div class="rdhead"><p id="rdMeta"></p><button type="button" id="rdClose" aria-label="Close">&times;</button></div><h3 id="rdTitle"></h3><p class="hint" id="rdSrc"></p><div id="rdBody"></div><div id="rdLinks"></div><section id="rdCm"></section></dialog>
 <dialog id="confirm"><form method="dialog"><h3 id="cTitle"></h3><div id="cBody"></div><label id="cOptWrap" class="toggle" hidden><span id="cOptLbl"></span><input type="checkbox" id="cOpt"></label><div class="btnrow" style="justify-content:flex-end;margin-top:18px"><button class="pill" id="cExtra" value="extra" hidden></button><button class="pill" value="cancel" autofocus>Cancel</button><button class="pill danger" id="cOk" value="ok"></button></div></form></dialog>
 <div id="pausebar" role="status" aria-live="polite" hidden><span class="pdot"></span><span id="pauseTxt"></span><button type="button" id="pauseSkip" title="Retry now">Retry now</button></div>
 <button id="totop" type="button" aria-label="Back to top" title="Back to top" hidden><svg viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 10L8 5.5l4.5 4.5"/></svg></button>
@@ -869,12 +885,13 @@ function baseNsfw(p){
   return p.sub.toLowerCase().startsWith('u_');
 }
 function isNsfw(p){ const k = nsfwMark(p); return k===null ? baseNsfw(p) : k; }
-/* Where a card should go when the original post is gone: a page a person can read, never an archive's raw API/JSON address.
-   The Wayback copy when one was found, otherwise Reveddit, which shows removed posts and their comments from the archives. */
-const revedditHref = p => 'https://www.reveddit.com/v/'+encodeURIComponent(p.sub)+'/comments/'+encodeURIComponent(p.id)+'/';
+/* Where a card should go when the original post is gone: a page a person can read, never an archive's raw API/JSON address (and not Reveddit, which needs Reddit's closed API).
+   The Wayback copy we found, otherwise the Wayback address for the post (the same one the Archives row offers). Posts recovered from Arctic Shift or PullPush open in the built-in reader instead (see openReader). */
+const wbPostHref = p => 'https://web.archive.org/web/'+WB_TS+'/https://old.reddit.com/r/'+p.sub+'/comments/'+p.id+'/';
+const hasReader = p => { const m = metaOf(p); return !!(m && m.rec && m.rec!=='Wayback'); };
 function recHref(p){
   const m = metaOf(p);
-  if(m && m.rec) return m.wb || revedditHref(p);
+  if(m && m.rec) return m.wb || wbPostHref(p);
   return p.link;
 }
 const isApiUrl = u => /arctic-shift\.photon-reddit\.com\/api\/|api\.pullpush\.io\//i.test(u||'');   // raw archive data, not a page to show anyone
@@ -1139,6 +1156,65 @@ function startStill(v, done){
   setTimeout(end, 20000);
   v.preload = 'metadata'; tryNext();
 }
+/* ---------- reader for posts recovered from an archive ----------
+   The archives give us the post itself (title, text, author, score), so show that here instead of sending anyone to a raw archive address.
+   Comments are fetched on request from Arctic Shift, through the same rate-limited helper as everything else. */
+const bodyOf = d => { const t = String(d.selftext||'').trim(); return !t || /^\[(removed|deleted)\]$/i.test(t) ? '' : t.slice(0,4000); };
+const fmtDate = c => new Date(c*1000).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+let readerP = null;
+function readerFill(p){
+  const m = metaOf(p) || {}, body = $('rdBody'); body.replaceChildren();
+  const add = (txt, cls) => { const e = document.createElement('p'); if(cls) e.className = cls; e.textContent = txt; body.appendChild(e); };
+  if(m.u){ const e = document.createElement('p'), a = document.createElement('a'); a.href = m.u; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = m.u; e.append('Link: ', a); body.appendChild(e); }
+  if(m.x) m.x.split(/\n{2,}/).forEach(t=>add(t));
+  else if(m.x===undefined) add('Looking for the post text...', 'muted');
+  else if(!m.u) add('The archive did not keep any text for this post.', 'muted');
+}
+function openReader(p){
+  const d = $('reader'), m = metaOf(p) || {}; readerP = p;
+  $('rdTitle').textContent = m.t || titleOf(p);
+  $('rdMeta').textContent = ['r/'+p.sub, m.a && m.a!=='[deleted]' ? 'u/'+m.a : '', m.c ? fmtDate(m.c) : '', m.s ? fmt(m.s)+' pts' : ''].filter(Boolean).join(' \u00b7 ');
+  $('rdSrc').textContent = 'Recovered from '+m.rec+'. Reddit no longer shows this post.';
+  readerFill(p);
+  const lk = $('rdLinks'); lk.replaceChildren();
+  for(const [label,href] of [['Wayback Machine', recHref(p)], ['Reddit page', p.link]]){ const a = document.createElement('a'); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = label; lk.appendChild(a); }
+  const cm = $('rdCm'); cm.replaceChildren();
+  const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'pill';
+  btn.textContent = (m.n||0) > 0 ? 'Load comments ('+fmt(m.n)+') from the archive' : 'Look for comments in the archive';
+  btn.onclick = () => readerComments(p, btn);
+  cm.appendChild(btn);
+  if(!d.open) d.showModal();
+  d.scrollTop = 0;
+  if(m.x===undefined){   // recovered before the text was kept: ask the archive once more for just this post
+    fetchBatch([p.id]).then(data=>{ const dd = data.find(x=>x.id===p.id), mm = metaOf(p); if(mm){ mm.x = dd ? bodyOf(dd) : ''; saveCache(); } if(readerP===p && d.open) readerFill(p); })
+      .catch(()=>{ const mm = metaOf(p); if(mm && mm.x===undefined) mm.x = ''; if(readerP===p && d.open) readerFill(p); });
+  }
+}
+async function readerComments(p, btn){
+  const cm = $('rdCm'); btn.disabled = true; btn.textContent = 'Loading...';
+  let list;
+  try{ list = ((await getJson('https://arctic-shift.photon-reddit.com/api/comments/search?link_id='+encodeURIComponent(p.id)+'&limit=100')).data || []); }
+  catch(e){ if(readerP!==p) return; btn.disabled = false; btn.textContent = 'Try again'; const n = document.createElement('p'); n.className = 'muted'; n.textContent = 'The archive could not be reached just now.'; cm.appendChild(n); setTimeout(()=>n.remove(), 6000); return; }
+  if(readerP!==p) return;
+  cm.replaceChildren();
+  if(!list.length){ const n = document.createElement('p'); n.className = 'muted'; n.textContent = 'The archive has no comments for this post.'; cm.appendChild(n); return; }
+  const kids = new Map(), ids = new Set(list.map(c=>c.id));
+  for(const c of list){ const par = String(c.parent_id||'').replace(/^t[13]_/,''); const key = ids.has(par) ? par : ''; if(!kids.has(key)) kids.set(key, []); kids.get(key).push(c); }
+  for(const arr of kids.values()) arr.sort((a,b)=>(b.score||0)-(a.score||0));
+  const draw = (key, host, depth) => { for(const c of kids.get(key)||[]){
+    const w = document.createElement('div'); w.className = 'rc'; if(depth>5) w.style.borderLeft = '0';
+    const h = document.createElement('div'); h.className = 'rh'; h.textContent = [c.author && c.author!=='[deleted]' ? 'u/'+c.author : '[deleted]', c.score!=null ? fmt(c.score)+' pts' : '', c.created_utc ? fmtDate(c.created_utc) : ''].filter(Boolean).join(' \u00b7 ');
+    const b = document.createElement('div'); b.className = 'rb'; b.textContent = /^\[(removed|deleted)\]$/i.test(String(c.body||'').trim()) ? '[removed]' : String(c.body||'').slice(0,3000);
+    w.append(h, b); host.appendChild(w); draw(c.id, w, depth+1);
+  } };
+  const head = document.createElement('p'); head.className = 'muted'; const total = (metaOf(p)||{}).n||0;
+  head.textContent = list.length+(total>list.length ? ' of '+fmt(total) : '')+' comments from the archive, best first';
+  cm.appendChild(head); draw('', cm, 0);
+}
+$('rdClose').addEventListener('click',()=>$('reader').close());
+$('reader').addEventListener('click',e=>{ if(e.target===$('reader')) $('reader').close(); });
+$('reader').addEventListener('close',()=>{ readerP = null; });
+
 function fillCard(el,p){
   const old = el.querySelector('.thumb'); if(old) releasePlayable(old);
   const m = metaOf(p), nsfw = isNsfw(p), media = mediaOf(p);
@@ -1177,8 +1253,7 @@ function fillCard(el,p){
     + '<a class="btn" href="'+esc(recHref(p))+'" target="_blank" rel="noopener noreferrer">Comments</a>'
     + (!m && !dead ? '<a class="btn" href="https://www.reddit.com/comments/'+esc(p.id)+'" target="_blank" rel="noopener noreferrer">Open on Reddit</a><button class="btn retry1" type="button" data-id="'+esc(p.id)+'">Retry this one</button>' : '')
     + '</div>'
-    + (removed ? '<div class="arch"><span>Archives:</span><a href="'+esc('https://web.archive.org/web/'+WB_TS+'/https://old.reddit.com/r/'+p.sub+'/comments/'+p.id+'/')+'" target="_blank" rel="noopener noreferrer">Wayback</a>'
-        + '<a href="'+esc(revedditHref(p))+'" target="_blank" rel="noopener noreferrer">Reveddit</a></div>' : '')
+    + (removed ? '<div class="arch"><span>Archives:</span><a href="'+esc(wbPostHref(p))+'" target="_blank" rel="noopener noreferrer">Wayback</a></div>' : '')
     + '</div>';
   const tEl = el.querySelector('.thumb'); if(tEl && tEl.dataset.v) wirePlayable(tEl);
   // If every preview fails, look for a working full-size copy and show that instead.
@@ -1887,6 +1962,11 @@ $('grid').addEventListener('click',e=>{
     const card = fb.closest('.card');
     if(card && card._p){ const clip = card.querySelector('video.clip'); openViewer(card._p, {t: clip ? clip.currentTime : 0}); }
     return;
+  }
+  const ra = !SEL.on && e.target.closest('.card a[href]');
+  if(ra && e.button===0 && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey){
+    const rc = ra.closest('.card'), rp = rc && rc._p;
+    if(rp && hasReader(rp) && ra.getAttribute('href')===recHref(rp)){ e.preventDefault(); openReader(rp); return; }   // a post recovered from an archive: read it here instead of leaving for a raw archive page
   }
   const ln = e.target.closest('a[data-open]');
   if(ln && e.button===0 && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey){
@@ -2849,7 +2929,7 @@ async function recoverInner(gen){
       catch(e){ status(label+' unavailable ('+e.message+'), moving on'); await sleep(1200); break; }
       for(const d of data){
         if(badTitle(d.title)) continue;
-        META[d.id] = slim(d,label);
+        META[d.id] = slim(d,label); { const x = bodyOf(d); if(x) META[d.id].x = x; else META[d.id].x = ''; }
         counts[label] = (counts[label]||0)+1; found.push(d.id);
       }
       await sleep(600);
