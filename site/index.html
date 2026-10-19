@@ -365,11 +365,6 @@ body.info-hover .card:focus-within .info,body.info-hover .card:focus-within .bad
   .card .star,.card .save,.card .ibtn{transition:opacity .18s}
   body .card:not(.is-focus):not(.info-open) .star,body .card:not(.is-focus):not(.info-open) .save,body .card:not(.is-focus):not(.info-open) .ibtn{opacity:0;pointer-events:none}
 }
-/* touch screens: a faint ring marks the tile in focus (Masonry and Grid; List has its own look) */
-@media (hover:none){
-  body:not(.layout-list) .card::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--sel) 50%,transparent);opacity:0;transition:opacity .25s;pointer-events:none;z-index:4}
-  body:not(.layout-list) .card.is-focus::after{opacity:1}
-}
 /* keep the (i) button clear of the player controls once they are showing */
 .card:has(.ctl) .ibtn{bottom:46px}
 
