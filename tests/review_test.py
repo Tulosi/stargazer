@@ -98,6 +98,13 @@ with sync_playwright() as p:
     check('Undo brings them all back', ev("ROWS.length") == cnt)
     if ev("document.body.classList.contains('selecting')"): pg.dispatch_event('#selbtn', 'click'); pg.wait_for_timeout(200)
     check('Cancel leaves selection mode', ev("!document.body.classList.contains('selecting')"))
+    # clips fade in over the still instead of flashing the card colour
+    ev("document.body.style.minHeight=''; window.scrollTo(0,0)")
+    ev("(()=>{ const id='vid01'; ROWS.push({id,perma:'https://www.reddit.com/r/gifs/comments/'+id+'/x/',starred:false,t:5}); ROWSET.add(id); META[id]={t:'clip',o:0,th:'https://i.redd.it/a.jpg',m:'gif',u:'',n:0,s:0,a:'',c:1700000000,v:'https://v.redd.it/none/DASH_360.mp4',w:640,h:360}; })()")
+    ev("startCsvMode()"); pg.wait_for_timeout(1000)
+    r = ev("""(()=>{ const t=document.querySelector('article.card[data-id=vid01] .thumb'); startPlay(t); const c=t.querySelector('video.clip'); if(!c) return null; const s=getComputedStyle(c); const first={op:s.opacity,bg:s.backgroundColor}; c.dispatchEvent(new Event('playing')); return {first, on:c.classList.contains('on')}; })()""")
+    check('clip starts see-through, with a transparent background', bool(r) and r['first']['op']=='0' and r['first']['bg']=='rgba(0, 0, 0, 0)')
+    check('clip is marked visible once it is playing', bool(r) and r['on'])
     check('no page errors', not errs)
     b.close()
 srv.shutdown()

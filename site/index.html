@@ -234,7 +234,7 @@ input[type=range]{width:100%;accent-color:var(--sel);margin:0}
 .thumb img,.thumb .still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:filter .18s,transform .18s,opacity .2s}
 .thumb .still{opacity:0}
 .thumb .still.ready{opacity:1}
-.thumb iframe.clip{position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none;background:#000}
+.thumb iframe.clip{position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none;background:transparent}
 .thumb .ph{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:12px;
   background:hsl(var(--h) var(--ph-s) var(--ph-l));color:var(--ink);font:500 13px/1.25 var(--font);overflow-wrap:anywhere;transition:opacity .15s}
 .thumb .ph span{opacity:.88}
@@ -250,7 +250,9 @@ body.previews-loading #loadText{color:var(--ink);font-weight:500}
 .load .bar{height:3px}
 
 .ph small{font-size:11px;opacity:.9}
-.thumb .clip{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:var(--surface-2);transition:filter .18s,transform .18s}
+/* A clip starts invisible on top of the still picture and fades in once its first frame is showing, so the card never flashes its background colour between still and playing. */
+.thumb .clip{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:transparent;opacity:0;transition:filter .18s,transform .18s,opacity .25s}
+.thumb .clip.on{opacity:1}
 .thumb.nsfw img,.thumb.nsfw .still,.thumb.nsfw .clip{filter:blur(22px);transform:scale(1.12)}
 .card:hover .thumb.nsfw img,.card:hover .thumb.nsfw .still,.card:hover .thumb.nsfw .clip,.thumb.nsfw:focus-visible img,.thumb.nsfw:focus-visible .still,.thumb.nsfw:focus-visible .clip,.thumb.nsfw.show img,.thumb.nsfw.show .still,.thumb.nsfw.show .clip{filter:none;transform:none}
 body.unblur .thumb.nsfw img,body.unblur .thumb.nsfw .still,body.unblur .thumb.nsfw .clip{filter:none;transform:none}
@@ -2172,6 +2174,7 @@ function startPlay(t){
     f.className = 'clip yt'; f.setAttribute('tabindex','-1'); f.setAttribute('allow','autoplay; encrypted-media');
     f.referrerPolicy = 'strict-origin-when-cross-origin';
     f.src = 'https://www.redgifs.com/ifr/'+encodeURIComponent(v.slice(3));
+    f.addEventListener('load',()=>setTimeout(()=>f.classList.add('on'),600));
     t.insertBefore(f, t.querySelector('.badges'));
     return;
   }
@@ -2191,7 +2194,7 @@ function startPlay(t){
       }
     };
     addEventListener('message',onMsg); t._ytMsg = onMsg;
-    f.addEventListener('load',()=>talk({event:'listening',id:1,channel:'widget'}));
+    f.addEventListener('load',()=>{ talk({event:'listening',id:1,channel:'widget'}); setTimeout(()=>f.classList.add('on'),900); });
     t.insertBefore(f, t.querySelector('.badges'));
     return;
   }
@@ -2204,6 +2207,7 @@ function startPlay(t){
     el.play().catch(()=>{});
   }
   el.className = 'clip';
+  el.addEventListener(isGif ? 'load' : 'playing', ()=>el.classList.add('on'), {once:true});
   el.addEventListener('error',()=>{
     // try the next quality / file before giving up
     const rest = (t.dataset.vc||'').split('|').filter(Boolean);
