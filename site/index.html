@@ -256,8 +256,6 @@ input[type=range]{width:100%;accent-color:var(--sel);margin:0}
 /* shimmer whenever a card is waiting for its content: always, not only on the first load (picture still to arrive, or post details not fetched yet) */
 .card:not(.is-dead) .thumb:has(>img,>video.still) .ph,.card:not(.is-dead) .thumb .ph.pending,body.previews-loading .card:not(.is-dead) .thumb .ph{overflow:hidden}
 .card:not(.is-dead) .thumb:has(>img,>video.still) .ph::after,.card:not(.is-dead) .thumb .ph.pending::after,body.previews-loading .card:not(.is-dead) .thumb .ph::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.14) 50%,transparent 70%);animation:shimmer 1.4s ease-in-out infinite}
-.thumb .tstrip{position:absolute;left:0;right:0;bottom:0;padding:22px 12px 9px;background:linear-gradient(to top,rgba(0,0,0,.66),transparent);color:#fff;font:500 12.5px/1.3 var(--font);display:none;pointer-events:none;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-body.info-off .card:not(.info-open) .thumb:not(.nsfw) .tstrip{display:block}
 .stats .st.busy b::after{content:"";display:inline-block;width:4px;height:4px;margin-left:4px;border-radius:50%;background:var(--muted);vertical-align:middle;animation:pulse 1s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}
 body.previews-loading #loadText{color:var(--ink);font-weight:500}
@@ -541,7 +539,6 @@ body.layout-list .thumb.nsfw img,body.layout-list .thumb.nsfw .still{filter:blur
 body.layout-list .thumb iframe.clip,body.layout-list .ctl,body.layout-list .cprog,body.layout-list .actions,body.layout-list .arch,body.layout-list .ibtn,body.layout-list .reveal,body.layout-list .gnav,body.layout-list .badge.media,body.layout-list .badge.rec,body.layout-list .ph span{display:none!important}
 body.layout-list .info{top:0;display:flex;flex-direction:column;justify-content:center;padding:6px 160px 6px 14px;background:rgba(0,0,0,.34)}
 body.layout-list .card.info-open .info{padding-right:160px}
-body.layout-list .tstrip{display:none!important}
 body.layout-list .title{padding-bottom:1px;line-height:1.35}
 body.layout-list .meta{display:flex;flex-wrap:nowrap;gap:0 10px;overflow:hidden;white-space:nowrap}
 body.layout-list .meta>*{flex:none}
@@ -1241,7 +1238,6 @@ function fillCard(el,p){
   el.innerHTML =
     '<a class="thumb'+(nsfw?' nsfw':'')+'" data-open'+(v0 ? ' data-v="'+esc(v0)+'"'+(vs.length>1 ? ' data-vc="'+esc(vs.slice(1,7).join('|'))+'"' : '') : '')+(m && m.ab ? ' data-ab="'+esc(m.ab)+'"' : '')+(m && m.ha!==undefined ? ' data-ha="'+(m.ha?1:0)+'"' : '')+' href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" aria-label="Open: '+esc(titleOf(p))+'">'
     + (thumb ? ph + '<img referrerpolicy="no-referrer" alt="">' : (v0 && !/^(yt|rg):/.test(v0) ? ph + '<video class="still" muted playsinline preload="none"></video>' : ph))
-    + '<span class="tstrip">'+esc(titleOf(p))+'</span>'
     + '<span class="badges"><span class="badge media'+(v0 ? ' playable' : '')+'">'+esc(MEDIA_LABEL[media]||media)+(gl ? ' 1/'+gl.length : '')+'</span>'
     + (nsfw ? '<span class="badge tag">NSFW</span>' : '') + '</span>'
     + (m && m.rec ? '<span class="badge rec" title="Rebuilt from an archive">Recovered: '+esc(m.rec)+'</span>' : '')

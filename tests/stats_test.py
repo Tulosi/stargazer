@@ -22,7 +22,7 @@ with sync_playwright() as p:
     check('active excludes filtered results (text posts hidden by default)', int(pg.inner_text('#stActive')) < 40)
     check('hidden-by-filters note explains the gap', ev("document.getElementById('summary').textContent.includes('hidden by filters')") )
     check('Filters badge ignores the defaults', ev("document.getElementById('decktoggle').dataset.n") in (None, '0'))
-    check('card shows a title strip when card info is off', ev("(()=>{ document.body.classList.add('info-off'); document.body.classList.remove('info-hover'); const t=document.querySelector('#grid .card .thumb .tstrip'); return !!t && getComputedStyle(t).display==='block'; })()"))
+    check('no title is written on the card when card info is off', ev("(()=>{ document.body.classList.add('info-off'); document.body.classList.remove('info-hover'); const c=document.querySelector('#grid .card'); return !c.querySelector('.tstrip') && ![...c.querySelectorAll('.info,.badge')].some(e=>getComputedStyle(e).display!=='none'); })()"))
     pg.keyboard.press('Escape'); pg.wait_for_timeout(100)
     pg.click('#rvw'); pg.wait_for_timeout(250)
     check('Review opens the Filters panel and it stays open', not ev("document.body.classList.contains('deck-collapsed')"))
