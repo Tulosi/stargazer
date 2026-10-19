@@ -328,6 +328,7 @@ body .card .nsfwb[aria-pressed=true]{opacity:1!important;pointer-events:auto!imp
 body.layout-list .meta a.cm:hover,body.layout-list .meta a.cm:focus-visible{color:var(--ink)}
 .meta{display:flex;flex-wrap:wrap;gap:1px 10px;align-items:baseline;font:400 11.5px/1.35 var(--font);font-variant-numeric:tabular-nums;color:rgba(255,255,255,.72);margin-top:4px}
 .meta .sub{border:0;background:none;padding:0;cursor:pointer;color:#fff;font:500 11.5px var(--font)}
+.meta .sub:hover,.meta .sub:focus-visible{text-decoration:underline;text-underline-offset:2px}
 .meta .sub:hover{text-decoration:underline;text-underline-offset:2px}
 .meta .note{color:rgba(255,255,255,.72)}
 .meta .note.dead{color:rgba(255,255,255,.72);text-decoration:line-through;text-decoration-thickness:1px}
@@ -1251,7 +1252,7 @@ function fillCard(el,p){
     + (gl ? '<button class="gnav gprev" type="button" aria-label="Previous image">&#8249;</button><button class="gnav gnext" type="button" aria-label="Next image">&#8250;</button>' : '')
     + '<div class="info">'
     + '<h3 class="title"><a data-open href="'+esc(href)+'" target="_blank" rel="noopener noreferrer">'+esc(titleOf(p))+'</a></h3>'
-    + '<div class="meta"><button class="sub" type="button" data-sub="'+esc(p.sub)+'">r/'+esc(p.sub)+'</button>'+stats
+    + '<div class="meta"><button class="sub" type="button" data-sub="'+esc(p.sub)+'" title="Show only r/'+esc(p.sub)+' posts in your list">r/'+esc(p.sub)+'</button>'+stats
     + (m && m.c ? '<span class="dt">'+new Date(m.c*1000).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'})+'</span>' : '')
     + (note ? '<span class="note'+(dead?' dead':'')+'">'+esc(note)+'</span>' : '')+'</div>'
     + '<div class="actions"><a class="btn primary" data-open href="'+esc(href)+'" target="_blank" rel="noopener noreferrer">Open source</a>'
@@ -2009,7 +2010,7 @@ $('grid').addEventListener('click',e=>{
     return;
   }
   const s = e.target.closest('button.sub');
-  if(s){ state.sub = s.dataset.sub; $('subsel').value = state.sub; refresh(); window.scrollTo({top:0}); return; }
+  if(s){ state.sub = s.dataset.sub; refresh(); window.scrollTo({top:0}); toast('Showing only r/'+state.sub+' posts', {label:'Show all', fn:()=>{ state.sub = ''; refresh(); }}); return; }
   const r = e.target.closest('button.reveal');
   if(r){ r.previousElementSibling.classList.toggle('show'); r.textContent = r.previousElementSibling.classList.contains('show') ? 'Blur' : 'Reveal'; }
 });
@@ -2019,7 +2020,18 @@ function renderMore(){
   for(let k=shown;k<end;k++){ const p=list[k]; let el=cardEls.get(p.id); if(!el){ el=buildCard(p); cardEls.set(p.id,el);} frag.appendChild(el); }
   grid.appendChild(frag); shown = end; updateMore();
 }
+/* Subreddit dropdown: rebuilt whenever the list changes (it used to be built once, before any posts existed). Subreddits with fewer than 3 posts are left out, except the one currently chosen. */
+let subSig = '';
+function buildSubs(){
+  const sig = POSTS.length+'|'+state.sub; if(sig===subSig) return; subSig = sig;
+  const counts = {}; POSTS.forEach(p=>counts[p.sub]=(counts[p.sub]||0)+1);
+  const subs = Object.keys(counts).filter(x=>counts[x]>=3 || x===state.sub).sort((x,y)=>counts[y]-counts[x]||x.localeCompare(y));
+  if(state.sub && !(state.sub in counts)) subs.unshift(state.sub);
+  $('subsel').innerHTML = '<option value="">All subreddits</option>' + subs.map(x=>'<option value="'+esc(x)+'">r/'+esc(x)+(counts[x]?' ('+counts[x]+')':'')+'</option>').join('');
+  $('subsel').value = state.sub;
+}
 function refresh(){
+  buildSubs();
   measureGrid();
   list = sorted(POSTS.filter(p=>matches(p)));
   $('grid').replaceChildren(); shown = 0;
@@ -2476,11 +2488,6 @@ function releasePlayable(t){ t._hover = t._mouse = t._focus = false; t._inView =
 })();
 
 /* ---------- controls ---------- */
-(function(){
-  const counts = {}; POSTS.forEach(p=>counts[p.sub]=(counts[p.sub]||0)+1);
-  const subs = Object.keys(counts).filter(s=>counts[s]>=3).sort((a,b)=>counts[b]-counts[a]||a.localeCompare(b));
-  $('subsel').innerHTML = '<option value="">All subreddits</option>' + subs.map(s=>'<option value="'+esc(s)+'">r/'+esc(s)+' ('+counts[s]+')</option>').join('');
-})();
 (function(){
   const bar = document.querySelector('.deck-bar'), btn = $('searchbtn'), q = $('q');
   const mark = ()=>{ btn.dataset.active = q.value.trim() ? '1' : '0'; };
