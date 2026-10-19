@@ -3471,7 +3471,7 @@ function startCsvMode(){
   MODE = 'csv'; resetView(); FEED.gen++;
   for(const id in META) if(!ROWSET.has(id)) delete META[id];   // drop feed previews so they never reach the cache
   ROWS.forEach((r,i)=>POSTS.push(makePost(i,r.id,r.perma)));
-  state.sort = 'saved'; $('sort').value = 'saved';
+  state.sort = 'new'; $('sort').value = 'new';   // newest first by default; Saved order is still one choice away
   metaOK = false; syncSortUI();
   setSourceUI(); refresh(); updateFavCount();
   if(Object.keys(META).length) onMeta(POSTS);

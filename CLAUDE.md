@@ -11,7 +11,7 @@ Hosted on GitHub Pages. Accounts and storage come from Supabase (free plan). The
 - `tools/screenshots/`  regenerates `docs/screenshots/*.jpg` for the README from invented posts and generated artwork (`make_images.py`, then `shoot.py`). Re-run after visible UI changes. Never use real posts or accounts.
 - `tools/hot_relay.py`  optional local relay that lets the page read Reddit's real hot feed (browsers cannot call Reddit directly).
 - `.github/workflows/`  `pages.yml` deploys `site/`; `keepalive.yml` pings Supabase so the free project is not paused.
-- `tests/`  Playwright checks (`merge_test.py`, `nsfw_test.py`, `panels_test.py`, `lists_test.py`, `reset_test.py`, `viewer_yt_test.py`, `wayback_test.py`, `gone_pic_test.py`, `audio_test.py`, `unload_test.py`, `cloud_reload_test.py`, `first_load_test.py`, `stats_test.py`, `intro_test.py`, `nav_test.py`, `view_test.py`, `sound_follow_test.py`, `layout_test.py`, `merge_prompt_test.py`, `localmeta_test.py`, `imgpause_test.py`, `rg_embed_test.py`, `polish_test.py`, `regrab_test.py`, `review_test.py`, `header_test.py`, `tilesize_test.py`, `seenimg_test.py`).
+- `tests/`  Playwright checks (`merge_test.py`, `nsfw_test.py`, `panels_test.py`, `lists_test.py`, `reset_test.py`, `viewer_yt_test.py`, `wayback_test.py`, `gone_pic_test.py`, `audio_test.py`, `unload_test.py`, `cloud_reload_test.py`, `first_load_test.py`, `stats_test.py`, `intro_test.py`, `nav_test.py`, `view_test.py`, `sound_follow_test.py`, `layout_test.py`, `merge_prompt_test.py`, `localmeta_test.py`, `imgpause_test.py`, `rg_embed_test.py`, `polish_test.py`, `regrab_test.py`, `review_test.py`, `header_test.py`, `tilesize_test.py`, `seenimg_test.py`, `sort_test.py`).
 
 ## Rules that must not be broken
 1. **No personal data in the repo.** No saved-post lists, no CSV files, no subreddit lists from a real account, no keys other than the Supabase anon key. `.gitignore` blocks `*.csv` and `local/`.
@@ -35,7 +35,7 @@ Hosted on GitHub Pages. Accounts and storage come from Supabase (free plan). The
 - Test by loading the page in Playwright with network routes mocked (see `tests/`). There is no live access to Reddit or the archives from the dev sandbox.
 
 - Deleting a single post (or several, via **Bulk Actions** mode) has no confirm for single deletes: it shows a toast with **Undo** (`toast(msg, {label, fn})`, `restoreRows`). Bulk delete asks once, then also offers Undo. Selection mode (`SEL`, `selMode`, `selAct`) acts on `list`; its action bar `#selbar` lives inside `.deck`: on desktop a tinted strip under the top bar, on phones a fixed bottom sheet; NSFW changes go through `markNsfw` (no commit) so many posts commit once.
-- The Filters badge counts only settings changed from the defaults. Theme lives in the Source panel (Appearance). Layout is remembered per list (`saved-posts-layouts`, `applyListLayout`) with the global value as the default.
+- A CSV or account list opens sorted **Newest posts** (set in `startCsvMode`; Saved order stays in the Sort menu); Subreddit mode opens on Hot. The Filters badge counts only settings changed from the defaults. Theme lives in the Source panel (Appearance). Layout is remembered per list (`saved-posts-layouts`, `applyListLayout`) with the global value as the default.
 - The viewer has previous/next **post** navigation (`viewerPost`, Up/Down or Left/Right arrows, swipe, bottom buttons) separate from the gallery's image arrows.
 
 - User-facing wording says **NSFW**; the card toggle shows it stacked on two lines (NS over FW). The filter modes are Hide / Blur / Show / Only.
