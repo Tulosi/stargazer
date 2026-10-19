@@ -349,7 +349,11 @@ body.info-off .card.info-open .ph span{display:inline}
 .ibtn{display:none;position:absolute;right:8px;bottom:8px;z-index:5;width:30px;height:30px;place-items:center;border:0;border-radius:50%;padding:0;background:rgba(12,12,14,.26);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:rgba(255,255,255,.78);cursor:pointer}
 .ibtn:hover{background:rgba(12,12,14,.5);color:#fff}
 .ibtn[aria-pressed=true]{background:rgba(255,255,255,.78);color:#111}
-@media (hover:none){body.info-off .ibtn{display:grid}}
+body.info-off .ibtn{display:grid}
+@media (hover:hover){   /* with a mouse the (i) button appears on hover, like the star and save buttons */
+  body.info-off .card .ibtn{opacity:0;transition:opacity .18s}
+  body.info-off .card:hover .ibtn,body.info-off .card:focus-within .ibtn,body.info-off .card.info-open .ibtn{opacity:1}
+}
 body.info-off .card .star,body.info-off .card .fs,body.info-off .card .save{opacity:0}
 body.info-off .card:hover .star,body.info-off .card:hover .fs,body.info-off .card:hover .save,body.info-off .card:focus-within .star,body.info-off .card:focus-within .fs,body.info-off .card:focus-within .save{opacity:1}
 body.info-hover .card .info,body.info-hover .card .badge,body.info-hover .card .reveal,body.info-hover .card .star,body.info-hover .card .fs,body.info-hover .card .save,body.info-hover .card .ph span{opacity:0}
