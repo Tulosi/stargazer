@@ -4,6 +4,7 @@ A single-file web page (`site/index.html`, no build step, no dependencies) that 
 Hosted on GitHub Pages. Accounts and storage come from Supabase (free plan). The page is public; the data is not.
 
 ## Layout
+- `README.md`  user-facing (what Stargazer is, quick start, local use, standalone download). Keep it free of deploy instructions; those live in `docs/SELF-HOSTING.md`. Keep its feature and privacy claims true when behaviour changes.
 - `site/index.html`  the whole app (HTML, CSS, JS). `site/config.js` holds the Supabase URL and anon key (safe to publish; Row Level Security protects data).
 - `supabase/schema.sql`  table, row-level security and the `merge_posts` function. Run once in the Supabase SQL editor.
 - `supabase/functions/redgifs/index.ts`  optional Edge Function (deployed by hand, Verify JWT off): looks RedGifs clips up for the page when the browser cannot reach the RedGifs API ("Failed to fetch"). The page tries RedGifs directly first, then this helper.
