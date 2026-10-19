@@ -44,9 +44,9 @@ with sync_playwright() as p:
     # 2 filters panel (dark)
     pg.click('#decktoggle'); pg.wait_for_timeout(500); snap(pg,WORK+'/filters.png'); pg.context.close()
     # 3 list 2 columns (light)
-    pg=session(b,{'width':1400,'height':760},'light'); pg.evaluate("document.querySelector('#layoutseg [data-l=list]').click()"); settle(pg,6000); snap(pg,WORK+'/list.png'); pg.context.close()
+    pg=session(b,{'width':1400,'height':760},'dark'); pg.evaluate("document.querySelector('#layoutseg [data-l=list]').click()"); settle(pg,6000); snap(pg,WORK+'/list.png'); pg.context.close()
     # 4 bulk actions (light masonry)
-    pg=session(b,{'width':1400,'height':760},'light'); settle(pg); pg.evaluate("()=>{ document.getElementById('selbtn').click(); [0,2,3,5].forEach(i=>SEL.ids.add(POSTS[i].id)); selPaint(); }"); pg.wait_for_timeout(500); snap(pg,WORK+'/bulk.png'); pg.context.close()
+    pg=session(b,{'width':1400,'height':760},'dark'); settle(pg); pg.evaluate("()=>{ document.getElementById('selbtn').click(); [0,2,3,5].forEach(i=>SEL.ids.add(POSTS[i].id)); selPaint(); }"); pg.wait_for_timeout(500); snap(pg,WORK+'/bulk.png'); pg.context.close()
     # 5 phone (dark)
     pg=session(b,{'width':390,'height':780},'dark',2,True); settle(pg); snap(pg,WORK+'/phone.png'); pg.context.close()
 for n,w in (('gallery',1400),('list',1400),('filters',1400),('bulk',1400),('phone',500)):
