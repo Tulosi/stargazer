@@ -37,6 +37,7 @@ Hosted on GitHub Pages. Accounts and storage come from Supabase (free plan). The
 - The viewer has previous/next **post** navigation (`viewerPost`, Up/Down or Left/Right arrows, swipe, bottom buttons) separate from the gallery's image arrows.
 
 - User-facing wording says **NSFW**; the card toggle shows it stacked on two lines (NS over FW). The filter modes are Hide / Blur / Show / Only.
+- List on desktop has a **Columns** choice (1 / 2 / 3 / Auto, `LCOLS`, `paintCols`, remembered in `saved-posts-listcols`); a fixed count also caps each column's width so rows stay easy to scan. Default is 1.
 - Tile size is a free slider on desktop; on phones (<=720px) it snaps to the column counts that fit (1, 2, 3 across) with a notch and number each (`buildSizeControl`, `SIZE_STEPS`).
 
 ## Deploying

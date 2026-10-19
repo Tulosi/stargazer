@@ -493,6 +493,13 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
 /* ---------- List layout: short rows, card info on a blurred preview, no media controls ---------- */
 .layouthint{margin:-2px 0 4px;font-size:12px;color:var(--muted)}
 body.layout-list #sizerow{display:none}
+#colsrow{display:none}
+@media (min-width:721px){
+  body.layout-list #colsrow{display:grid}
+  /* Long rows are hard to scan, so a fixed column count also caps each column's width and centres the block; Auto keeps filling the screen. */
+  body.layout-list.lcols-1 .grid,body.layout-list.lcols-2 .grid,body.layout-list.lcols-3 .grid{grid-template-columns:repeat(var(--lcols),minmax(0,1fr));max-width:calc(var(--lcols) * 680px + (var(--lcols) - 1) * 6px);margin-left:auto;margin-right:auto}
+  body.layout-list.lcols-1{--lcols:1} body.layout-list.lcols-2{--lcols:2} body.layout-list.lcols-3{--lcols:3}
+}
 body.layout-list .grid{grid-template-columns:repeat(auto-fill,minmax(min(460px,100%),1fr))}
 body.layout-list .thumb img,body.layout-list .thumb .still{filter:blur(16px) brightness(.72);transform:scale(1.25)}
 body.layout-list .thumb.nsfw img,body.layout-list .thumb.nsfw .still{filter:blur(22px) brightness(.55)}
@@ -627,6 +634,7 @@ body.layout-list .nsfwb[aria-pressed=true]:hover::after{filter:invert(1)}
         <div class="ctlrow"><span>Layout</span><div class="srcseg" id="layoutseg" role="group" aria-label="Layout"><button class="pill" type="button" data-l="masonry" aria-pressed="true" title="Best for media">Masonry</button><button class="pill" type="button" data-l="grid" aria-pressed="false" title="Equal square tiles in strict rows">Grid</button><button class="pill" type="button" data-l="list" aria-pressed="false" title="Best for text posts">List</button></div></div>
         <p class="hint layouthint" id="layouthint" role="status"></p>
         <label class="ctlrow" id="sizerow"><span>Tile size</span><span class="sizewrap"><input id="size" type="range" min="150" max="360" step="10" value="230"><span class="notches" aria-hidden="true"></span></span></label>
+        <div class="ctlrow" id="colsrow"><span>Columns</span><div class="srcseg" id="colsseg" role="group" aria-label="List columns"><button class="pill" type="button" data-c="1" aria-pressed="true" title="Easiest to scan">1</button><button class="pill" type="button" data-c="2" aria-pressed="false">2</button><button class="pill" type="button" data-c="3" aria-pressed="false">3</button><button class="pill" type="button" data-c="auto" aria-pressed="false" title="As many as fit">Auto</button></div></div>
         <label class="ctlrow"><span>Card info</span>
           <select id="infomode" class="field" aria-label="Card info">
             <option value="show">Always visible</option>
@@ -2482,6 +2490,12 @@ document.querySelectorAll('#layoutseg .pill').forEach(b=>b.addEventListener('cli
   paintLayout(); relayoutAll();
 }));
 paintLayout();
+/* List columns (desktop). One or two columns read best; the choice is remembered. */
+let LCOLS = '1';
+try{ const sv = localStorage.getItem('saved-posts-listcols'); if(['1','2','3','auto'].includes(sv)) LCOLS = sv; }catch(e){}
+function paintCols(){ document.querySelectorAll('#colsseg .pill').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.c===LCOLS))); ['1','2','3'].forEach(n=>document.body.classList.toggle('lcols-'+n, LCOLS===n)); }
+document.querySelectorAll('#colsseg .pill').forEach(b=>b.addEventListener('click',()=>{ LCOLS = b.dataset.c; try{ localStorage.setItem('saved-posts-listcols', LCOLS); }catch(e){} paintCols(); relayoutAll(); }));
+paintCols();
 /* Tile size. On desktop it is a free slider. On phones only a few column counts fit, so the slider snaps to those (1, 2, 3 across) with a notch and number for each. */
 const phoneMQ = matchMedia('(max-width:720px)');
 let SIZE_STEPS = null;   // card widths for 1, 2, 3 columns on phones; null on desktop
