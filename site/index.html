@@ -612,6 +612,10 @@ body.layout-list .nsfwb[aria-pressed=true]:hover::after{filter:invert(1)}
     <div class="panel" id="panel" role="region" aria-label="Filters">
       <div class="pcol">
         <h2>View</h2>
+        <div class="ctlrow"><span>Layout</span><div class="srcseg" id="layoutseg" role="group" aria-label="Layout"><button class="pill" type="button" data-l="masonry" aria-pressed="true" title="Best for media">Masonry</button><button class="pill" type="button" data-l="grid" aria-pressed="false" title="Equal square tiles in strict rows">Grid</button><button class="pill" type="button" data-l="list" aria-pressed="false" title="Best for text posts">List</button></div></div>
+        <p class="hint layouthint" id="layouthint" role="status"></p>
+        <label class="ctlrow" id="sizerow"><span>Tile size</span><span class="sizewrap"><input id="size" type="range" min="150" max="360" step="10" value="230"><span class="notches" aria-hidden="true"></span></span></label>
+        <div class="ctlrow" id="colsrow"><span>Columns</span><div class="srcseg" id="colsseg" role="group" aria-label="List columns"><button class="pill" type="button" data-c="1" aria-pressed="false" title="Easiest to scan">1</button><button class="pill" type="button" data-c="2" aria-pressed="false">2</button><button class="pill" type="button" data-c="3" aria-pressed="false">3</button><button class="pill" type="button" data-c="auto" aria-pressed="true" title="As many as fit">Auto</button></div></div>
         <label class="ctlrow"><span>Sort</span>
           <select id="sort" class="field" aria-label="Sort order">
             <option value="hot">Hot (Reddit default)</option>
@@ -634,10 +638,6 @@ body.layout-list .nsfwb[aria-pressed=true]:hover::after{filter:invert(1)}
         </label>
         <div class="ctlrow"><span></span><button class="pill" id="reshuffle" type="button" hidden>Reshuffle</button></div>
         <label class="ctlrow"><span>Subreddit</span><select id="subsel" class="field" aria-label="Subreddit"></select></label>
-        <div class="ctlrow"><span>Layout</span><div class="srcseg" id="layoutseg" role="group" aria-label="Layout"><button class="pill" type="button" data-l="masonry" aria-pressed="true" title="Best for media">Masonry</button><button class="pill" type="button" data-l="grid" aria-pressed="false" title="Equal square tiles in strict rows">Grid</button><button class="pill" type="button" data-l="list" aria-pressed="false" title="Best for text posts">List</button></div></div>
-        <p class="hint layouthint" id="layouthint" role="status"></p>
-        <label class="ctlrow" id="sizerow"><span>Tile size</span><span class="sizewrap"><input id="size" type="range" min="150" max="360" step="10" value="230"><span class="notches" aria-hidden="true"></span></span></label>
-        <div class="ctlrow" id="colsrow"><span>Columns</span><div class="srcseg" id="colsseg" role="group" aria-label="List columns"><button class="pill" type="button" data-c="1" aria-pressed="false" title="Easiest to scan">1</button><button class="pill" type="button" data-c="2" aria-pressed="false">2</button><button class="pill" type="button" data-c="3" aria-pressed="false">3</button><button class="pill" type="button" data-c="auto" aria-pressed="true" title="As many as fit">Auto</button></div></div>
         <label class="ctlrow"><span>Card info</span>
           <select id="infomode" class="field" aria-label="Card info">
             <option value="show">Always visible</option>
