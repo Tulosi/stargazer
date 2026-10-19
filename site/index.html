@@ -280,7 +280,7 @@ body.unblur .reveal{display:none!important}
 .card:not(:has(.fs)) .nsfwb{right:80px}
 .nsfwb[hidden]{display:none}
 .nsfwb{background:rgba(12,12,14,.26);color:rgba(255,255,255,.36);box-shadow:none;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
-/* 18+ toggle: off = glass button with faint text, shown only while the card is hovered or in focus; on = glass button with full white text and a white ring, always visible. Hovering previews the other state (an X for removing the mark). */
+/* NSFW toggle: off = glass button with faint text, shown only while the card is hovered or in focus; on = glass button with full white text and a white ring, always visible. Hovering previews the other state (an X for removing the mark). */
 .nsfwb[aria-pressed=false]:hover{background:rgba(12,12,14,.26);color:#fff}
 .nsfwb[aria-pressed=true]::before,.nsfwb[aria-pressed=false]:hover::before{content:"";position:absolute;inset:0;border-radius:50%;padding:2px;background:rgba(255,255,255,.5);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
 .save.nsfwb[aria-pressed=true]{background:rgba(12,12,14,.26);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#fff;box-shadow:none}
@@ -607,7 +607,7 @@ body.layout-list .badges{display:contents}
 
       <div class="pcol">
         <h2>Options</h2>
-        <div class="nsfwgrp" role="group" aria-label="18+ content"><span class="nsfwlbl">18+</span>
+        <div class="nsfwgrp" role="group" aria-label="NSFW content"><span class="nsfwlbl">NSFW</span>
           <div class="srcseg nsfwseg" id="nsfwseg">
             <button class="pill" type="button" data-m="hide" aria-pressed="true">Hidden</button>
             <button class="pill" type="button" data-m="blur" aria-pressed="false">Blurred</button>
@@ -731,8 +731,8 @@ body.layout-list .badges{display:contents}
 <div id="selbar" role="toolbar" aria-label="Selected posts" hidden>
   <b id="selcount">0 selected</b>
   <button type="button" class="pill" data-a="star">Star</button>
-  <button type="button" class="pill" data-a="nsfw" title="Mark selected as 18+">18+</button>
-  <button type="button" class="pill" data-a="sfw" title="Unmark selected as 18+">Not 18+</button>
+  <button type="button" class="pill" data-a="nsfw" title="Mark selected as NSFW">NSFW</button>
+  <button type="button" class="pill" data-a="sfw" title="Unmark selected as NSFW">Not NSFW</button>
   <button type="button" class="pill danger" data-a="del">Delete</button>
   <button type="button" class="pill" data-a="all" title="Select every listed post">All</button>
   <button type="button" class="pill" data-a="done">Done</button>
@@ -878,7 +878,7 @@ function sorted(arr){
 function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 const WB_TS = '20230601';
 const wbImg = u => 'https://web.archive.org/web/'+WB_TS+'im_/'+u;
-const NSFW_ICON = '<svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><text x="8" y="11.2" text-anchor="middle" font-family="Geist,Inter,system-ui,sans-serif" font-weight="700" font-size="8.6" fill="currentColor">18+</text></svg>';
+const NSFW_ICON = '<svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><g text-anchor="middle" font-family="Geist,Inter,system-ui,sans-serif" font-weight="700" font-size="6.8" fill="currentColor"><text x="8" y="7.2">NS</text><text x="8" y="13.2">FW</text></g></svg>';
 const FS_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>';
 function imgCandidates(p){
   const m = metaOf(p), prim = [], arch = [];
@@ -1094,13 +1094,13 @@ function fillCard(el,p){
     + (thumb ? ph + '<img referrerpolicy="no-referrer" alt="">' : (v0 && !/^(yt|rg):/.test(v0) ? ph + '<video class="still" muted playsinline preload="none"></video>' : ph))
     + '<span class="tstrip">'+esc(titleOf(p))+'</span>'
     + '<span class="badges"><span class="badge media'+(v0 ? ' playable' : '')+'">'+esc(MEDIA_LABEL[media]||media)+(gl ? ' 1/'+gl.length : '')+'</span>'
-    + (nsfw ? '<span class="badge tag">18+</span>' : '') + '</span>'
+    + (nsfw ? '<span class="badge tag">NSFW</span>' : '') + '</span>'
     + (m && m.rec ? '<span class="badge rec" title="Rebuilt from an archive">Recovered: '+esc(m.rec)+'</span>' : '')
     + '</a>'
     + (nsfw && thumb ? '<button class="reveal" type="button">Reveal</button>' : '')
     + '<button class="star" type="button" data-id="'+esc(p.id)+'" aria-pressed="'+(FAVS.has(p.id)?'true':'false')+'" aria-label="Star this post" title="Star this post">'+(FAVS.has(p.id)?'\u2605':'\u2606')+'</button>'
     + '<button class="save" type="button" data-id="'+esc(p.id)+'" aria-pressed="'+(ROWSET.has(p.id)?'true':'false')+'" aria-label="'+(ROWSET.has(p.id)?'Remove from your CSV':'Save to your CSV')+'" title="'+(ROWSET.has(p.id)?'Remove from your CSV':'Save to your CSV')+'">'+(ROWSET.has(p.id)?BM_ON:BM_OFF)+'</button>'
-    + '<button class="save nsfwb" type="button" data-id="'+esc(p.id)+'"'+(ROWSET.has(p.id) ? '' : ' hidden')+' aria-pressed="'+(nsfw?'true':'false')+'" aria-label="'+(nsfw ? 'Unmark as 18+' : 'Mark as 18+')+'" title="'+(nsfw ? 'Unmark as 18+' : 'Mark as 18+')+'">'+NSFW_ICON+'</button>'
+    + '<button class="save nsfwb" type="button" data-id="'+esc(p.id)+'"'+(ROWSET.has(p.id) ? '' : ' hidden')+' aria-pressed="'+(nsfw?'true':'false')+'" aria-label="'+(nsfw ? 'Unmark as NSFW' : 'Mark as NSFW')+'" title="'+(nsfw ? 'Unmark as NSFW' : 'Mark as NSFW')+'">'+NSFW_ICON+'</button>'
     + (MEDIA_KINDS.has(media) && (thumb || v0) ? '<button class="fs" type="button" aria-label="Full screen" title="Full screen">'+FS_ICON+'</button>' : '')
     + '<button class="morebtn" type="button" aria-expanded="false" aria-label="More actions" title="More actions"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5L5.5 8l4.5 4.5"/></svg></button>'
     + '<button class="ibtn" type="button" aria-label="Show info" aria-pressed="false"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6.3"/><path d="M8 7.2v3.6"/><circle cx="8" cy="5.1" r=".6" fill="currentColor"/></svg></button>'
@@ -1980,7 +1980,7 @@ async function selAct(a){
   if(a==='all'){ list.forEach(p=>SEL.ids.add(p.id)); selPaint(); return; }
   if(!n) return;
   if(a==='star'){ ps.forEach(p=>{ const r = ROWS.find(x=>x.id===p.id); if(r){ r.starred = true; r.t = nowT(r.t); FAVS.add(p.id); markDirty(p.id); } }); updateFavCount(); refresh(true); await commit(); toast('Starred '+n+(n===1?' post':' posts')); return; }
-  if(a==='nsfw' || a==='sfw'){ ps.forEach(p=>markNsfw(p, a==='nsfw')); refresh(true); await commit(); toast((a==='nsfw' ? 'Marked ' : 'Unmarked ')+n+(n===1?' post':' posts')+' as 18+'); return; }
+  if(a==='nsfw' || a==='sfw'){ ps.forEach(p=>markNsfw(p, a==='nsfw')); refresh(true); await commit(); toast((a==='nsfw' ? 'Marked ' : 'Unmarked ')+n+(n===1?' post':' posts')+' as NSFW'); return; }
   if(a==='del'){
     const keeps = ps.filter(p=>ROWSET.has(p.id)).map(p=>{ const r = ROWS.find(x=>x.id===p.id) || {}; return {id:p.id, perma:r.perma||p.perma||p.link, starred:!!r.starred}; });
     const r = await confirmDialog({title:'Delete '+keeps.length+(keeps.length===1?' post':' posts')+' from your CSV?', paras:['They will be removed from "'+LIB.cur.name+'". You can undo this right after.'], ok:'Delete'});
@@ -3414,7 +3414,7 @@ async function toggleNsfw(p){
   if(!markNsfw(p, want)) return;
   refresh(true);
   await commit();
-  toast(want ? 'Marked 18+' : 'Marked not 18+', {label:'Undo', fn:()=>toggleNsfw(p)});
+  toast(want ? 'Marked NSFW' : 'Marked not NSFW', {label:'Undo', fn:()=>toggleNsfw(p)});
 }
 /* Puts deleted rows back (newer stamp than the tombstone, so the restore wins on every device). */
 async function restoreRows(keeps){

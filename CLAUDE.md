@@ -36,7 +36,7 @@ Hosted on GitHub Pages. Accounts and storage come from Supabase (free plan). The
 - The Filters badge counts only settings changed from the defaults. Theme lives in the Source panel (Appearance). Layout is remembered per list (`saved-posts-layouts`, `applyListLayout`) with the global value as the default.
 - The viewer has previous/next **post** navigation (`viewerPost`, Up/Down or Left/Right arrows, swipe, bottom buttons) separate from the gallery's image arrows.
 
-- User-facing wording says **18+** (button, tag, tooltips, toasts, filter label); code, CSS classes and the stored `?nsfw=` mark keep the NSFW name. The filter modes are Hidden / Blurred / Show / Only.
+- User-facing wording says **NSFW**; the card toggle shows it stacked on two lines (NS over FW). The filter modes are Hidden / Blurred / Show / Only.
 
 ## Deploying
 Push to `main`; `pages.yml` publishes `site/`. Settings needed once: Pages source = GitHub Actions; Actions secrets `SUPABASE_URL`, `SUPABASE_ANON_KEY` for the keepalive.
