@@ -321,6 +321,9 @@ body .card .nsfwb[aria-pressed=true]{opacity:1!important;pointer-events:auto!imp
 .title{margin:0;font:500 13px/1.32 var(--font);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;text-shadow:0 1px 10px rgba(0,0,0,.35)}
 .title a{text-decoration:none;color:#fff}
 .title a:hover{text-decoration:underline;text-underline-offset:2px}
+.meta a.cm{color:inherit;text-decoration:none}
+.meta a.cm:hover,.meta a.cm:focus-visible{text-decoration:underline;text-underline-offset:2px;color:#fff}
+body.layout-list .meta a.cm:hover,body.layout-list .meta a.cm:focus-visible{color:var(--ink)}
 .meta{display:flex;flex-wrap:wrap;gap:1px 10px;align-items:baseline;font:400 11.5px/1.35 var(--font);font-variant-numeric:tabular-nums;color:rgba(255,255,255,.72);margin-top:4px}
 .meta .sub{border:0;background:none;padding:0;cursor:pointer;color:#fff;font:500 11.5px var(--font)}
 .meta .sub:hover{text-decoration:underline;text-underline-offset:2px}
@@ -866,17 +869,16 @@ function baseNsfw(p){
   return p.sub.toLowerCase().startsWith('u_');
 }
 function isNsfw(p){ const k = nsfwMark(p); return k===null ? baseNsfw(p) : k; }
-/* Where a card should go when the original post is gone: the archive copy it was recovered from. */
+/* Where a card should go when the original post is gone: a page a person can read, never an archive's raw API/JSON address.
+   The Wayback copy when one was found, otherwise Reveddit, which shows removed posts and their comments from the archives. */
+const revedditHref = p => 'https://www.reveddit.com/v/'+encodeURIComponent(p.sub)+'/comments/'+encodeURIComponent(p.id)+'/';
 function recHref(p){
   const m = metaOf(p);
-  if(m && m.rec){
-    if(m.wb) return m.wb;
-    if(m.rec==='PullPush') return 'https://api.pullpush.io/reddit/search/submission/?ids='+p.id;
-    return 'https://arctic-shift.photon-reddit.com/api/posts/ids?ids='+p.id;   // the archive that just returned this post
-  }
+  if(m && m.rec) return m.wb || revedditHref(p);
   return p.link;
 }
-const sourceOf = p => (metaOf(p) && metaOf(p).u) || recHref(p);
+const isApiUrl = u => /arctic-shift\.photon-reddit\.com\/api\/|api\.pullpush\.io\//i.test(u||'');   // raw archive data, not a page to show anyone
+const sourceOf = p => { const m = metaOf(p); return (m && m.u && !isApiUrl(m.u)) ? m.u : recHref(p); };
 
 /* ---------- filtering ---------- */
 function matches(p, skip){
@@ -1147,7 +1149,7 @@ function fillCard(el,p){
   const removed = media==='removed' || (m && m.rec);
   const vs = dead ? [] : playSources(m), v0 = vs[0] || '';
   const gl = m && m.gl && m.gl.length > 1 ? m.gl : null;
-  const stats = m && !m.miss ? ((m.s||0) > 1 ? '<span>'+fmt(m.s)+' pts</span>' : '')+((m.n||0) > 0 ? '<span>'+fmt(m.n)+' comments</span>' : '') : '';
+  const stats = m && !m.miss ? ((m.s||0) > 1 ? '<span>'+fmt(m.s)+' pts</span>' : '')+((m.n||0) > 0 ? '<a class="cm" href="'+esc(recHref(p))+'" target="_blank" rel="noopener noreferrer" title="Open the comments">'+fmt(m.n)+' comments</a>' : '') : '';
   const ph = '<div class="ph'+(!m && !dead ? ' pending' : '')+'" style="--h:'+hue(p.sub)+'"><span>r/'+esc(p.sub)+(dead?'<br><small>media unavailable</small>':'')+'</span></div>';
   el._p = p; el._gi = 0; el.classList.toggle('is-dead', dead);
   el.innerHTML =
@@ -1176,7 +1178,7 @@ function fillCard(el,p){
     + (!m && !dead ? '<a class="btn" href="https://www.reddit.com/comments/'+esc(p.id)+'" target="_blank" rel="noopener noreferrer">Open on Reddit</a><button class="btn retry1" type="button" data-id="'+esc(p.id)+'">Retry this one</button>' : '')
     + '</div>'
     + (removed ? '<div class="arch"><span>Archives:</span><a href="'+esc('https://web.archive.org/web/'+WB_TS+'/https://old.reddit.com/r/'+p.sub+'/comments/'+p.id+'/')+'" target="_blank" rel="noopener noreferrer">Wayback</a>'
-        + '<a href="'+esc('https://arctic-shift.photon-reddit.com/api/posts/ids?ids='+p.id)+'" target="_blank" rel="noopener noreferrer">Arctic Shift</a></div>' : '')
+        + '<a href="'+esc(revedditHref(p))+'" target="_blank" rel="noopener noreferrer">Reveddit</a></div>' : '')
     + '</div>';
   const tEl = el.querySelector('.thumb'); if(tEl && tEl.dataset.v) wirePlayable(tEl);
   // If every preview fails, look for a working full-size copy and show that instead.
