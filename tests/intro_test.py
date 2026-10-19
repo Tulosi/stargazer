@@ -15,6 +15,7 @@ with sync_playwright() as p:
     ev("""async()=>{ await idbReq('csv','readwrite',s=>s.clear()); await persistRec({id:'e',name:'e.csv',text:'id,permalink,starred,updated,deleted\\r\\n',handle:null,updated:1}); await activate(await idbReq('csv','readonly',s=>s.get('e'))); startCsvMode(); }""")
     pg.wait_for_timeout(400)
     check('intro shows an Open CSV button', pg.is_visible('#introOpen'))
+    check('intro ends with a quiet GitHub link, then the credit line', pg.is_visible('.introfoot a') and ev("document.querySelector('.introfoot a').href")=='https://github.com/Tulosi/stargazer' and pg.inner_text('.introfoot').strip().endswith('Created by Tulos and - mostly - Claude') and ev("(()=>{ const f=document.querySelector('.introfoot'), i=document.querySelector('.intro'); return i.lastElementChild===f; })()"))
     with pg.expect_file_chooser() as fc: pg.click('#introOpen')
     fc.value.set_files({'name': 'saved_posts.csv', 'mimeType': 'text/csv', 'buffer': CSV.encode()}); pg.wait_for_timeout(600)
     check('button opens the picked CSV', ev("ROWS.length") == 3 and ev("LIB.cur.name") == 'saved_posts.csv')
