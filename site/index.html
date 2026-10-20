@@ -274,8 +274,15 @@ body:not(.layout-list) .card.is-text .thumb .ph::before{content:"";width:clamp(5
 .stats .st.busy b::after{content:"";display:inline-block;width:4px;height:4px;margin-left:4px;border-radius:50%;background:var(--muted);vertical-align:middle;animation:pulse 1s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}
 body.previews-loading #loadText{color:var(--ink);font-weight:500}
-body.previews-loading #loadText:not(:empty)::before{content:"";display:inline-block;width:7px;height:7px;margin-right:8px;border-radius:50%;background:var(--hot);vertical-align:middle;position:relative;top:-1px;animation:beacon 1.8s ease-out infinite}   /* alive while previews are actively loading: a soft ring spreads and fades */
-@keyframes beacon{0%{opacity:1;box-shadow:0 0 0 0 color-mix(in srgb,var(--hot) 55%,transparent)}45%{opacity:.35}70%,100%{opacity:1;box-shadow:0 0 0 8px color-mix(in srgb,var(--hot) 0%,transparent)}}   /* the dot dims and brightens while a soft ring spreads */
+.loaddot{position:relative;display:inline-block;width:7px;height:7px;margin:0 9px 0 7px;vertical-align:middle;top:-1px;opacity:0;transition:opacity .15s ease}
+.loaddot::before,.loaddot::after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--hot)}
+.loaddot::before{opacity:0}   /* the ring */
+body.previews-loading .loaddot{opacity:1}
+.load:has(#loadText:empty) .loaddot{display:none}
+body.previews-loading .loaddot::after{animation:dotbreathe 2s ease-in-out infinite}
+body.previews-loading .loaddot::before{animation:dotring 2s cubic-bezier(.15,.6,.3,1) infinite}
+@keyframes dotbreathe{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:.8}}
+@keyframes dotring{0%{transform:scale(1);opacity:.5}100%{transform:scale(3.2);opacity:0}}   /* alive while previews are actively loading: the dot breathes and a soft ring spreads and fades */
 .load .bar{height:3px}
 
 .ph small{font-size:11px;opacity:.9}
@@ -828,7 +835,7 @@ body.layout-list .nsfwb[aria-pressed=true]:hover::after{filter:invert(1)}
 <div class="wrap">
   <div class="status">
     <div class="load" id="load" aria-live="polite">
-      <span id="loadText">Waiting to load previews</span>
+      <span class="loaddot" aria-hidden="true"></span><span id="loadText">Waiting to load previews</span>
       <span id="recText"></span><button type="button" class="linkbtn" id="recStop" hidden>Stop searching</button>
       <div class="bar"><i id="loadBar"></i></div>
     </div>
