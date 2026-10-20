@@ -351,8 +351,10 @@ body.info-off .card .info,body.info-off .card .badge,body.info-off .card .ph spa
 body.info-off .card.info-open .info,body.info-off .card.info-open .badge{display:block}
 body.info-off .card.info-open .ph span{display:inline}
 .card.info-open .info{padding-right:46px}
-/* a text-only post has no picture to say what it is, so its info opens by default (the (i) button shows pressed and can close it); with Show on hover there is no button, so the title just stays visible */
-body.info-hover:not(.layout-list) .card.is-text .info{display:block;opacity:1}
+/* a text-only post has no picture to say what it is, so in Hidden and Show on hover its title stays on the tile (just the title; hovering, focusing or the (i) button brings the rest) */
+body.info-off:not(.layout-list) .card.is-text .info,body.info-hover:not(.layout-list) .card.is-text .info{display:block;opacity:1}
+body.info-off:not(.layout-list) .card.is-text:not(.info-open) .info :is(.meta,.actions,.arch),
+body.info-hover:not(.layout-list) .card.is-text:not(:hover):not(:focus-within):not(.is-focus):not(.info-open) .info :is(.meta,.actions,.arch){display:none}
 .ibtn{display:none;position:absolute;right:8px;bottom:8px;z-index:5;width:30px;height:30px;place-items:center;border:0;border-radius:50%;padding:0;background:rgba(12,12,14,.26);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:rgba(255,255,255,.78);cursor:pointer}
 .ibtn:hover{background:rgba(12,12,14,.5);color:#fff}
 .ibtn[aria-pressed=true]{background:rgba(255,255,255,.78);color:#111}
@@ -367,7 +369,10 @@ body.info-hover .card .info,body.info-hover .card .badge,body.info-hover .card .
 body.info-hover .card:hover .info,body.info-hover .card:hover .badge,body.info-hover .card:hover .reveal,body.info-hover .card:hover .star,body.info-hover .card:hover .fs,body.info-hover .card:hover .save,body.info-hover .card:hover .ph span,
 body.info-hover .card:focus-within .info,body.info-hover .card:focus-within .badge,body.info-hover .card:focus-within .reveal,body.info-hover .card:focus-within .star,body.info-hover .card:focus-within .fs,body.info-hover .card:focus-within .save,body.info-hover .card:focus-within .ph span{opacity:1}
 @media (hover:none){body.info-off .card .star,body.info-off .card .fs,body.info-off .card .save{opacity:1}}
-@media (hover:none){body.info-hover .card .info,body.info-hover .card .badge,body.info-hover .card .reveal,body.info-hover .card .star,body.info-hover .card .fs,body.info-hover .card .save,body.info-hover .card .ph span{opacity:1}}
+@media (hover:none){   /* no hover on a touch screen: Show on hover shows the info of the tile in focus (or opened with its (i) button), the way the star and save buttons already behave */
+  body.info-hover .card .reveal,body.info-hover .card .star,body.info-hover .card .fs,body.info-hover .card .save{opacity:1}
+  body.info-hover .card.is-focus .info,body.info-hover .card.is-focus .badge,body.info-hover .card.is-focus .ph span,body.info-hover .card.info-open .info,body.info-hover .card.info-open .badge,body.info-hover .card.info-open .ph span{opacity:1}
+}
 
 /* touch screens: save, star and the (i) button only appear on the tile in focus (or while its info is open) */
 @media (hover:none){
@@ -1274,7 +1279,6 @@ function fillCard(el,p){
     + (removed ? '<div class="arch"><span>Archives:</span><a href="'+esc(wbPostHref(p))+'" target="_blank" rel="noopener noreferrer">Wayback</a></div>' : '')
     + '</div>';
   const tEl = el.querySelector('.thumb'); if(tEl && tEl.dataset.v) wirePlayable(tEl);
-  if(media==='text' && el._textOpen!==p.id){ el._textOpen = p.id; el.classList.add('info-open'); }   // text-only posts start with their info open; the (i) button can close it
   { const ib = el.querySelector('.ibtn'), on = el.classList.contains('info-open'); if(ib){ ib.setAttribute('aria-pressed', on?'true':'false'); ib.setAttribute('aria-label', on?'Hide info':'Show info'); } }
   if(nsfw && tEl && REVEALED.has(p.id)){ tEl.classList.add('show'); const rb = el.querySelector('.reveal'); if(rb) rb.textContent = 'Blur'; }
   // If every preview fails, look for a working full-size copy and show that instead.
