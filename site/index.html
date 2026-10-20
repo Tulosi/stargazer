@@ -240,7 +240,7 @@ input[type=range]{width:100%;accent-color:var(--sel);margin:0}
 /* ---- status line ---- */
 .status:has(#loadText:empty):has(#recText:empty):has(#summary:empty){display:none}
 .status{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:2px 0 10px;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
-.load{display:flex;flex-wrap:wrap;gap:2px 14px;min-width:0}
+.load{display:flex;flex-wrap:wrap;align-items:center;gap:2px 14px;min-width:0}
 .load .err{color:var(--warn)}
 .load button{margin-left:8px;border:0;background:var(--surface-2);border-radius:999px;padding:3px 11px;cursor:pointer;font-size:12px}
 .load .bar{position:fixed;top:0;left:0;right:0;height:2px;z-index:60;pointer-events:none}
@@ -274,11 +274,12 @@ body:not(.layout-list) .card.is-text .thumb .ph::before{content:"";width:clamp(5
 .stats .st.busy b::after{content:"";display:inline-block;width:4px;height:4px;margin-left:4px;border-radius:50%;background:var(--muted);vertical-align:middle;animation:pulse 1s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}
 body.previews-loading #loadText{color:var(--ink);font-weight:500}
-.loaddot{position:relative;display:inline-block;width:7px;height:7px;margin:0 9px 0 7px;vertical-align:middle;top:-1px;opacity:0;transition:opacity .15s ease}
+.loaddot{position:relative;display:none;flex:none;width:7px;height:7px;margin:0 -6px 0 7px}   /* only takes up room while loading, so the text sits flush left otherwise; the left margin leaves space for the ring */
 .loaddot::before,.loaddot::after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--hot)}
 .loaddot::before{opacity:0}   /* the ring */
-body.previews-loading .loaddot{opacity:1}
-.load:has(#loadText:empty) .loaddot{display:none}
+body.previews-loading .loaddot{display:block;animation:dotin .2s ease-out}
+@keyframes dotin{from{opacity:0}}
+.load:has(#loadText:empty) .loaddot{display:none!important}
 body.previews-loading .loaddot::after{animation:dotbreathe 2s ease-in-out infinite}
 body.previews-loading .loaddot::before{animation:dotring 2s cubic-bezier(.15,.6,.3,1) infinite}
 @keyframes dotbreathe{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:.8}}
