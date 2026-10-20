@@ -33,6 +33,19 @@ with sync_playwright() as p:
     check('info mode hover: picture card shows nothing until hovered', not shown('.card:not(.is-text) .title'))
     pg.hover('.card:not(.is-text)'); pg.wait_for_timeout(400)
     check('info mode hover: hovering a picture card shows its info', shown('.card:not(.is-text) .title'))
+    # Show on hover fades the info in and out
+    setmode('hover')
+    dur = lambda sel: ev("(()=>{ const s=getComputedStyle(document.querySelector('%s')); const i=s.transitionProperty.split(', ').indexOf('opacity'); return i<0 ? 0 : parseFloat(s.transitionDuration.split(', ')[i]); })()" % sel)
+    check('Show on hover: info fades (even while hovered)', dur('.card:not(.is-text) .info') >= 0.15)
+    sample = """()=>new Promise(res=>{ const e=document.querySelector('.card:not(.is-text) .info'); const out=[]; const t0=performance.now(); const f=()=>{ out.push(+getComputedStyle(e).opacity); if(performance.now()-t0<450) requestAnimationFrame(f); else res(out); }; f(); })"""
+    pg.mouse.move(5, 5); pg.wait_for_timeout(600)
+    box = pg.locator('.card:not(.is-text)').first.bounding_box()
+    pg.mouse.move(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2)
+    up = pg.evaluate(sample)
+    check('Show on hover: opacity eases up instead of jumping', up[-1] == 1 and any(0 < v < 1 for v in up))
+    pg.mouse.move(5, 5)
+    down = pg.evaluate(sample)
+    check('Show on hover: and eases back down', down[-1] == 0 and any(0 < v < 1 for v in down))
     ev("document.getElementById('infomode').value='show'; document.getElementById('infomode').dispatchEvent(new Event('change'))"); pg.wait_for_timeout(300)
     check('info mode show: both visible', ev(vis('.is-text')) and ev(vis(':not(.is-text)')))
     # lavender tile with a picture-off mark for text posts that have no thumbnail

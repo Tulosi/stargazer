@@ -401,6 +401,8 @@ body.info-hover .card:focus-within .info,body.info-hover .card:focus-within .bad
 .ctl .time{flex:none;font:400 10.5px var(--font);font-variant-numeric:tabular-nums;color:rgba(255,255,255,.9);white-space:nowrap}
 @container (max-width:230px){.ctl .time{display:none}}
 .card:hover .info,.card:focus-within .info{transition:none}
+/* Show on hover: the info fades in and out */
+body.info-hover .card .info,body.info-hover .card .badge,body.info-hover .card .ph span{transition:opacity .22s ease}
 .card.playing:hover .info,.card.playing:focus-within .info{padding-bottom:44px}
 
 /* ---- viewer, toast, misc ---- */
