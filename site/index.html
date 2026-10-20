@@ -435,6 +435,7 @@ body.info-hover .card .info,body.info-hover .card .badge,body.info-hover .card .
 #viewer .vstage{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
 #viewer img,#viewer video{max-width:100%;max-height:100%;object-fit:contain}
 #viewer iframe.vyt.vrg{width:100%;height:100%;aspect-ratio:auto;max-height:none}
+#viewer .vstage:has(iframe.vrg){height:calc(100% - 64px - env(safe-area-inset-bottom,0px));align-self:flex-start}   /* RedGifs' own player has its controls along the bottom, so leave a band for the previous/next post buttons instead of covering them */
 #viewer iframe.vyt{border:0;background:#000;width:min(100%,calc(100vh*16/9));aspect-ratio:16/9;max-height:100%}
 #viewer .vytlink{position:absolute;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translateX(-50%);padding:10px 18px;border-radius:999px;background:rgba(255,255,255,.9);color:#111;text-decoration:none;font-weight:600;font-size:14px}
 #viewer img{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-user-drag:none;will-change:transform;transition:none}
