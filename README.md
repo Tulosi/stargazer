@@ -12,7 +12,7 @@
   <a href="#faq">FAQ</a>
 </p>
 
-<p align="center">Free · No sign-up required · One page, no install · Works on desktop and phone</p>
+<p align="center">Free · No sign-up required · One page, no install · Works on desktop and mobile</p>
 
 <p align="center">
   <img src="docs/screenshots/gallery.jpg" alt="Stargazer's Masonry gallery in dark mode" width="900">
