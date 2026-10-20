@@ -34,6 +34,9 @@ with sync_playwright() as p:
     m.route('**/*', lambda r: r.continue_() if r.request.url.startswith('file:') else r.abort())
     m.goto(PAGE); m.wait_for_timeout(800)
     check('phone: every nav label is on screen', m.evaluate("[...document.querySelectorAll('.navbtns .nl')].every(e=>e.getBoundingClientRect().bottom <= innerHeight)"))
+    # unloading the only list leaves an empty placeholder that must not be named as a source
+    ev("async()=>{ const rec = LIB.cur; await idbReq('csv','readwrite',s=>s.delete(rec.id)); LIB.cur = null; const next = {id:'builtin-zz', name:'My saved posts', text:'id,permalink,starred,updated,deleted\\r\\n', handle:null, updated:Date.now()}; await persistRec(next); await activate(next); startCsvMode(); }"); pg.wait_for_timeout(600)
+    check('empty placeholder reads No source loaded', ev("document.getElementById('csvSel').selectedOptions[0].textContent") == 'No source loaded' and 'No source loaded' in ev("document.getElementById('csvStatus').textContent") and ev("document.getElementById('csvKind').hidden"))
     check('no page errors', not errs)
     b.close()
 raise SystemExit(1 if bad else 0)

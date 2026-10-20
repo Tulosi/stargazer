@@ -3271,15 +3271,19 @@ function pickMergeHint(){
 }
 $('mrgDo').addEventListener('click',()=>$('csvMerge').click());
 $('mrgLater').addEventListener('click',()=>{ const o = mrgRead(), r = LIB.cur; if(!r) return; o[r.id] = Object.assign(o[r.id]||{t:Date.now()}, {snooze:Date.now()+7*864e5}); mrgWrite(o); updateMergeHint(); });
+/* After unloading the last list the page keeps an empty placeholder; say so plainly rather than naming it as a source. */
+const isEmptySlot = r => !!r && /^builtin/.test(r.id) && !ROWS.length && !TOMBS.size && !r.handle && !isCloudList(r);
+const srcLabel = x => (LIB.cur && LIB.cur.id===x.id && isEmptySlot(x)) ? 'No source loaded' : kindLabel(x)+' \u00b7 '+x.name;
 function csvInfo(){
   updateSrcBtn();
   const r = LIB.cur; if(!r) return;
   const cloud = isCloudList(r);
   const where = r.handle ? (r.synced ? 'linked to a file on disk; changes are written to it' : 'linked file not connected; changes are kept in this browser only') : 'stored in this browser';
-  $('csvStatus').textContent = ROWS.length.toLocaleString()+' saved posts in "'+r.name+'" ('+where+').'+(cloud ? ' Synced with your account.' : '');
+  const empty = isEmptySlot(r);
+  $('csvStatus').textContent = empty ? 'No source loaded. Use Open CSV to load your saved posts.' : ROWS.length.toLocaleString()+' saved posts in "'+r.name+'" ('+where+').'+(cloud ? ' Synced with your account.' : '');
   $('csvStatus').dataset.kind = r.handle && !r.synced ? 'warn' : '';
   /* Two kinds of list: an Account list is kept in your account and follows you to every device; a Local list stays on this device (in the browser, or in a file you linked). */
-  const kb = $('csvKind'); kb.dataset.k = cloud ? 'account' : 'local';
+  const kb = $('csvKind'); kb.hidden = empty; kb.dataset.k = cloud ? 'account' : 'local';
   kb.innerHTML = KIND_ICON[cloud ? 'account' : 'local'] + '<span>' + (cloud ? 'Account list: synced across your devices' + (r.handle ? ' and written to a file' : '')
     : 'Local list: ' + (r.handle ? (r.synced ? 'written to a file on this device' : 'linked file not connected') : 'this browser only')) + '</span>';
   $('csvReconnect').hidden = !(r.handle && !r.synced);
@@ -3290,12 +3294,12 @@ function csvInfo(){
   cb.title = cloud ? 'Keep this list on this device only. Your account keeps its own copy.' : 'Merge this list into your account and keep it in step across devices';
   updateSyncUI(); updateMergeHint();
   $('csvUnload').disabled = !ROWS.length && !TOMBS.size && !r.handle && !r.cloud && LIB.list.length <= 1;   // nothing to unload: only an empty list is here
-  const opts = $('csvSel').options; for(let i=0;i<opts.length;i++){ const x = (LIB.cur && LIB.cur.id===opts[i].value) ? LIB.cur : LIB.list.find(q=>q.id===opts[i].value); if(x) opts[i].textContent = kindLabel(x)+' \u00b7 '+x.name; }
+  const opts = $('csvSel').options; for(let i=0;i<opts.length;i++){ const x = (LIB.cur && LIB.cur.id===opts[i].value) ? LIB.cur : LIB.list.find(q=>q.id===opts[i].value); if(x) opts[i].textContent = srcLabel(x); }
 }
 async function renderLibrary(){
   LIB.list = await libAll();
   const sel = $('csvSel');
-  sel.innerHTML = LIB.list.map(r=>'<option value="'+esc(r.id)+'">'+esc(kindLabel(r)+' \u00b7 '+r.name)+'</option>').join('');
+  sel.innerHTML = LIB.list.map(r=>'<option value="'+esc(r.id)+'">'+esc(srcLabel(r))+'</option>').join('');
   if(LIB.cur) sel.value = LIB.cur.id;
   csvInfo();
 }
