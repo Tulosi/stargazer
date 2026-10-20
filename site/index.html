@@ -132,6 +132,8 @@ button,select,input{font:inherit;color:inherit}
 .pullline{margin-top:6px;padding:7px 10px;border-radius:8px;font-size:13px;font-weight:700;color:var(--ink);background:var(--surface-2);border:1px solid var(--line)}
 .pullline[data-warn="1"]{color:var(--alert-ink);background:var(--alert-bg);border-color:var(--alert-line)}
 .pullline[hidden]{display:none}
+.pullset{position:relative;font-weight:400;font-size:12px;text-decoration:underline;cursor:pointer;white-space:nowrap}
+.pullset input{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
 .srcbadge[data-s=syncing] svg{animation:spin 1.1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .srcbadge[data-s=error],.srcbadge[data-s=offline]{background:var(--warn);color:#1a1200}
@@ -749,7 +751,7 @@ body.layout-list .nsfwb[aria-pressed=true]:hover::after{filter:invert(1)}
             </details>
           </div>
           <span id="csvStatus"></span>
-          <div class="pullline" id="pullLine" role="status" hidden></div>
+          <div class="pullline" id="pullLine" hidden><span id="pullTxt" role="status"></span> <label class="linkbtn pullset">Set date<input type="date" id="pullDate" aria-label="Date this list was last pulled from Reddit"></label></div>
           <input id="csvfile" type="file" accept=".csv,text/csv,text/plain" hidden>
         </div>
         <form class="subform" id="subForm" hidden>
@@ -3216,24 +3218,39 @@ function updateExpHint(){
 const MRGKEY = 'saved-posts-lastmerge', MRG_DAYS = 30;
 const mrgRead = () => { try{ return JSON.parse(localStorage.getItem(MRGKEY)||'{}'); }catch(e){ return {}; } };
 const mrgWrite = o => { try{ localStorage.setItem(MRGKEY, JSON.stringify(o)); }catch(e){} };
-function noteMerge(id){ const o = mrgRead(); o[id] = {t:Date.now(), snooze:0}; mrgWrite(o); updateMergeHint(); }
+/* Reddit's export carries no date, so the pull date is the file's own modified time, but only for a raw Reddit export (no "updated" column). A file this page wrote has been re-saved since, so its time says nothing about the pull. */
+function pullTime(r){
+  if(!r || !r.mod) return 0;
+  const head = (parseCsv(r.text)[0]||[]).map(h=>h.trim().toLowerCase());
+  return head.includes('updated') ? 0 : Math.min(r.mod, Date.now());
+}
+function noteMerge(id, ts){
+  const o = mrgRead(), old = o[id];
+  if(ts){ o[id] = {t: old && old.src ? Math.max(old.t, ts) : ts, snooze:0, src:'file'}; }          // a real pull date; never move it backwards
+  else if(!old){ o[id] = {t:Date.now(), snooze:0, est:true}; }                          // unknown: the clock starts now
+  mrgWrite(o); updateMergeHint();
+}
 let mrgToasted = false;
 function updateMergeHint(){
   const el = $('mrgHint'), r = LIB.cur; if(!el) return;
   const pl = $('pullLine');
   if(!r || !ROWS.length){ el.hidden = true; if(pl) pl.hidden = true; return; }
   const o = mrgRead(); let e = o[r.id];
-  if(!e){ e = o[r.id] = {t:Date.now(), snooze:0}; mrgWrite(o); }   // a list seen for the first time starts its 30 days now
+  if(!e){ e = o[r.id] = {t:Date.now(), snooze:0, est:true}; mrgWrite(o); }   // a list seen for the first time starts its 30 days now
   const days = (Date.now()-e.t)/86400000, due = days >= MRG_DAYS && Date.now() >= (e.snooze||0);
   if(pl){   // always say when this list last had fresh data from Reddit; loud once it is over 30 days
-    const d = Math.floor(days);
-    pl.textContent = 'Last pulled from Reddit: '+new Date(e.t).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'})+' ('+(d < 1 ? 'today' : d+(d===1?' day':' days')+' ago')+')'+(days >= MRG_DAYS ? '. Over '+MRG_DAYS+' days old.' : '');
+    const fmt = t => new Date(t).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});
+    const mid = t => { const x = new Date(t); x.setHours(0,0,0,0); return x.getTime(); };
+    const d = Math.round((mid(Date.now())-mid(e.t))/864e5), ago = d < 1 ? 'today' : d+(d===1?' day':' days')+' ago';
+    $('pullTxt').textContent = e.est ? 'Last pulled from Reddit: date unknown (first opened here '+fmt(e.t)+', '+ago+')' : 'Last pulled from Reddit: '+fmt(e.t)+' ('+ago+')'+(days >= MRG_DAYS ? '. Over '+MRG_DAYS+' days old.' : '');
     pl.dataset.warn = days >= MRG_DAYS ? '1' : '0'; pl.hidden = false;
+    $('pullDate').max = new Date().toISOString().slice(0,10);
   }
   el.hidden = !due; if(!due) return;
   $('mrgTxt').textContent = 'Newer saves may be missing. Pull a fresh CSV from Reddit and merge it in:';
   if(!mrgToasted){ mrgToasted = true; toast('It has been over '+MRG_DAYS+' days since you merged a Reddit export. See Source to update your list.'); }
 }
+$('pullDate').addEventListener('change',e=>{ const r = LIB.cur, v = e.target.value; if(!r || !v) return; const t = Math.min(new Date(v+'T12:00:00').getTime(), Date.now()); const o = mrgRead(); o[r.id] = {t, snooze:0, src:'set'}; mrgWrite(o); updateMergeHint(); });
 $('mrgDo').addEventListener('click',()=>$('csvMerge').click());
 $('mrgLater').addEventListener('click',()=>{ const o = mrgRead(), r = LIB.cur; if(!r) return; o[r.id] = Object.assign(o[r.id]||{t:Date.now()}, {snooze:Date.now()+7*864e5}); mrgWrite(o); updateMergeHint(); });
 function csvInfo(){
@@ -3592,12 +3609,12 @@ async function pickCsv(forMerge){
       if(!forMerge) opts.mode = 'readwrite';
       const [h] = await window.showOpenFilePicker(opts);
       const f = await h.getFile();
-      return {name:f.name, text:await f.text(), handle: forMerge ? null : h};
+      return {name:f.name, text:await f.text(), handle: forMerge ? null : h, mod:f.lastModified};
     }catch(e){ if(e && e.name==='AbortError') return null; }
   }
   return new Promise(res=>{
     const inp = $('csvfile');
-    inp.onchange = async () => { const f = inp.files[0]; inp.value = ''; res(f ? {name:f.name, text:await f.text(), handle:null} : null); };
+    inp.onchange = async () => { const f = inp.files[0]; inp.value = ''; res(f ? {name:f.name, text:await f.text(), handle:null, mod:f.lastModified} : null); };
     inp.click();
   });
 }
@@ -3978,7 +3995,7 @@ async function openCsvResult(r){
   const {rows} = csvToRows(r.text);
   if(!rows.length){ csvStatus('No posts found in that file. It needs an id and permalink column.','warn'); return; }
   const rec = {id:'csv-'+Date.now().toString(36), name:r.name, text:r.text, handle:r.handle, updated:Date.now(), synced:!!r.handle};
-  await persistRec(rec); await activate(rec); startCsvMode(); noteMerge(rec.id);
+  await persistRec(rec); await activate(rec); startCsvMode(); noteMerge(rec.id, pullTime(r));
   csvStatus('Opened "'+r.name+'" with '+rows.length.toLocaleString()+' posts.');
 }
 document.addEventListener('click',e=>{ if(e.target.closest && e.target.closest('#introOpen')) $('csvOpen').click(); });
@@ -3994,7 +4011,7 @@ $('csvOpen').addEventListener('click',async()=>{ const r = await pickCsv(false);
     if(!hasFiles(e)) return; e.preventDefault(); depth = 0; veil.hidden = true;
     const f = e.dataTransfer.files[0]; if(!f) return;
     if(!/\.(csv|txt)$/i.test(f.name) && f.type && !/csv|text/.test(f.type)){ csvStatus('That does not look like a CSV file.','warn'); return; }
-    await openCsvResult({name:f.name, text:await f.text(), handle:null});
+    await openCsvResult({name:f.name, text:await f.text(), handle:null, mod:f.lastModified});
   });
 })();
 $('csvMerge').addEventListener('click',async()=>{
@@ -4007,7 +4024,7 @@ $('csvMerge').addEventListener('click',async()=>{
   if(rep.removedHere.length) lines.push(rep.removedHere.length.toLocaleString()+' posts here were deleted more recently in that file, so they will be removed.');
   if(rep.skippedDeleted.length) lines.push(rep.skippedDeleted.length.toLocaleString()+' posts in that file were deleted here earlier, so they are skipped rather than added back.');
   let restore = false;
-  if(!rep.added.length && !rep.starsChanged && !rep.removedHere.length && !rep.skippedDeleted.length && res.tombs.size===TOMBS.size){ noteMerge(LIB.cur.id); csvStatus('Nothing new to merge: "'+r.name+'" matches "'+LIB.cur.name+'".'); return; }
+  if(!rep.added.length && !rep.starsChanged && !rep.removedHere.length && !rep.skippedDeleted.length && res.tombs.size===TOMBS.size){ noteMerge(LIB.cur.id, pullTime(r)); csvStatus('Nothing new to merge: "'+r.name+'" matches "'+LIB.cur.name+'".'); return; }
   if(rep.added.length || rep.removedHere.length || rep.skippedDeleted.length){
     const d = await confirmDialog({title:'Merge "'+r.name+'" into "'+LIB.cur.name+'"?', paras:lines, ok:'Merge',
       option: rep.skippedDeleted.length ? 'Also restore the '+rep.skippedDeleted.length.toLocaleString()+' posts I deleted earlier' : ''});
@@ -4018,7 +4035,7 @@ $('csvMerge').addEventListener('click',async()=>{
     const back = new Set(rep.skippedDeleted);
     for(const id of back){ const x = res.tombs.get(id); if(!x) continue; res.tombs.delete(id); res.rows.unshift({id, perma:x.perma||'', starred:false, t:nowT(x.t)}); }
   }
-  applyMerged(res); await commit(); startCsvMode(); noteMerge(LIB.cur.id);
+  applyMerged(res); await commit(); startCsvMode(); noteMerge(LIB.cur.id, pullTime(r));
   csvStatus('Merged "'+r.name+'": '+rep.added.length.toLocaleString()+' added'+(rep.removedHere.length?', '+rep.removedHere.length+' removed':'')+(rep.skippedDeleted.length ? (restore ? ', '+rep.skippedDeleted.length+' restored' : ', '+rep.skippedDeleted.length+' kept deleted') : '')+'.');
 });
 $('csvExport').addEventListener('click',()=>{ noteExport(LIB.cur.id); updateExpHint(); download(/\.csv$/i.test(LIB.cur.name) ? LIB.cur.name : LIB.cur.name+'.csv', rowsToCsv(ROWS, TOMBS)); csvStatus('Exported '+ROWS.length.toLocaleString()+' posts'+(TOMBS.size ? ' and '+TOMBS.size.toLocaleString()+' deletion records' : '')+'.'); });
