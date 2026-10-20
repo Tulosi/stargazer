@@ -2649,7 +2649,7 @@ function applyListLayout(){
 function paintLayoutHint(){
   const h = $('layouthint'); if(!h) return;
   h.textContent = LAYOUTS[LAYOUT];
-  if(LAYOUT!=='list' && !state.showText){ const n = document.createElement('span'); n.className = 'laynote'; n.textContent = 'Text posts default to hidden in this view, but can be turned on manually.'; h.appendChild(n); }
+  if(LAYOUT!=='list' && !state.showText){ const n = document.createElement('span'); n.className = 'laynote'; n.textContent = 'Text posts default to off in this view.'; h.appendChild(n); }
 }
 function applyTextDefault(){
   if(textTouched || state.showText===textDefault()) { paintLayoutHint(); return; }
