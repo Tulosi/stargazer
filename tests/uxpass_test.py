@@ -38,7 +38,7 @@ with sync_playwright() as p:
     ev("async()=>{ const rec = LIB.cur; await idbReq('csv','readwrite',s=>s.delete(rec.id)); LIB.cur = null; const next = {id:'builtin-zz', name:'My saved posts', text:'id,permalink,starred,updated,deleted\\r\\n', handle:null, updated:Date.now()}; await persistRec(next); await activate(next); startCsvMode(); }"); pg.wait_for_timeout(600)
     check('empty placeholder reads No source loaded', ev("document.getElementById('csvSel').selectedOptions[0].textContent") == 'No source loaded' and 'No source loaded' in ev("document.getElementById('csvStatus').textContent") and ev("document.getElementById('csvKind').hidden"))
     ev("document.body.classList.add('previews-loading'); document.getElementById('loadText').textContent='Loading previews 1 / 5'")
-    check('a pulsing dot shows beside Loading previews while loading', ev("(()=>{ const s=getComputedStyle(document.getElementById('loadText'),'::before'); return s.content!=='none' && s.animationName==='ripple'; })()"))
+    check('a pulsing dot shows beside Loading previews while loading', ev("(()=>{ const s=getComputedStyle(document.getElementById('loadText'),'::before'); return s.content!=='none' && s.animationName==='beacon'; })()"))
     ev("document.body.classList.remove('previews-loading')")
     check('and is gone when loading stops', ev("getComputedStyle(document.getElementById('loadText'),'::before').content") == 'none')
     check('no page errors', not errs)

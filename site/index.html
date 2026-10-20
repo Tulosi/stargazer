@@ -274,8 +274,8 @@ body:not(.layout-list) .card.is-text .thumb .ph::before{content:"";width:clamp(5
 .stats .st.busy b::after{content:"";display:inline-block;width:4px;height:4px;margin-left:4px;border-radius:50%;background:var(--muted);vertical-align:middle;animation:pulse 1s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}
 body.previews-loading #loadText{color:var(--ink);font-weight:500}
-body.previews-loading #loadText:not(:empty)::before{content:"";display:inline-block;width:7px;height:7px;margin-right:8px;border-radius:50%;background:var(--hot);vertical-align:middle;position:relative;top:-1px;animation:ripple 1.8s ease-out infinite}   /* alive while previews are actively loading: a soft ring spreads and fades */
-@keyframes ripple{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--hot) 55%,transparent)}70%,100%{box-shadow:0 0 0 8px color-mix(in srgb,var(--hot) 0%,transparent)}}
+body.previews-loading #loadText:not(:empty)::before{content:"";display:inline-block;width:7px;height:7px;margin-right:8px;border-radius:50%;background:var(--hot);vertical-align:middle;position:relative;top:-1px;animation:beacon 1.8s ease-out infinite}   /* alive while previews are actively loading: a soft ring spreads and fades */
+@keyframes beacon{0%{opacity:1;box-shadow:0 0 0 0 color-mix(in srgb,var(--hot) 55%,transparent)}45%{opacity:.35}70%,100%{opacity:1;box-shadow:0 0 0 8px color-mix(in srgb,var(--hot) 0%,transparent)}}   /* the dot dims and brightens while a soft ring spreads */
 .load .bar{height:3px}
 
 .ph small{font-size:11px;opacity:.9}
