@@ -31,7 +31,7 @@ Stargazer turns that export into a visual gallery you can actually comb through.
 ## What you can do
 
 **Browse**
-- Three layouts: **Masonry** (best for pictures and clips), **Grid** (equal squares) and **List** (compact rows with a small thumbnail, easiest for scanning text posts). Choose a different layout for each list; List view also lets you pick 1, 2, 3 or Auto columns.
+- Three layouts: **Masonry** (best for pictures and clips), **Grid** (equal squares) and **List** (compact rows with a small thumbnail, easiest for scanning text posts, which List shows by default; Masonry and Grid keep them hidden unless you switch Show text posts on). Choose a different layout for each list; List view also lets you pick 1, 2, 3 or Auto columns.
 - A built-in viewer for images, galleries, videos, YouTube and RedGifs, with previous/next post navigation (arrow keys, swipe or buttons).
 - Search titles, subreddits and authors (type `r/edmonton+alberta` to see several subreddits combined); sort by hot, newest, oldest, most comments, highest score or subreddit; limit by time range.
 - Light and dark themes, adjustable tile size, and a layout that adapts to phones.

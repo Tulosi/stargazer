@@ -542,6 +542,7 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
 
 /* ---------- List layout: short rows, card info on a blurred preview, no media controls ---------- */
 .layouthint{margin:-2px 0 4px;font-size:12px;color:var(--muted)}
+.layouthint .laynote{display:block;margin-top:2px;font-size:11px;opacity:.85}
 body.layout-list #sizerow{display:none}
 #colsrow{display:none}
 @media (min-width:721px){
@@ -852,6 +853,8 @@ const SOURCES = [
 ];
 
 const META = {};
+let textTouched = false;   // the person has switched Show text posts themselves, so layout changes stop overriding it
+const textDefault = () => LAYOUT==='list';   // List suits text posts, so they start on there
 const state = {q:'', cats:new Set(), kinds:new Set(), media:new Set(), nsfw:'hide', sub:'', sort:'saved', fav:false, hideBroken:true, showText:false, range:'all', seed:String(Date.now())};
 const PAGE = 120;
 let shown = 0, list = [];
@@ -2115,14 +2118,14 @@ let stT; function updateStats(){
 const VKEY2 = 'saved-posts-view';
 let vsT; function saveView(){ clearTimeout(vsT); vsT = setTimeout(()=>{ try{
   if(MODE!=='csv' || !POSTS.length) return;
-  sessionStorage.setItem(VKEY2, JSON.stringify({cats:[...state.cats], kinds:[...state.kinds], media:[...state.media], nsfw:state.nsfw, sub:state.sub, sort:state.sort, fav:state.fav, showText:state.showText, hideBroken:state.hideBroken, range:state.range, q:state.q, seed:state.seed, y:Math.round(scrollY)}));
+  sessionStorage.setItem(VKEY2, JSON.stringify({cats:[...state.cats], kinds:[...state.kinds], media:[...state.media], nsfw:state.nsfw, sub:state.sub, sort:state.sort, fav:state.fav, showText:state.showText, textTouched, hideBroken:state.hideBroken, range:state.range, q:state.q, seed:state.seed, y:Math.round(scrollY)}));
 }catch(e){} }, 300); }
 addEventListener('scroll', saveView, {passive:true});
 function restoreView(){
   let v = null; try{ v = JSON.parse(sessionStorage.getItem(VKEY2)||'null'); }catch(e){}
   if(!v || MODE!=='csv') return;
   state.cats = new Set(v.cats||[]); state.kinds = new Set(v.kinds||[]); state.media = new Set(v.media||[]);
-  state.sub = v.sub||''; state.fav = !!v.fav; state.showText = !!v.showText; state.hideBroken = v.hideBroken!==false; state.q = v.q||''; state.seed = v.seed || state.seed;
+  state.sub = v.sub||''; state.fav = !!v.fav; state.showText = !!v.showText; textTouched = !!v.textTouched; state.hideBroken = v.hideBroken!==false; state.q = v.q||''; state.seed = v.seed || state.seed;
   if(v.sort && $('sort').querySelector('option[value='+v.sort+']')){ state.sort = v.sort; $('sort').value = v.sort; }
   if(v.range){ state.range = v.range; $('range').value = v.range; }
   syncBox(); $('favonly').checked = state.fav; $('showtext').checked = state.showText; $('hidebroken') && ($('hidebroken').checked = state.hideBroken);
@@ -2137,14 +2140,14 @@ function updateSummary(){
   const active = state.cats.size||state.kinds.size||state.media.size||state.sub||state.q||state.fav||state.nsfw!=='hide'||!state.hideBroken||state.range!=='all';
   const hidden = MODE==='csv' ? Math.max(0, POSTS.length - list.length) : 0;
   /* Count only settings the user changed from the defaults (the hiding defaults are explained by the "hidden by filters" line). */
-  const n = (state.nsfw!=='hide'?1:0) + (state.showText?1:0) + (state.hideBroken?0:1) + (state.cats.size?1:0) + (state.kinds.size?1:0) + (state.media.size?1:0) + (state.sub?1:0) + (state.q?1:0) + (state.fav?1:0) + (state.range!=='all'?1:0);
+  const n = (state.nsfw!=='hide'?1:0) + ((!!state.showText)!==textDefault()?1:0) + (state.hideBroken?0:1) + (state.cats.size?1:0) + (state.kinds.size?1:0) + (state.media.size?1:0) + (state.sub?1:0) + (state.q?1:0) + (state.fav?1:0) + (state.range!=='all'?1:0);
   const sb = $('selbtn'); if(sb){ const ok = MODE==='csv' && POSTS.length > 0; sb.hidden = !ok; if(!ok && SEL.on) selMode(false); }
   const dt = $('decktoggle'); if(n) dt.dataset.n = String(n); else delete dt.dataset.n;
   dt.dataset.active = active ? '1' : '0';
   $('summary').innerHTML = hidden ? '<b>'+hidden.toLocaleString()+'</b> hidden by filters <button class="clear" id="rvw" type="button">Review</button>'+(active ? ' <button class="clear" id="clr" type="button">Clear filters</button>' : '')
     : (active ? list.length.toLocaleString()+' of '+POSTS.length.toLocaleString()+' posts <button class="clear" id="clr" type="button">Clear filters</button>' : '');
   const rv = $('rvw'); if(rv) rv.onclick = () => $('decktoggle').click();   // a toggle: opens the Filters panel, or closes it if it is already open
-  const c = $('clr'); if(c) c.onclick = ()=>{ state.cats.clear(); state.kinds.clear(); state.media.clear(); state.sub=''; state.q=''; syncBox(); state.fav=false; $('favonly').checked=false; state.showText=false; $('showtext').checked=false; if(state.range!=='all'){ setRange('all'); return; } $('subsel').value=''; setNsfw('hide'); };
+  const c = $('clr'); if(c) c.onclick = ()=>{ state.cats.clear(); state.kinds.clear(); state.media.clear(); state.sub=''; state.q=''; syncBox(); state.fav=false; $('favonly').checked=false; textTouched=false; state.showText=textDefault(); $('showtext').checked=state.showText; if(state.range!=='all'){ setRange('all'); return; } $('subsel').value=''; setNsfw('hide'); };
 }
 
 /* ---------- bulk selection ---------- */
@@ -2565,7 +2568,7 @@ function setNsfw(m){
   document.body.classList.toggle('unblur', m==='show'||m==='only');   // Uncensored and Only show NSFW tiles without the blur
   refresh();
 }
-$('showtext').addEventListener('change',e=>{ state.showText = e.target.checked; refresh(); });
+$('showtext').addEventListener('change',e=>{ state.showText = e.target.checked; textTouched = true; refresh(); paintLayoutHint(); });
 $('nsfwseg').addEventListener('click',e=>{ const b = e.target.closest('.pill'); if(b && b.dataset.m!==state.nsfw) setNsfw(b.dataset.m); });
 (function(){
   const fb = $('decktoggle'), sb = $('srctoggle'), body = document.body;
@@ -2640,14 +2643,26 @@ function setListLayout(id, l){ if(id==null) return; const m = listLayouts(); m[i
 function applyListLayout(){
   if(!LIB.cur) return; const l = listLayouts()[LIB.cur.id];
   if(l && LAYOUTS[l] && l!==LAYOUT){ LAYOUT = l; paintLayout(); }
+  applyTextDefault();
 }
-function paintLayout(){ document.querySelectorAll('#layoutseg .pill').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.l===LAYOUT))); document.body.classList.toggle('layout-grid', LAYOUT==='grid'); document.body.classList.toggle('layout-list', LAYOUT==='list'); const h = $('layouthint'); if(h) h.textContent = LAYOUTS[LAYOUT]; if(window.applyInfoMode) window.applyInfoMode(); document.querySelectorAll('.card.btns-open').forEach(c=>{ c.classList.remove('btns-open'); const b = c.querySelector('.morebtn'); if(b) b.setAttribute('aria-expanded','false'); }); }
+/* Text posts default to shown in List and hidden elsewhere, until the person toggles them themselves. */
+function paintLayoutHint(){
+  const h = $('layouthint'); if(!h) return;
+  h.textContent = LAYOUTS[LAYOUT];
+  if(LAYOUT!=='list' && !state.showText){ const n = document.createElement('span'); n.className = 'laynote'; n.textContent = 'Text posts default to hidden in this view, but can be turned on manually.'; h.appendChild(n); }
+}
+function applyTextDefault(){
+  if(textTouched || state.showText===textDefault()) { paintLayoutHint(); return; }
+  state.showText = textDefault(); const t = $('showtext'); if(t) t.checked = state.showText;
+  paintLayoutHint(); if(typeof refresh==='function' && POSTS && POSTS.length) refresh();
+}
+function paintLayout(){ document.querySelectorAll('#layoutseg .pill').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.l===LAYOUT))); document.body.classList.toggle('layout-grid', LAYOUT==='grid'); document.body.classList.toggle('layout-list', LAYOUT==='list'); const h = $('layouthint'); paintLayoutHint(); if(window.applyInfoMode) window.applyInfoMode(); document.querySelectorAll('.card.btns-open').forEach(c=>{ c.classList.remove('btns-open'); const b = c.querySelector('.morebtn'); if(b) b.setAttribute('aria-expanded','false'); }); }
 document.querySelectorAll('#layoutseg .pill').forEach(b=>b.addEventListener('click',()=>{
   LAYOUT = b.dataset.l; try{ localStorage.setItem('saved-posts-layout', LAYOUT); }catch(e){}
   if(LIB.cur) setListLayout(LIB.cur.id, LAYOUT);
-  paintLayout(); relayoutAll();
+  paintLayout(); applyTextDefault(); relayoutAll();
 }));
-paintLayout();
+paintLayout(); applyTextDefault();
 /* List columns (desktop). One or two columns read best; the choice is remembered. */
 let LCOLS = 'auto';
 try{ const sv = localStorage.getItem('saved-posts-listcols'); if(['1','2','3','auto'].includes(sv)) LCOLS = sv; }catch(e){}
