@@ -33,8 +33,6 @@ with sync_playwright() as p:
     ev("async(t)=>{ await openCsvResult({name:'own.csv', text:t, handle:null, mod:Date.now()-6*864e5}); }", H + rows)
     pg.wait_for_timeout(400)
     check('a file this page wrote says the date is unknown', 'unknown' in pl()['t'])
-    ev("(()=>{ const i=document.getElementById('pullDate'); const d=new Date(Date.now()-40*864e5); i.value=d.toISOString().slice(0,10); i.dispatchEvent(new Event('change')); })()")
-    check('Set date overrides it and can turn it red', '40 days ago' in pl()['t'] and pl()['warn'] == '1' and 'unknown' not in pl()['t'])
     check('no page errors', not errs)
     b.close()
 print('FAILED: ' + ', '.join(bad) if bad else 'ALL PASS')

@@ -132,8 +132,6 @@ button,select,input{font:inherit;color:inherit}
 .pullline{margin-top:6px;padding:7px 10px;border-radius:8px;font-size:13px;font-weight:700;color:var(--ink);background:var(--surface-2);border:1px solid var(--line)}
 .pullline[data-warn="1"]{color:var(--alert-ink);background:var(--alert-bg);border-color:var(--alert-line)}
 .pullline[hidden]{display:none}
-.pullset{position:relative;font-weight:400;font-size:12px;text-decoration:underline;cursor:pointer;white-space:nowrap}
-.pullset input{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
 .srcbadge[data-s=syncing] svg{animation:spin 1.1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .srcbadge[data-s=error],.srcbadge[data-s=offline]{background:var(--warn);color:#1a1200}
@@ -751,7 +749,7 @@ body.layout-list .nsfwb[aria-pressed=true]:hover::after{filter:invert(1)}
             </details>
           </div>
           <span id="csvStatus"></span>
-          <div class="pullline" id="pullLine" hidden><span id="pullTxt" role="status"></span> <label class="linkbtn pullset">Set date<input type="date" id="pullDate" aria-label="Date this list was last pulled from Reddit"></label></div>
+          <div class="pullline" id="pullLine" hidden><span id="pullTxt" role="status"></span></div>
           <input id="csvfile" type="file" accept=".csv,text/csv,text/plain" hidden>
         </div>
         <form class="subform" id="subForm" hidden>
@@ -3244,13 +3242,11 @@ function updateMergeHint(){
     const d = Math.round((mid(Date.now())-mid(e.t))/864e5), ago = d < 1 ? 'today' : d+(d===1?' day':' days')+' ago';
     $('pullTxt').textContent = e.est ? 'Last pulled from Reddit: date unknown (first opened here '+fmt(e.t)+', '+ago+')' : 'Last pulled from Reddit: '+fmt(e.t)+' ('+ago+')'+(days >= MRG_DAYS ? '. Over '+MRG_DAYS+' days old.' : '');
     pl.dataset.warn = days >= MRG_DAYS ? '1' : '0'; pl.hidden = false;
-    $('pullDate').max = new Date().toISOString().slice(0,10);
   }
   el.hidden = !due; if(!due) return;
   $('mrgTxt').textContent = 'Newer saves may be missing. Pull a fresh CSV from Reddit and merge it in:';
   if(!mrgToasted){ mrgToasted = true; toast('It has been over '+MRG_DAYS+' days since you merged a Reddit export. See Source to update your list.'); }
 }
-$('pullDate').addEventListener('change',e=>{ const r = LIB.cur, v = e.target.value; if(!r || !v) return; const t = Math.min(new Date(v+'T12:00:00').getTime(), Date.now()); const o = mrgRead(); o[r.id] = {t, snooze:0, src:'set'}; mrgWrite(o); updateMergeHint(); });
 $('mrgDo').addEventListener('click',()=>$('csvMerge').click());
 $('mrgLater').addEventListener('click',()=>{ const o = mrgRead(), r = LIB.cur; if(!r) return; o[r.id] = Object.assign(o[r.id]||{t:Date.now()}, {snooze:Date.now()+7*864e5}); mrgWrite(o); updateMergeHint(); });
 function csvInfo(){
