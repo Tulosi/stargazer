@@ -241,6 +241,7 @@ input[type=range]{width:100%;accent-color:var(--sel);margin:0}
 .status:has(#loadText:empty):has(#recText:empty):has(#summary:empty){display:none}
 .status{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:2px 0 10px;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
 .load{display:flex;flex-wrap:wrap;align-items:center;gap:2px 14px;min-width:0}
+.load #loadText:empty,.load #recText:empty{display:none}   /* an empty item would still add a flex gap and push the other text in from the left edge */
 .load .err{color:var(--warn)}
 .load button{margin-left:8px;border:0;background:var(--surface-2);border-radius:999px;padding:3px 11px;cursor:pointer;font-size:12px}
 .load .bar{position:fixed;top:0;left:0;right:0;height:2px;z-index:60;pointer-events:none}

@@ -45,6 +45,8 @@ with sync_playwright() as p:
     ev("loading=0; document.body.classList.remove('previews-loading')"); pg.wait_for_timeout(300)
     check('and is removed from the layout when loading stops', ev("getComputedStyle(document.querySelector('.loaddot')).display") == 'none')
     check('with the dot gone the text is left aligned', ev("(()=>{ const r=document.createRange(); r.selectNodeContents(document.getElementById('loadText')); return r.getBoundingClientRect().left; })()") < 20)
+    ev("loading=1; document.getElementById('loadText').textContent=''; document.getElementById('recText').textContent='Recovered 3 of 5 posts'")
+    check('with no preview text, the Recovered line sits flush with the content edge', ev("(()=>{ const r=document.createRange(); r.selectNodeContents(document.getElementById('recText')); return Math.abs(r.getBoundingClientRect().left - document.querySelector('.status').getBoundingClientRect().left) < 1; })()"))
     check('no page errors', not errs)
     b.close()
 raise SystemExit(1 if bad else 0)
