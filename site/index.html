@@ -287,6 +287,8 @@ body.unblur .thumb.nsfw img,body.unblur .thumb.nsfw .still,body.unblur .thumb.ns
 body.unblur .reveal{display:none!important}
 .card.is-dead .ph{filter:grayscale(.65)}
 
+/* the media label is information, not a control: plain text with a soft shadow, no pill */
+body:not(.layout-list) .badge.media{background:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:5px 2px;color:rgba(255,255,255,.92);text-shadow:0 1px 3px rgba(0,0,0,.7),0 0 8px rgba(0,0,0,.35)}
 /* frosted pills and buttons on top of media */
 .badge,.star,.fs,.save,.reveal{background:rgba(12,12,14,.26);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:rgba(255,255,255,.78);transition:opacity .15s,background .15s,color .15s}
 .star:hover,.fs:hover,.save:hover,.reveal:hover{background:rgba(12,12,14,.5);color:#fff}
@@ -324,7 +326,7 @@ body .card .nsfwb[aria-pressed=true]{opacity:1!important;pointer-events:auto!imp
 .card:hover .gnav,.card:focus-within .gnav{opacity:1}
 @media (hover:none){.gnav{opacity:1}}
 .star:hover,.fs:hover,.save:hover{background:rgba(12,12,14,.78)}
-.star[aria-pressed=true]{color:#fff}
+.star[aria-pressed=true]{color:color-mix(in srgb,var(--hot) 55%,#fff);background:rgba(12,12,14,.55)}   /* a starred card reads differently from one that is only in your list */
 .star{font-size:21px;padding-bottom:4px}
 .save[aria-pressed=true]{color:#fff}
 .reveal{position:absolute;left:8px;top:40px;z-index:2;display:none;border:0;border-radius:999px;padding:5px 10px;font:500 11px var(--font);cursor:pointer}
@@ -388,7 +390,7 @@ body.info-hover .card:focus-within .info,body.info-hover .card:focus-within .bad
 /* touch screens: save, star and the (i) button only appear on the tile in focus (or while its info is open) */
 @media (hover:none){
   .card .star,.card .save,.card .ibtn{transition:opacity .18s}
-  body .card:not(.is-focus):not(.info-open) .star,body .card:not(.is-focus):not(.info-open) .save,body .card:not(.is-focus):not(.info-open) .ibtn{opacity:0;pointer-events:none}
+  body .card:not(.is-focus):not(.info-open) .star,body .card:not(.is-focus):not(.info-open) .save,body .card:not(.is-focus):not(.info-open) .ibtn{opacity:.5}   /* every card shows its buttons faintly so they are discoverable; the focused card shows them at full strength */
 }
 /* keep the (i) button clear of the player controls once they are showing */
 .card:has(.ctl) .ibtn{bottom:46px}
@@ -1279,7 +1281,7 @@ function fillCard(el,p){
     + '</a>'
     + (nsfw && thumb ? '<button class="reveal" type="button">Reveal</button>' : '')
     + '<button class="star" type="button" data-id="'+esc(p.id)+'" aria-pressed="'+(FAVS.has(p.id)?'true':'false')+'" aria-label="Star this post" title="Star this post">'+(FAVS.has(p.id)?'\u2605':'\u2606')+'</button>'
-    + '<button class="save" type="button" data-id="'+esc(p.id)+'" aria-pressed="'+(ROWSET.has(p.id)?'true':'false')+'" aria-label="'+(ROWSET.has(p.id)?'Remove from your CSV':'Save to your CSV')+'" title="'+(ROWSET.has(p.id)?'Remove from your CSV':'Save to your CSV')+'">'+(ROWSET.has(p.id)?BM_ON:BM_OFF)+'</button>'
+    + '<button class="save" type="button" data-id="'+esc(p.id)+'" aria-pressed="'+(ROWSET.has(p.id)?'true':'false')+'" aria-label="'+(ROWSET.has(p.id)?'In your list: tap to remove':'Not in your list: tap to add')+'" title="'+(ROWSET.has(p.id)?'In your list: tap to remove':'Not in your list: tap to add')+'">'+(ROWSET.has(p.id)?BM_ON:BM_OFF)+'</button>'
     + '<button class="save nsfwb" type="button" data-id="'+esc(p.id)+'"'+(ROWSET.has(p.id) ? '' : ' hidden')+' aria-pressed="'+(nsfw?'true':'false')+'" aria-label="'+(nsfw ? 'Unmark as NSFW' : 'Mark as NSFW')+'" title="'+(nsfw ? 'Unmark as NSFW' : 'Mark as NSFW')+'">'+NSFW_ICON+'</button>'
     + (MEDIA_KINDS.has(media) && (thumb || v0) ? '<button class="fs" type="button" aria-label="Full screen" title="Full screen">'+FS_ICON+'</button>' : '')
     + '<button class="morebtn" type="button" aria-expanded="false" aria-label="More actions" title="More actions"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5L5.5 8l4.5 4.5"/></svg></button>'
@@ -3698,7 +3700,7 @@ function syncSaveButtons(){
     const b = el.querySelector('button.save:not(.nsfwb)'); if(!b) continue;
     const on = ROWSET.has(b.dataset.id);
     b.setAttribute('aria-pressed', on?'true':'false'); b.innerHTML = on ? BM_ON : BM_OFF;
-    b.setAttribute('aria-label', on ? 'Remove from your CSV' : 'Save to your CSV'); b.title = b.getAttribute('aria-label');
+    b.setAttribute('aria-label', on ? 'In your list: tap to remove' : 'Not in your list: tap to add'); b.title = b.getAttribute('aria-label');
     const nbn = el.querySelector('button.nsfwb'); if(nbn) nbn.hidden = !on;
   }
 }
@@ -3744,7 +3746,8 @@ async function toggleSave(p){
     deleteRows([p.id]);
     await commit();
     if(MODE==='csv') removePosts([p.id]); else syncSaveButtons();
-    toast('Deleted from "'+LIB.cur.name+'"', {label:'Undo', fn:()=>restoreRows([keep])});
+    let first = false; try{ first = !localStorage.getItem('saved-posts-bmhint'); if(first) localStorage.setItem('saved-posts-bmhint','1'); }catch(e){}
+    toast('Deleted from "'+LIB.cur.name+'"'+(first ? '. The bookmark means a post is in your list; press it again to add one back.' : ''), {label:'Undo', fn:()=>restoreRows([keep])});
   } else {
     ROWS.unshift({id:p.id, perma:p.perma || p.link, starred:false, t:nowT((TOMBS.get(p.id)||{}).t)}); TOMBS.delete(p.id); ROWSET.add(p.id); markDirty(p.id);
     if(MODE!=='csv') keepLocalMeta(p.id);
