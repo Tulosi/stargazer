@@ -129,6 +129,9 @@ button,select,input{font:inherit;color:inherit}
 .exphint[data-warn="1"]{color:var(--warn)}
 .exphint[hidden],.mrghint[hidden],.syncrow[hidden]{display:none}
 .mrghint a{color:inherit}
+.pullline{margin-top:6px;padding:7px 10px;border-radius:8px;font-size:13px;font-weight:700;color:var(--ink);background:var(--surface-2);border:1px solid var(--line)}
+.pullline[data-warn="1"]{color:var(--alert-ink);background:var(--alert-bg);border-color:var(--alert-line)}
+.pullline[hidden]{display:none}
 .srcbadge[data-s=syncing] svg{animation:spin 1.1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .srcbadge[data-s=error],.srcbadge[data-s=offline]{background:var(--warn);color:#1a1200}
@@ -746,6 +749,7 @@ body.layout-list .nsfwb[aria-pressed=true]:hover::after{filter:invert(1)}
             </details>
           </div>
           <span id="csvStatus"></span>
+          <div class="pullline" id="pullLine" role="status" hidden></div>
           <input id="csvfile" type="file" accept=".csv,text/csv,text/plain" hidden>
         </div>
         <form class="subform" id="subForm" hidden>
@@ -3216,12 +3220,18 @@ function noteMerge(id){ const o = mrgRead(); o[id] = {t:Date.now(), snooze:0}; m
 let mrgToasted = false;
 function updateMergeHint(){
   const el = $('mrgHint'), r = LIB.cur; if(!el) return;
-  if(!r || !ROWS.length){ el.hidden = true; return; }
+  const pl = $('pullLine');
+  if(!r || !ROWS.length){ el.hidden = true; if(pl) pl.hidden = true; return; }
   const o = mrgRead(); let e = o[r.id];
   if(!e){ e = o[r.id] = {t:Date.now(), snooze:0}; mrgWrite(o); }   // a list seen for the first time starts its 30 days now
   const days = (Date.now()-e.t)/86400000, due = days >= MRG_DAYS && Date.now() >= (e.snooze||0);
+  if(pl){   // always say when this list last had fresh data from Reddit; loud once it is over 30 days
+    const d = Math.floor(days);
+    pl.textContent = 'Last pulled from Reddit: '+new Date(e.t).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'})+' ('+(d < 1 ? 'today' : d+(d===1?' day':' days')+' ago')+')'+(days >= MRG_DAYS ? '. Over '+MRG_DAYS+' days old.' : '');
+    pl.dataset.warn = days >= MRG_DAYS ? '1' : '0'; pl.hidden = false;
+  }
   el.hidden = !due; if(!due) return;
-  $('mrgTxt').textContent = 'This list has not been merged with a Reddit export for '+Math.floor(days)+' days, so newer saves may be missing.';
+  $('mrgTxt').textContent = 'Newer saves may be missing. Pull a fresh CSV from Reddit and merge it in:';
   if(!mrgToasted){ mrgToasted = true; toast('It has been over '+MRG_DAYS+' days since you merged a Reddit export. See Source to update your list.'); }
 }
 $('mrgDo').addEventListener('click',()=>$('csvMerge').click());
