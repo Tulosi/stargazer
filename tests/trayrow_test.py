@@ -34,6 +34,21 @@ with sync_playwright() as p:
         ok = rows and all(r['spread'] <= 3 and r['inside'] for r in rows)
         check('phone %dpx, 3 across (tile %s): one line, inside the tray' % (w, sorted(set(r['w'] for r in rows))[:2]), ok)
         check('  and no control narrower than 16px', all(r['minbtn'] >= 16 for r in rows))
+    # bare icons: no circles or pill inside the tray, and a slim tray at 3-across
+    ctx = b.new_context(viewport={'width': 390, 'height': 780}, is_mobile=True, has_touch=True, device_scale_factor=1)
+    ctx.add_init_script("localStorage.setItem('saved-posts-cardmode','always')")
+    pg = ctx.new_page(); pg.route('**/*', lambda r: r.continue_() if r.request.url.startswith(('file:', 'data:')) else r.abort())
+    pg.goto(PAGE); pg.wait_for_timeout(800); pg.click('#introSample'); pg.wait_for_timeout(1500); three(pg); pg.wait_for_timeout(700)
+    info = pg.evaluate("""()=>{ const l=document.querySelector('.card .layer'); const bs=[...l.querySelectorAll('.actions .btn, .lay-cap button')].filter(e=>e.offsetParent!==null);
+      const fill=bs.filter(e=>{const c=getComputedStyle(e).backgroundColor; return c!=='rgba(0, 0, 0, 0)' && c!=='transparent';}).length;
+      const hit=bs.map(e=>{const a=getComputedStyle(e,'::after'); return a.content!=='none' ? e.getBoundingClientRect().height+parseFloat(a.top)*-2 : 0;});
+      return {fill, h:Math.round(l.getBoundingClientRect().height), n:bs.length, minHit:Math.round(Math.min(...hit))}; }""")
+    check('bare icons: no filled circle behind any tray control (%s)' % info, info['fill'] == 0)
+    check('3-across tray is slim (<= 44px) and keeps a ~44px tall catch area', info['h'] <= 44 and info['minHit'] >= 40)
+    ctx.close()
+    # below 200px NSFW leaves the tray
+    rows = run({'width': 390, 'height': 780}, True, lambda pg: pg.evaluate("()=>{const s=document.getElementById('size'); s.value=1; s.dispatchEvent(new Event('input'))}"), 'p2')
+    check('2-across tile (%s): five icons fit one line' % sorted(set(r['w'] for r in rows))[:1], rows and all(r['spread'] <= 3 and r['inside'] and r['n'] <= 5 for r in rows))
     rows = run({'width': 1500, 'height': 900}, False, lambda pg: pg.evaluate("()=>{ document.documentElement.style.setProperty('--card','560px'); relayoutAll(); }"), 'wide')
     check('wide tiles keep words (Open post, Comments) not icons', rows and not rows[0]['icon'])
     rows = run({'width': 1500, 'height': 900}, False, lambda pg: None, 'default')

@@ -382,36 +382,41 @@ body.layout-list .meta a.cm:hover,body.layout-list .meta a.cm:focus-visible{colo
    List keeps its own row arrangement: there the layer boxes are display:contents, so the info text and the round buttons sit where they always did. ---- */
 .layer,.lay-act,.lay-cap{display:contents}
 .lhandle,.lh-close,.lay-play,.peek{display:none}
-body:not(.layout-list) .layer{--lb:34px;display:flex;flex-direction:column;gap:8px;position:absolute;left:8px;right:8px;bottom:8px;z-index:4;padding:10px 12px 11px;border-radius:16px;background:rgba(20,18,30,.6);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.28);opacity:0;pointer-events:none;transform:translateY(10px);transition:opacity .2s ease,transform .24s var(--ease-out)}
+body:not(.layout-list) .layer{--lw:36px;--lh:32px;--gi:19px;display:flex;flex-direction:column;gap:3px;position:absolute;left:6px;right:6px;bottom:6px;z-index:4;padding:5px 10px 4px;border-radius:14px;background:rgba(20,18,30,.6);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.28);opacity:0;pointer-events:none;transform:translateY(10px);transition:opacity .2s ease,transform .24s var(--ease-out)}
 body:not(.layout-list) .layer .info{position:static;display:block;padding:0;background:none;transition:none}
 body:not(.layout-list) .layer *{pointer-events:inherit}   /* a layer that is down must not catch taps meant for the media underneath */
 body:not(.layout-list) .layer .title{font:650 15px/1.25 var(--font);-webkit-line-clamp:2}
 body:not(.layout-list) .layer .meta{margin-top:3px}
 body:not(.layout-list) .layer .arch{display:flex;margin-top:5px}
-body:not(.layout-list) .layer .lh-close{display:block;position:relative;align-self:center;width:72px;height:20px;margin:-8px 0 -4px;padding:0;border:0;background:none;cursor:pointer;touch-action:none}   /* a small target in the middle, so a scroll that starts on the tray rarely grabs it */
-body:not(.layout-list) .layer .lh-close::before{content:"";position:absolute;left:50%;top:8px;width:30px;height:4px;margin-left:-15px;border-radius:3px;background:rgba(255,255,255,.5)}
-body:not(.layout-list) .lay-act{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
-body:not(.layout-list) .lay-cap{display:flex;flex:none;margin-left:auto;background:rgba(255,255,255,.14);border-radius:999px;padding:3px;gap:2px}
-body:not(.layout-list) .lay-cap :is(.star,.fs,.save){position:relative;top:auto;right:auto;width:var(--lb);height:var(--lb);margin:0;padding:0;display:grid;place-items:center;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;color:#fff;font-size:calc(var(--lb)*.55);opacity:1;transform:none}
+body:not(.layout-list) .layer .lh-close{display:block;position:relative;align-self:center;width:72px;height:14px;margin:-4px 0 -5px;padding:0;border:0;background:none;cursor:pointer;touch-action:none}   /* a small target in the middle, so a scroll that starts on the tray rarely grabs it */
+body:not(.layout-list) .layer .lh-close::before{content:"";position:absolute;left:50%;top:5px;width:30px;height:3px;margin-left:-15px;border-radius:3px;background:rgba(255,255,255,.5)}
+body:not(.layout-list) .lay-act{display:flex;flex-wrap:wrap;align-items:center;gap:0 6px}
+body:not(.layout-list) .lay-cap{display:flex;flex:none;margin-left:auto;gap:0}   /* bare icons: the glass tray is the only surface, no circles or pill inside it */
+body:not(.layout-list) .lay-cap :is(.star,.fs,.save){position:relative;top:auto;right:auto;width:var(--lw);height:var(--lh);margin:0;padding:0;display:grid;place-items:center;border-radius:10px;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;color:#fff;font-size:var(--gi);opacity:1;transform:none}
 @media (hover:hover){body:not(.layout-list) .lay-cap :is(.star,.fs,.save):hover{background:rgba(255,255,255,.18)}}
 body:not(.layout-list) .lay-cap .nsfwb[hidden]{display:none}
-body:not(.layout-list) .lay-cap .star[aria-pressed=true]{background:rgba(255,255,255,.92);color:#111}
+body:not(.layout-list) .lay-cap .star[aria-pressed=true]{background:none;color:color-mix(in srgb,var(--hot) 70%,#fff)}   /* on = filled and tinted; off = outline */
+body:not(.layout-list) .lay-cap .nsfwb::before{display:none}
 body:not(.layout-list) .lay-cap .save.nsfwb[aria-pressed=true]{background:none}
 body:not(.layout-list) .lay-cap .nsfwb[aria-pressed=false]{color:rgba(255,255,255,.5)}
 body:not(.layout-list) .lay-cap .nsfwb[aria-pressed=false]:hover{color:#fff}
-body:not(.layout-list) .lay-cap .star{padding-bottom:0;font-size:calc(var(--lb)*.62)}
-body:not(.layout-list) .lay-cap .fs svg,body:not(.layout-list) .lay-cap .save:not(.nsfwb) svg{width:calc(var(--lb)*.47);height:calc(var(--lb)*.47)}
-body:not(.layout-list) .lay-cap .nsfwb svg{width:calc(var(--lb)*.72);height:calc(var(--lb)*.72)}
+body:not(.layout-list) .lay-cap .star{padding:3px 0 0;font-size:calc(var(--gi)*1.2)}
+body:not(.layout-list) .lay-cap .fs svg,body:not(.layout-list) .lay-cap .save:not(.nsfwb) svg{width:calc(var(--gi)*.92);height:calc(var(--gi)*.92)}
+body:not(.layout-list) .lay-cap .nsfwb svg{width:calc(var(--gi)*1.3);height:calc(var(--gi)*1.3)}
+/* a taller invisible catch area on every tray button (about 44px), so a thumb does not need the glyph's size */
+body:not(.layout-list) .lay-cap :is(.star,.fs,.save):not(.nsfwb)::after,body:not(.layout-list) .layer .actions .btn::after{content:"";position:absolute;inset:-6px 0}
 body:not(.layout-list) .layer .actions{display:flex;margin:0;gap:6px;min-width:0}
-body:not(.layout-list) .layer .actions .btn{flex:none;padding:8px 12px;font-size:12px;white-space:nowrap}
+body:not(.layout-list) .layer .actions .btn{position:relative;flex:none;height:var(--lh);padding:0 10px;border-radius:10px;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;color:rgba(255,255,255,.88);font-size:12.5px;font-weight:500;white-space:nowrap;display:grid;place-items:center}
+body:not(.layout-list) .layer .actions .btn.primary{color:#fff;font-weight:650}
+@media (hover:hover){body:not(.layout-list) .layer .actions .btn:hover{background:rgba(255,255,255,.14)}}
 .btn .bi{display:none}
 /* Open post, Comments and the pill share one row. Where words no longer fit beside the pill, the two links become round icon buttons (their names stay in aria-label and the tooltip). */
 body:not(.layout-list) .lay-act{flex-wrap:nowrap}
 @container (max-width:380px){
   body:not(.layout-list) .layer .actions{gap:5px}
-  body:not(.layout-list) .layer .actions .btn{position:relative;display:grid;place-items:center;width:var(--lb);height:var(--lb);padding:0;border-radius:50%}
+  body:not(.layout-list) .layer .actions .btn{width:var(--lw);padding:0}
   body:not(.layout-list) .layer .actions .btn .bt{display:none}
-  body:not(.layout-list) .layer .actions .btn .bi{display:block;width:calc(var(--lb)*.5);height:calc(var(--lb)*.5)}
+  body:not(.layout-list) .layer .actions .btn .bi{display:block;width:var(--gi);height:var(--gi)}
 }
 body:not(.layout-list) .lay-play:not(:empty){display:block}
 .layer .ctl{position:static;height:auto;padding:0;background:none;opacity:1;pointer-events:auto;z-index:auto}
@@ -443,11 +448,12 @@ body.cm-always:not(.layout-list) .card .peek,body:not(.layout-list) .card.lay-op
 @media (hover:none){body.cm-hover:not(.layout-list) .card.is-focus .peek{display:none}}
 /* small tiles: the same layer, condensed, and never wider than the tile */
 @container (max-width:300px){
-  body:not(.layout-list) .layer{--lb:28px;left:6px;right:6px;bottom:6px;padding:8px 9px 9px;gap:7px;border-radius:14px}
+  body:not(.layout-list) .layer{--lw:34px;--lh:30px;--gi:18px;padding:4px 8px 3px}
   body:not(.layout-list) .layer .title{font-size:13px}
 }
 @container (max-width:200px){
-  body:not(.layout-list) .layer{--lb:24px;left:4px;right:4px;bottom:4px;padding:6px;gap:5px;border-radius:12px}
+  body:not(.layout-list) .layer{--lw:28px;--lh:30px;--gi:17px;left:4px;right:4px;bottom:4px;padding:3px 4px 2px;gap:2px;border-radius:12px}
+  body:not(.layout-list) .lay-cap .nsfwb{display:none}   /* five icons is what a 2-across phone tile has room for; NSFW stays in Bulk Actions, Filters and the full-screen view */
   body:not(.layout-list) .layer .title{font-size:11px;-webkit-line-clamp:1}
   body:not(.layout-list) .layer .meta{display:none}
   body:not(.layout-list) .layer .ctl{gap:5px}
@@ -455,13 +461,10 @@ body.cm-always:not(.layout-list) .card .peek,body:not(.layout-list) .card.lay-op
   body:not(.layout-list) .layer .time{display:none}
 }
 @container (max-width:140px){
-  body:not(.layout-list) .layer{--lb:20px}
   body:not(.layout-list) .layer .arch{display:none}
   body:not(.layout-list) .layer .actions .btn:not(.primary){display:none}
-  body:not(.layout-list) .layer{--lb:clamp(16px,calc((100cqw - 44px) / 4.3),22px);padding:5px}
-  body:not(.layout-list) .lay-cap{padding:2px;gap:0}
-  body:not(.layout-list) .lay-cap .nsfwb{display:none}   /* four controls in one row is all a 3-across tile has room for; NSFW is a size up */
-  body:not(.layout-list) .lay-cap :is(.star,.fs,.save):not(.nsfwb)::after,body:not(.layout-list) .layer .actions .btn::after{content:"";position:absolute;inset:-7px -2px}   /* the picture is small, the thumb is not: a taller catch area */
+  body:not(.layout-list) .layer{--lw:clamp(22px,calc((100cqw - 14px) / 4),28px);--lh:26px;--gi:calc(var(--lw)*.62);left:3px;right:3px;bottom:3px;padding:2px 3px 1px;border-radius:11px}   /* four icons share the tile; the catch areas (44px tall) do the rest */
+  body:not(.layout-list) .lay-cap :is(.star,.fs,.save):not(.nsfwb)::after,body:not(.layout-list) .layer .actions .btn::after{inset:-9px 0}
   body:not(.layout-list) .layer .info{display:none}   /* on the narrowest tiles the layer keeps just Source and the pill, so it still fits a short tile */
 }
 body.layout-list #cardrow{display:none}   /* List keeps its own arrangement (inline on desktop, folded on phones) */
