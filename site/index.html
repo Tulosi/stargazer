@@ -59,6 +59,10 @@ a{color:inherit}
 button,select,input{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--sel);outline-offset:2px}
 .card :focus-visible{outline-color:#fff;outline-offset:-3px}
+/* tapping or double-clicking a tile or its handle must not flash a blue tap highlight or select text */
+.card,.card *{-webkit-tap-highlight-color:transparent}
+.card{-webkit-user-select:none;user-select:none}
+.card :focus:not(:focus-visible){outline:none}
 .wrap{max-width:1760px;margin:0 auto;padding-top:12px;padding-inline:max(14px,env(safe-area-inset-left,0px)) max(14px,env(safe-area-inset-right,0px))}
 
 /* ---- top bar ---- */
