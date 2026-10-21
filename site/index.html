@@ -719,6 +719,20 @@ body:not(.layout-list) .layer .btn{-webkit-backdrop-filter:none;backdrop-filter:
 a,button,summary,label,select,[role=button]{touch-action:manipulation}
 @media (pointer:coarse){input,select,textarea,.field{font-size:16px}}
 .deck{padding-top:env(safe-area-inset-top,0px)}
+/* the shortcut list: collapsed, muted, last in the Filters panel */
+.kbhelp{grid-column:1/-1;border-top:1px solid var(--line);padding-top:10px;color:var(--muted);font-size:12px}
+.kbhelp>summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:28px;color:var(--muted)}
+.kbhelp>summary::-webkit-details-marker{display:none}
+.kbhelp>summary::after{content:"";width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg) translate(-1px,-1px);transition:transform .15s}
+.kbhelp[open]>summary::after{transform:rotate(-135deg) translate(-1px,-1px)}
+@media (hover:hover){.kbhelp>summary:hover{color:var(--ink)}}
+.kbcols{display:grid;grid-template-columns:1fr 1fr;gap:6px 28px;margin-top:6px}
+.kbcols dl{margin:0;display:grid;gap:5px;align-content:start}
+.kbcols dt{font-weight:600;color:var(--muted);opacity:.85}
+.kbcols dd{margin:0;line-height:1.45}
+.kbcols kbd{font:inherit;font-size:11px;padding:0 5px;border:1px solid var(--line);border-radius:5px;background:var(--surface-2);color:var(--ink);white-space:nowrap}
+@media (max-width:720px){.kbhelp{order:1}.kbcols{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.kbhelp>summary::after{transition:none}}
 </style>
 </head>
 <body class="deck-collapsed src-collapsed">
@@ -825,6 +839,23 @@ a,button,summary,label,select,[role=button]{touch-action:manipulation}
         <div class="grp"><span class="lbl">Kind</span><div class="chips" id="kindChips"></div></div>
         <div class="grp"><span class="lbl">Status</span><div class="chips" id="mediaChips"></div></div>
       </div>
+      <details class="kbhelp" id="kbhelp">
+        <summary>Shortcuts and gestures</summary>
+        <div class="kbcols">
+          <dl><dt>Keyboard</dt>
+            <dd><kbd>Tab</kbd> moves from card to card</dd>
+            <dd><kbd>Enter</kbd> on a card steps into its controls; <kbd>Esc</kbd> steps back out</dd>
+            <dd><kbd>I</kbd> shows or hides the controls of the card under the pointer or in focus</dd>
+            <dd>Full screen: <kbd>&larr;</kbd> <kbd>&rarr;</kbd> pictures in a gallery, <kbd>&uarr;</kbd> <kbd>&darr;</kbd> previous / next post, <kbd>Esc</kbd> closes</dd>
+          </dl>
+          <dl><dt>Touch and mouse</dt>
+            <dd>Tap a picture to show or hide its controls</dd>
+            <dd>Swipe the small handle up to open them, down to put them away</dd>
+            <dd>Double tap (or double click) a playing clip to pause or resume it</dd>
+            <dd>Full screen: pinch to zoom, swipe for the next post</dd>
+          </dl>
+        </div>
+      </details>
     </div>
 
     <div class="panel" id="srcpanel" role="region" aria-label="Source and account">
