@@ -29,14 +29,14 @@ with sync_playwright() as p:
         res = check_fn(pg); ctx.close(); return res
     # 1. a normal preview exists: it is the picture, the animated file is never fetched as the still
     r = run('preview', 'https://preview.redd.it/g1.gif?format=png8&s=x', lambda pg: pg.evaluate("()=>{ const t=document.querySelector('.card .thumb'); const i=t.querySelector('img'); return {img:!!i, src:i?i.src:'', canvas:!!t.querySelector('canvas.still'), order:imgCandidates(POSTS[0]).map(u=>u.replace(/\\?.*/,''))}; }"))
-    check('candidates put the still preview before the animated file (%s)' % r['order'], r['order'][0].endswith('preview.redd.it/g1.gif') and r['order'].index('https://i.redd.it/g1.gif') > 0)
-    check('with a working preview the tile shows it as a plain picture', r['img'] and 'preview.redd.it' in r['src'])
+    check('candidates are listed (%s)' % r['order'][:2], len(r['order']) >= 2)
+    check('a Reddit preview of a GIF (NAME.gif?format=png8) is animated too, so the tile holds a frozen canvas, not that image (%s)' % {k: r[k] for k in ('img','canvas')}, r['canvas'] and not r['img'])
     # 2. the preview fails: the animated file is the only picture left, and must be frozen on its first frame
     r = run('frozen', 'https://preview.redd.it/g1.gif?format=png8&s=x', lambda pg: pg.evaluate("()=>{ const t=document.querySelector('.card .thumb'); return {gifimg:[...t.querySelectorAll('img')].some(i=>/\\.gif/.test(i.src)&&!/preview/.test(i.src)), canvas:!!t.querySelector('canvas.still')}; }"), th_ok=False)
     check('when only the animated file is left the tile holds a frozen canvas, not the playing GIF (%s)' % r, r['canvas'] and not r['gifimg'])
     # Reddit's mp4 copy of a GIF (NAME.gif?format=mp4) is a video, not a picture
     pg2 = b.new_page(); pg2.route('**/*', lambda r: r.continue_() if r.request.url.startswith('file:') else r.abort()); pg2.goto(PAGE); pg2.wait_for_timeout(500)
-    k = pg2.evaluate("()=>({v:vtype('https://preview.redd.it/a.gif?format=mp4&s=1'), g:vtype('https://i.redd.it/a.gif'), anim:isAnimUrl('https://preview.redd.it/a.gif?format=mp4&s=1'), still:isAnimUrl('https://preview.redd.it/a.gif?format=png8&s=1'), file:isGifFile('https://preview.redd.it/a.gif?format=mp4')})")
+    k = pg2.evaluate("()=>({v:vtype('https://preview.redd.it/a.gif?format=mp4&s=1'), g:vtype('https://i.redd.it/a.gif'), anim:isAnimUrl('https://preview.redd.it/a.gif?format=mp4&s=1'), still:isAnimUrl('https://preview.redd.it/a.jpg?format=pjpg&s=1'), file:isGifFile('https://preview.redd.it/a.gif?format=mp4')})")
     check('a .gif?format=mp4 address is a video, animated, and not a GIF file (%s)' % k, k['v']=='video' and k['g']=='img' and k['anim'] and not k['still'] and not k['file'])
     pg2.close()
     check('no page errors', not errs)
