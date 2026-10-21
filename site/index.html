@@ -2603,9 +2603,9 @@ function pickFocus(){
   /* At the very top of the feed the first card counts as in focus when it is on screen, even if it is short and a taller neighbour sits nearer the middle. */
   if(scrollY < 120){ const first = $('grid').firstElementChild; if(first && first.classList.contains('card') && cardView.has(first)){ const r = first.getBoundingClientRect(); if(Math.min(r.bottom,bottom) - Math.max(r.top,top) > Math.min(r.height,40)*0.5){ best = first; bd = 0; } } }
   /* a card the person touched (its buttons or its info) stays in focus until it scrolls out of view or the page has moved on by a little */
-  if(pinned){ if(!pinned.isConnected || score(pinned)===null || Math.abs(scrollY-pinY) > 80) pinned = null; else { best = pinned; bd = 0; } }
+  if(pinned){ if(!pinned.isConnected || (()=>{ const r = pinned.getBoundingClientRect(); return Math.min(r.bottom,bottom) - Math.max(r.top,top) <= 0; })() || Math.abs(scrollY-pinY) > 120) pinned = null; else { best = pinned; bd = 0; } }
   // stick with the current tile unless another is clearly more central, so nothing flickers
-  if(focusCard && best && focusCard!==best){ const fd = score(focusCard); if(fd!==null && bd > fd-40) best = focusCard; }
+  if(!pinned && focusCard && best && focusCard!==best){ const fd = score(focusCard); if(fd!==null && bd > fd-40) best = focusCard; }   // (a card the person touched is never overruled by that stickiness)
   if(best!==focusCard){ if(focusCard){ focusCard.classList.remove('is-focus'); if(document.body.classList.contains('cm-hover')) focusCard.classList.remove('lay-shut'); } focusCard = best; if(best) best.classList.add('is-focus'); }
   const t = best ? best.querySelector('.thumb[data-v]') : null;
   if(t!==focused){ const old = focused; focused = t; if(old){ leftSound(old); syncPlay(old); } if(t) syncPlay(t); }

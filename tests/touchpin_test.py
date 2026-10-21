@@ -28,6 +28,11 @@ with sync_playwright() as p:
     check('tapping the handle focuses that card', ev(foc) == other)
     ev("(i)=>document.querySelectorAll('.card')[i].querySelector('.info').click()", tgt); pg.wait_for_timeout(200)
     check('tapping a card\'s info focuses that card', ev(foc) == tgt)
+    # a touched card wins even when the card that had focus sits right at the middle of the screen
+    ev("""(()=>{ const cs=[...document.querySelectorAll('.card')]; const top=document.querySelector('.deck').getBoundingClientRect().bottom, mid=(top+innerHeight)/2; const d=c=>{const r=c.getBoundingClientRect(); return Math.abs((r.top+r.bottom)/2-mid)}; const near=cs.reduce((a,c)=>d(c)<d(a)?c:a); cs.forEach(c=>c.classList.remove('is-focus')); near.classList.add('is-focus'); focusCard=near; pinned=null; })()""")
+    other2 = ev("(()=>{ const f=document.querySelector('.card.is-focus'); return [...document.querySelectorAll('.card')].findIndex(c=>c!==f && c.getBoundingClientRect().top>60 && c.getBoundingClientRect().bottom<780); })()")
+    ev("(i)=>document.querySelectorAll('.card')[i].querySelector('a.thumb').click()", other2); pg.wait_for_timeout(300)
+    check('a touched card takes focus even from a card sitting at the middle of the screen', ev(foc) == other2)
     ev("window.scrollTo(0, 2000)"); pg.wait_for_timeout(600)
     check('after scrolling far the pin lets go', ev(foc) != tgt)
     check('no page errors', not errs)
