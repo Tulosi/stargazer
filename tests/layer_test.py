@@ -1,4 +1,4 @@
-"""Card info & controls: the per-card glass layer, its three modes, the handle, closing, double tap to pause. Run: python tests/layer_test.py"""
+"""Card info & controls: the per-card glass layer, its three modes, the handle, closing, tap to open, double tap to pause. Run: python tests/layer_test.py"""
 import os
 from playwright.sync_api import sync_playwright
 PAGE = 'file://' + os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'site', 'index.html'))
@@ -76,13 +76,21 @@ with sync_playwright() as p:
     tap = "(()=>{ const a=document.querySelector('.card a.thumb'); a.click(); %s })()"
     ev(tap % "setTimeout(()=>a.click(), 80);"); pg.wait_for_timeout(600)
     check('double tap on a clip toggles pause once', ev("window.__pp") == 1)
+    ev(SETM, 'collapsed'); pg.mouse.move(2, 2); pg.wait_for_timeout(300)
+    ev(tap % ""); pg.wait_for_timeout(600)
+    check('a single tap on a clip opens its layer, a moment later (not the post)', ev(LAY, 0) == 1 and ev("window.__pp") == 1)
+    ev(tap % ""); pg.wait_for_timeout(600)
+    check('and another tap closes it', ev(LAY, 0) == 0)
+    ev("document.querySelectorAll('.card')[3].querySelector('a.thumb').click()"); pg.wait_for_timeout(400)
+    check('a tap on a tile without player controls opens its layer at once', ev(LAY, 3) == 1)
+    check('the layer order is Source, Comments, then NSFW, Favourite, Saved, Fullscreen on the right', ev("(()=>{ const l=document.querySelectorAll('.card')[3].querySelector('.layer'); const a=[...l.querySelectorAll('.actions .btn')].map(x=>x.textContent.trim()); const c=[...l.querySelectorAll('.lay-cap > *')].map(x=>x.classList.contains('nsfwb')?'nsfw':x.classList.contains('star')?'star':x.classList.contains('fs')?'fs':'save'); const ar=l.querySelector('.actions').getBoundingClientRect(), cr=l.querySelector('.lay-cap').getBoundingClientRect(); return a[0]==='Source' && a[1]==='Comments' && c.join()==='nsfw,star,save,fs' && ar.left<cr.left; })()"))
     try:
         with pg.context.expect_page(timeout=2000):
-            ev(tap % "")
+            ev("document.querySelectorAll('.card')[3].querySelector('.actions a.btn.primary').click()")
         opened = True
     except Exception:
         opened = False
-    check('a single tap still opens the post, a moment later', opened and ev("window.__pp") == 1)
+    check('the Source button goes to the post', opened)
     check('no page errors', not errs)
     b.close()
 raise SystemExit(1 if bad else 0)

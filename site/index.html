@@ -380,8 +380,8 @@ body:not(.layout-list) .layer .arch{display:flex;margin-top:5px}
 body:not(.layout-list) .layer .lh-close{display:block;position:relative;height:16px;margin:-8px -6px -2px;padding:0;border:0;background:none;cursor:pointer;touch-action:none}
 body:not(.layout-list) .layer .lh-close::before{content:"";position:absolute;left:50%;top:6px;width:30px;height:4px;margin-left:-15px;border-radius:3px;background:rgba(255,255,255,.5)}
 body.cm-always:not(.layout-list) .layer .lh-close{display:none}
-body:not(.layout-list) .lay-act{display:flex;align-items:center;gap:8px}
-body:not(.layout-list) .lay-cap{display:flex;flex:none;background:rgba(255,255,255,.14);border-radius:999px;padding:3px;gap:2px}
+body:not(.layout-list) .lay-act{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+body:not(.layout-list) .lay-cap{display:flex;flex:none;margin-left:auto;background:rgba(255,255,255,.14);border-radius:999px;padding:3px;gap:2px}
 body:not(.layout-list) .lay-cap :is(.star,.fs,.save){position:relative;top:auto;right:auto;width:var(--lb);height:var(--lb);margin:0;padding:0;display:grid;place-items:center;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;color:#fff;font-size:calc(var(--lb)*.55);opacity:1;transform:none}
 body:not(.layout-list) .lay-cap :is(.star,.fs,.save):hover{background:rgba(255,255,255,.18)}
 body:not(.layout-list) .lay-cap .nsfwb[hidden]{display:none}
@@ -392,9 +392,8 @@ body:not(.layout-list) .lay-cap .nsfwb[aria-pressed=false]:hover{color:#fff}
 body:not(.layout-list) .lay-cap .star{padding-bottom:0;font-size:calc(var(--lb)*.62)}
 body:not(.layout-list) .lay-cap .fs svg,body:not(.layout-list) .lay-cap .save:not(.nsfwb) svg{width:calc(var(--lb)*.47);height:calc(var(--lb)*.47)}
 body:not(.layout-list) .lay-cap .nsfwb svg{width:calc(var(--lb)*.72);height:calc(var(--lb)*.72)}
-body:not(.layout-list) .layer .actions{display:flex;margin:0 0 0 auto;gap:6px;min-width:0}
+body:not(.layout-list) .layer .actions{display:flex;margin:0;gap:6px;min-width:0}
 body:not(.layout-list) .layer .actions .btn{flex:none;padding:8px 12px;font-size:12px;white-space:nowrap}
-body:not(.layout-list) .layer .actions .btn.primary{display:none}
 body:not(.layout-list) .lay-play:not(:empty){display:block}
 .layer .ctl{position:static;height:auto;padding:0;background:none;opacity:1;pointer-events:auto;z-index:auto}
 /* the handle: a faint pill at the bottom of every tile; its hit area is the lower part of the tile */
@@ -427,9 +426,9 @@ body.cm-always:not(.layout-list) .card .peek,body:not(.layout-list) .card.lay-op
   body:not(.layout-list) .layer{--lb:24px;left:4px;right:4px;bottom:4px;padding:6px;gap:5px;border-radius:12px}
   body:not(.layout-list) .layer .title{font-size:11px;-webkit-line-clamp:1}
   body:not(.layout-list) .layer .meta{display:none}
-  body:not(.layout-list) .lay-act{display:block}
-  body:not(.layout-list) .lay-cap{display:flex;justify-content:space-between}
-  body:not(.layout-list) .layer .actions{display:none}
+  body:not(.layout-list) .layer .actions{flex:1 1 100%}
+  body:not(.layout-list) .layer .actions .btn{flex:1;min-width:0;padding:5px 6px;font-size:10.5px;overflow:hidden;text-overflow:ellipsis}
+  body:not(.layout-list) .lay-cap{width:100%;margin-left:0;justify-content:space-between}
   body:not(.layout-list) .layer .ctl{gap:5px}
   body:not(.layout-list) .layer .ctl .pp,body:not(.layout-list) .layer .ctl .vol{width:22px;height:22px}
   body:not(.layout-list) .layer .time{display:none}
@@ -437,6 +436,8 @@ body.cm-always:not(.layout-list) .card .peek,body:not(.layout-list) .card.lay-op
 @container (max-width:140px){
   body:not(.layout-list) .layer{--lb:20px}
   body:not(.layout-list) .layer .arch{display:none}
+  body:not(.layout-list) .layer .actions .btn:not(.primary){display:none}
+  body:not(.layout-list) .layer .info{display:none}   /* on the narrowest tiles the layer keeps just Source and the pill, so it still fits a short tile */
 }
 body.layout-list #cardrow{display:none}   /* List keeps its own arrangement (inline on desktop, folded on phones) */
 
@@ -1331,15 +1332,16 @@ function fillCard(el,p){
     + (note ? '<span class="note'+(dead?' dead':'')+'">'+esc(note)+'</span>' : '')+'</div>'
     + (removed ? '<div class="arch"><span>Archives:</span><a href="'+esc(wbPostHref(p))+'" target="_blank" rel="noopener noreferrer">Wayback</a></div>' : '')
     + '</div>'
-    + '<div class="lay-act"><div class="lay-cap">'
-    + '<button class="star" type="button" data-id="'+esc(p.id)+'" aria-pressed="'+(FAVS.has(p.id)?'true':'false')+'" aria-label="Star this post" title="Star this post">'+(FAVS.has(p.id)?'\u2605':'\u2606')+'</button>'
-    + '<button class="save" type="button" data-id="'+esc(p.id)+'" aria-pressed="'+(ROWSET.has(p.id)?'true':'false')+'" aria-label="'+(ROWSET.has(p.id)?'In your list: tap to remove':'Not in your list: tap to add')+'" title="'+(ROWSET.has(p.id)?'In your list: tap to remove':'Not in your list: tap to add')+'">'+(ROWSET.has(p.id)?BM_ON:BM_OFF)+'</button>'
-    + '<button class="save nsfwb" type="button" data-id="'+esc(p.id)+'"'+(ROWSET.has(p.id) ? '' : ' hidden')+' aria-pressed="'+(nsfw?'true':'false')+'" aria-label="'+(nsfw ? 'Unmark as NSFW' : 'Mark as NSFW')+'" title="'+(nsfw ? 'Unmark as NSFW' : 'Mark as NSFW')+'">'+NSFW_ICON+'</button>'
-    + (MEDIA_KINDS.has(media) && (thumb || v0) ? '<button class="fs" type="button" aria-label="Full screen" title="Full screen">'+FS_ICON+'</button>' : '')
-    + '</div>'
-    + '<div class="actions"><a class="btn primary" data-open href="'+esc(href)+'" target="_blank" rel="noopener noreferrer">Open source</a>'
+    + '<div class="lay-act">'
+    + '<div class="actions"><a class="btn primary" data-open href="'+esc(href)+'" target="_blank" rel="noopener noreferrer">Source</a>'
     + '<a class="btn" href="'+esc(p.link)+'" target="_blank" rel="noopener noreferrer">Comments</a>'
     + (!m && !dead ? '<a class="btn" href="https://www.reddit.com/comments/'+esc(p.id)+'" target="_blank" rel="noopener noreferrer">Open on Reddit</a><button class="btn retry1" type="button" data-id="'+esc(p.id)+'">Retry this one</button>' : '')
+    + '</div>'
+    + '<div class="lay-cap">'
+    + '<button class="save nsfwb" type="button" data-id="'+esc(p.id)+'"'+(ROWSET.has(p.id) ? '' : ' hidden')+' aria-pressed="'+(nsfw?'true':'false')+'" aria-label="'+(nsfw ? 'Unmark as NSFW' : 'Mark as NSFW')+'" title="'+(nsfw ? 'Unmark as NSFW' : 'Mark as NSFW')+'">'+NSFW_ICON+'</button>'
+    + '<button class="star" type="button" data-id="'+esc(p.id)+'" aria-pressed="'+(FAVS.has(p.id)?'true':'false')+'" aria-label="Star this post" title="Star this post">'+(FAVS.has(p.id)?'\u2605':'\u2606')+'</button>'
+    + '<button class="save" type="button" data-id="'+esc(p.id)+'" aria-pressed="'+(ROWSET.has(p.id)?'true':'false')+'" aria-label="'+(ROWSET.has(p.id)?'In your list: tap to remove':'Not in your list: tap to add')+'" title="'+(ROWSET.has(p.id)?'In your list: tap to remove':'Not in your list: tap to add')+'">'+(ROWSET.has(p.id)?BM_ON:BM_OFF)+'</button>'
+    + (MEDIA_KINDS.has(media) && (thumb || v0) ? '<button class="fs" type="button" aria-label="Full screen" title="Full screen">'+FS_ICON+'</button>' : '')
     + '</div></div>'
     + '<div class="lay-play"></div>'
     + '</div>'
@@ -2063,15 +2065,16 @@ document.addEventListener('keydown',e=>{
   $('grid').addEventListener('click',e=>{ const h = e.target.closest && e.target.closest('.lhandle, .lh-close'); if(h && h._swiped){ e.stopImmediatePropagation(); } },true);
 })();
 $('grid').addEventListener('click',e=>{
-  /* double tap (or double click) on a playing clip pauses or resumes it; a single tap still opens the post, a moment later, only on tiles that have player controls */
+  /* a plain click or tap on a tile opens its layer (Masonry / Grid); the Source button in the layer goes to the post. A double tap on a clip with player controls pauses or resumes it instead,
+     so a single tap on those waits a moment to see if a second one follows. List keeps the link. */
   { const th = e.target.closest('a.thumb');
-    if(th && !SEL.on && e.button===0 && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey){
+    if(th && !SEL.on && !document.body.classList.contains('layout-list') && e.button===0 && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey){
       const card = th.closest('.card'), pp = card && card.querySelector('.ctl .pp');
-      if(card && card._tapGo){ card._tapGo = false; }
-      else if(pp){
+      if(card){
         e.preventDefault();
-        if(card._tapT){ clearTimeout(card._tapT); card._tapT = 0; pp.click(); }
-        else card._tapT = setTimeout(()=>{ card._tapT = 0; card._tapGo = true; th.click(); }, 280);
+        const toggle = () => setLayer(card, !card.classList.contains('lay-open'));
+        if(pp){ if(card._tapT){ clearTimeout(card._tapT); card._tapT = 0; pp.click(); } else card._tapT = setTimeout(()=>{ card._tapT = 0; toggle(); }, 280); }
+        else toggle();
         return;
       }
     } }
@@ -2581,7 +2584,7 @@ function pickFocus(){
 }
 document.addEventListener('click',e=>{
   if(!auto.focus) return;
-  const c = e.target.closest && e.target.closest('.card'); if(!c || !e.target.closest('.layer,.lhandle,.morebtn')) return;
+  const c = e.target.closest && e.target.closest('.card'); if(!c || !e.target.closest('.layer,.lhandle,.morebtn,a.thumb')) return;
   pinned = c; pinY = scrollY; cardView.add(c); pickFocus();
 }, true);
 const schedFocus = () => { if(pfRaf) return; pfRaf = requestAnimationFrame(()=>{ pfRaf = 0; pickFocus(); }); };
