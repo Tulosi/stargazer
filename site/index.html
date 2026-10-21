@@ -2751,7 +2751,7 @@ function wirePlayable(t){
     const cur = () => host.querySelector('.thumb[data-v]');
     host.addEventListener('mouseenter',()=>{ const x = cur(); if(x) setHover(x,'mouse',true); });
     host.addEventListener('mouseleave',()=>{ const x = cur(); if(x) setHover(x,'mouse',false); });
-    host.addEventListener('focusin',()=>{ const x = cur(); if(x) setHover(x,'focus',true); });
+    host.addEventListener('focusin',e=>{ const x = cur(); if(x && !(e.target.matches && !e.target.matches(':focus-visible'))) setHover(x,'focus',true); });   // keyboard focus only: a mouse click leaves focus on the tile's link, which kept the clip playing after the pointer moved away
     host.addEventListener('focusout',e=>{ if(host.contains(e.relatedTarget)) return; const x = cur(); if(x) setHover(x,'focus',false); });
   }
   playIO.observe(t);
