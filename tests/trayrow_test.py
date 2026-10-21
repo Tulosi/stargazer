@@ -46,6 +46,20 @@ with sync_playwright() as p:
     check('bare icons: no filled circle behind any tray control (%s)' % info, info['fill'] == 0)
     check('3-across tray is slim (<= 44px) and keeps a ~44px tall catch area', info['h'] <= 44 and info['minHit'] >= 40)
     ctx.close()
+    # icons: evenly spread, and centred on one line (smallest desktop tile, 2-across and 3-across phone)
+    EVEN = """()=>{ const l=document.querySelector('.card .layer'); const bs=[...l.querySelectorAll('.actions .btn, .lay-cap button')].filter(e=>e.offsetParent!==null).map(e=>e.getBoundingClientRect());
+      const cx=bs.map(r=>r.left+r.width/2), cy=bs.map(r=>r.top+r.height/2); const gaps=cx.slice(1).map((x,i)=>x-cx[i]); const lr=l.getBoundingClientRect();
+      return {pitch:Math.max(...gaps)-Math.min(...gaps), dy:Math.max(...cy)-Math.min(...cy), lm:cx[0]-lr.left, rm:lr.right-cx[cx.length-1]}; }"""
+    for lab, vp, mob, setup in (('desktop smallest tile', {'width':1500,'height':900}, False, lambda pg: pg.evaluate("()=>{ document.documentElement.style.setProperty('--card','150px'); relayoutAll(); }")),
+                                ('desktop ~300px tile', {'width':1500,'height':900}, False, lambda pg: pg.evaluate("()=>{ document.documentElement.style.setProperty('--card','300px'); relayoutAll(); }")),
+                                ('phone 2-across', {'width':390,'height':780}, True, lambda pg: pg.evaluate("()=>{const s=document.getElementById('size'); s.value=1; s.dispatchEvent(new Event('input'))}")),
+                                ('phone 3-across', {'width':390,'height':780}, True, three)):
+        ctx = b.new_context(viewport=vp, is_mobile=mob, has_touch=mob); ctx.add_init_script("localStorage.setItem('saved-posts-cardmode','always')")
+        pg = ctx.new_page(); pg.route('**/*', lambda r: r.continue_() if r.request.url.startswith(('file:', 'data:')) else r.abort())
+        pg.goto(PAGE); pg.wait_for_timeout(800); pg.click('#introSample'); pg.wait_for_timeout(1500); setup(pg); pg.wait_for_timeout(700)
+        e = pg.evaluate(EVEN)
+        check('%s: icons evenly spaced (pitch spread %.1fpx), one centre line (%.1fpx), symmetric margins (%.0f/%.0f)' % (lab, e['pitch'], e['dy'], e['lm'], e['rm']), e['pitch'] <= 1.5 and e['dy'] <= 1 and abs(e['lm'] - e['rm']) <= 2)
+        ctx.close()
     # below 200px NSFW leaves the tray
     rows = run({'width': 390, 'height': 780}, True, lambda pg: pg.evaluate("()=>{const s=document.getElementById('size'); s.value=1; s.dispatchEvent(new Event('input'))}"), 'p2')
     check('2-across tile (%s): five icons fit one line' % sorted(set(r['w'] for r in rows))[:1], rows and all(r['spread'] <= 3 and r['inside'] and r['n'] <= 5 for r in rows))

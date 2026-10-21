@@ -51,7 +51,7 @@ with sync_playwright() as p:
     ev("document.querySelector('#layoutseg [data-l=masonry]').click()"); pg.wait_for_timeout(200)
     sp = lambda: ev("""(()=>{ const c=[...document.querySelectorAll('#grid .card')].find(x=>x.querySelector('.fs')&&x.querySelector('.save')); const gaps=()=>{ const b=[...c.querySelectorAll('.lay-cap > *')].filter(x=>!x.hidden).map(x=>x.getBoundingClientRect()); return b.slice(1).map((r,i)=>Math.round(r.left-b[i].right)); }; const g1=gaps(); c.querySelector('.fs').remove(); return [g1, gaps()]; })()""")
     g = sp()
-    check('without a full-screen button the pill closes up (even spacing)', len(set(g[0]))==1 and len(set(g[1]))==1 and g[0][0]==g[1][0])
+    check('without a full-screen button the pill closes up (even spacing)', max(g[0])-min(g[0])<=1 and max(g[1])-min(g[1])<=1)   # icons are spread evenly with or without the full-screen button
     check('hint names Masonry as best for media', 'media' in ev("document.getElementById('layouthint').textContent"))
     ev("document.querySelector('#layoutseg [data-l=list]').click()")
     check('hint names List as best for text posts', 'text posts' in ev("document.getElementById('layouthint').textContent"))
