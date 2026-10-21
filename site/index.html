@@ -1118,7 +1118,7 @@ const WB_TS = '20230601';
 const wbImg = u => 'https://web.archive.org/web/'+WB_TS+'im_/'+u;
 const NSFW_ICON = '<svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><g text-anchor="middle" font-family="Geist,Inter,system-ui,sans-serif" font-weight="700" font-size="6.8" fill="currentColor"><text x="8" y="7.2">NS</text><text x="8" y="13.2">FW</text></g></svg>';
 const FS_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>';
-const isAnimUrl = u => { u = String(u).replace(/^https?:\/\/web\.archive\.org\/web\/\d+[a-z_]*\//i,''); return /\.gif(\?|#|$)/i.test(u) && !/^https?:\/\/(?:external-)?preview\.redd\.it\//i.test(u); };   // Reddit's preview.redd.it copies of a GIF are still pictures (png8), only the original file animates
+const isAnimUrl = u => { u = String(u).replace(/^https?:\/\/web\.archive\.org\/web\/\d+[a-z_]*\//i,''); return (/\.gif(\?|#|$)/i.test(u) && !/^https?:\/\/(?:external-)?preview\.redd\.it\//i.test(u)) || isMp4Fmt(u); };   // Reddit's preview.redd.it copies of a GIF are still pictures (png8), only the original file animates
 /* A GIF used as a tile's picture would play whether or not anyone asked: draw its first frame on a canvas instead (the full-screen view and the hover / in-view play still use the real file). */
 function freezeFrame(im){
   try{
@@ -1333,6 +1333,8 @@ function startStill(v, done){
   };
   v.addEventListener('loadeddata',()=>{ anyImgOK = true; clearImgFail(p); v.classList.add('ready'); const ph = v.parentNode && v.parentNode.querySelector('.ph'); if(ph) ph.remove(); end(); },{once:true});
   v.addEventListener('error',tryNext);
+  v.addEventListener('play',()=>{ if(!v.paused) v.pause(); });   // a still stays a still, whatever the browser or an extension thinks about autoplay
+  v.autoplay = false; v.loop = false; v.controls = false;
   setTimeout(end, 20000);
   v.preload = 'metadata'; tryNext();
 }
@@ -1485,7 +1487,10 @@ try{ const o = JSON.parse(localStorage.getItem(HKEY)||'{}'), now = Date.now(); f
 let hsT; function saveHealth(){ clearTimeout(hsT); hsT = setTimeout(()=>{ try{ localStorage.setItem(HKEY, JSON.stringify(HEALTH)); }catch(e){} },800); }
 const hashStr = t => { let h = 5381; for(let i=0;i<t.length;i++) h = ((h<<5)+h+t.charCodeAt(i))|0; return (h>>>0).toString(36); };
 const wbRaw = u => 'https://web.archive.org/web/'+WB_TS+'id_/'+u;
-const vtype = u => /\.gif(\?|$)/i.test(u) ? 'img' : 'video';
+/* Reddit names the mp4 copy of a GIF like the GIF itself (NAME.gif?format=mp4). It is a video: treating it as a picture would put a moving file in an <img>, which Safari plays on its own. */
+const isMp4Fmt = u => /[?&]format=mp4(?:&|#|$)/i.test(String(u));
+const isGifFile = u => /\.gif(\?|#|$)/i.test(String(u)) && !isMp4Fmt(u);
+const vtype = u => isGifFile(u) ? 'img' : 'video';
 
 function buildChain(p,m){
   const out = [], seen = new Set();
@@ -1494,7 +1499,7 @@ function buildChain(p,m){
   const u = m.u || '', src = sourceOf(p);
   const isImg = /\.(jpe?g|png|webp|gif)(\?|$)/i.test(u) || /^https?:\/\/i\.redd\.it\//i.test(u);
   const vid = playableFromUrl(u);
-  if(vid && !/\.gif(\?|$)/i.test(vid)){ add({href:vid, probe:vid, type:'video', kind:'orig'}); add({href:wbRaw(vid), probe:wbRaw(vid), type:'video', kind:'archive'}); }
+  if(vid && !isGifFile(vid)){ add({href:vid, probe:vid, type:'video', kind:'orig'}); add({href:wbRaw(vid), probe:wbRaw(vid), type:'video', kind:'archive'}); }
   else if(isImg){ add({href:u, probe:u, type:'img', kind:'orig'}); add({href:wbImg(u), probe:wbImg(u), type:'img', kind:'archive'}); }
   const im = /imgur\.com\/(?:gallery\/|a\/)?([A-Za-z0-9]{5,8})(?:[./?]|$)/i.exec(u);
   if(im){ const j = 'https://i.imgur.com/'+im[1]+'.jpg'; add({href:j, probe:j, type:'img', kind:'orig'}); add({href:wbImg(j), probe:wbImg(j), type:'img', kind:'archive'}); }
@@ -1921,7 +1926,7 @@ async function openViewer(p, opts){
     return;
   }
   const vurl = m ? (m.vh || m.v || '') : '';
-  if(vurl && !/\.gif(\?|$)/i.test(vurl)){
+  if(vurl && !isGifFile(vurl)){
     const v = document.createElement('video');
     v.controls = true; v.loop = true; v.playsInline = true; v.preload = 'auto'; v.src = vurl;
     /* Sound is always off when a clip opens; the speaker button or slider turns it on. */
@@ -2662,7 +2667,7 @@ function startPlay(t){
     return;
   }
   let el;
-  const isGif = /\.gif(\?|$)/i.test(v);
+  const isGif = isGifFile(v);
   if(isGif){ el = document.createElement('img'); el.alt = ''; el.referrerPolicy = 'no-referrer'; el.src = v; }
   else {
     el = document.createElement('video');
