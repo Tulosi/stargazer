@@ -791,8 +791,9 @@ a,button,summary,label,select,[role=button]{touch-action:manipulation}
             <option value="always">Show always</option>
           </select>
         </label>
-        <label class="toggle" for="autoplay">Auto-play in view<input id="autoplay" type="checkbox"></label>
-        <label class="toggle" for="autoplayall">Autoplay all media in viewport<input id="autoplayall" type="checkbox"></label>
+        <label class="toggle" for="autohover" title="A clip plays while the pointer is over its card, or while it has keyboard focus">Play on hover<input id="autohover" type="checkbox"></label>
+        <label class="toggle" for="autoplay" title="Clips on screen play by themselves, up to 18 at a time. YouTube and RedGifs embeds wait for a hover.">Auto-play in view (up to 18, no embeds)<input id="autoplay" type="checkbox"></label>
+        <label class="toggle" for="autoplayall" title="Every clip and embed on screen plays, with no limit. Overrides the option above.">Autoplay all media in viewport (no limit)<input id="autoplayall" type="checkbox"></label>
         <p class="apwarn" id="apwarn">Plays every clip on screen at once. Can be heavy on your device.</p>
         <label class="ctlrow"><span>Theme</span>
           <select id="theme" class="field" aria-label="Theme">
@@ -2479,7 +2480,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape' && SEL.on && VIEW.r
 
 /* ---------- hover and auto-play ---------- */
 const touchMQ = matchMedia('(hover: none)');
-const auto = {on:false, focus:touchMQ.matches, all:false}, playing = new Set(), MAX_AUTO = 18;
+const auto = {hover:true, on:false, focus:touchMQ.matches, all:false}, playing = new Set(), MAX_AUTO = 18;
 let focused = null, focusCard = null; const viewSet = new Set(), cardView = new Set();
 const cardIO = new IntersectionObserver(es=>{ for(const e of es){ if(e.isIntersecting) cardView.add(e.target); else { cardView.delete(e.target); if(e.boundingClientRect.bottom < 0 || e.boundingClientRect.top > innerHeight) setLayer(e.target,false); const lt = e.target.querySelector('.thumb[data-v]'); if(lt) leftSound(lt); } } if(auto.focus) schedFocus(); },{threshold:[0,.25,.5,.75,1]});   // on touch screens only the media nearest the middle of the screen plays
 function fmtTime(x){ x = Math.max(0,Math.floor(x||0)); return Math.floor(x/60)+':'+String(x%60).padStart(2,'0'); }
@@ -2501,7 +2502,7 @@ const SPK_OFF = '<svg viewBox="0 0 16 16" width="14" height="14" fill="currentCo
 const audioUIs = new Set();
 /* A clip is audible while the pointer is on it, or in focus mode when it is the focused one, or when its own speaker button / slider was used
    (touch screens have no hover, so pressing the speaker is the way to listen to a card). */
-const isAudible = t => !!t._soundOn || (auto.focus ? (auto.on ? t===focused : !!t._hover) : !!t._hover);
+const isAudible = t => !!t._soundOn || (auto.focus && auto.on ? t===focused : !!(auto.hover && t._hover));
 /* Sound follows the user's attention: moving on from a card whose sound was switched on mutes it, and switching sound on for one card silences any other. */
 function leftSound(t){ if(t._soundOn && !viewerOpen()){ t._soundOn = false; AUDIO.muted = true; applyAudio(); } }
 let soundT = null;
@@ -2704,10 +2705,11 @@ function syncPlay(t){
   for(const x of [...viewSet]) if(!x.isConnected) viewSet.delete(x);
   if(focused && !focused.isConnected) focused = null;
   let want, tracked;
+  const hv = !!(auto.hover && t._hover);   // the Play on hover switch
   if(LAYOUT==='list'){ want = false; tracked = false; }   // List rows are static: a blurred preview, no playback
-  else if(auto.all){ want = !!(t._hover || t._inView); tracked = true; }   // Autoplay all media in viewport: no cap, embeds included, on touch too
-  else if(auto.focus){ want = auto.on ? t===focused : !!t._hover; tracked = auto.on && t===focused; }
-  else { want = t._hover || (auto.on && t._inView && !/^(yt|rg):/.test(t.dataset.v||'') && (playing.has(t) || playing.size < MAX_AUTO)); tracked = !t._hover || (auto.on && t._inView); }
+  else if(auto.all){ want = !!(hv || t._inView); tracked = true; }   // Autoplay all media in viewport: no cap, embeds included, on touch too
+  else if(auto.focus){ want = auto.on ? t===focused : hv; tracked = auto.on && t===focused; }
+  else { want = hv || (auto.on && t._inView && !/^(yt|rg):/.test(t.dataset.v||'') && (playing.has(t) || playing.size < MAX_AUTO)); tracked = !hv || (auto.on && t._inView); }
   if(want){ startPlay(t); if(tracked) playing.add(t); }
   else { stopPlay(t); playing.delete(t); }
   applyAudio();
@@ -2791,7 +2793,16 @@ function releasePlayable(t){ t._hover = t._mouse = t._focus = false; t._inView =
   const apply = on => { auto.on = on; box.checked = on; document.querySelectorAll('.thumb[data-v]').forEach(syncPlay); schedFocus(); };
   let on = false; try{ const sv = localStorage.getItem(KEY); on = sv===null ? auto.focus : sv==='1'; }catch(e){ on = auto.focus; }   // touch screens default to on
   auto.on = on; box.checked = on;
-  if(auto.focus) box.parentNode.firstChild.textContent = 'Auto-play focused media';
+  if(auto.focus) box.parentNode.firstChild.textContent = 'Auto-play focused media'; box.parentNode.removeAttribute('title');
+  box.addEventListener('change',()=>{ apply(box.checked); try{ localStorage.setItem(KEY, box.checked?'1':'0'); }catch(e){} });
+})();
+
+(function(){
+  /* Play on hover: a clip plays while the pointer is over its card or it has keyboard focus. On by default. */
+  const box = $('autohover'), KEY = 'saved-posts-autoplayhover';
+  const apply = on => { auto.hover = on; box.checked = on; document.querySelectorAll('.thumb[data-v]').forEach(syncPlay); schedFocus(); };
+  let on = true; try{ on = localStorage.getItem(KEY)!=='0'; }catch(e){}
+  auto.hover = on; box.checked = on;
   box.addEventListener('change',()=>{ apply(box.checked); try{ localStorage.setItem(KEY, box.checked?'1':'0'); }catch(e){} });
 })();
 
