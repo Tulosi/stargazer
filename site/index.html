@@ -400,7 +400,7 @@ body.info-hover .card:focus-within .info,body.info-hover .card:focus-within .bad
 /* ---- Card controls: the four round glass buttons (star, full screen, bookmark, NSFW toggle) in Masonry and Grid.
    Collapsed folds them into one chevron in the top right; Expand on hover slides them out when the card is hovered (or in focus on touch);
    Always show keeps them out. List has its own arrangement and ignores this setting. ---- */
-body:not(.layout-list) .card :is(.star,.fs,.save){opacity:0;pointer-events:none;transform:translateX(8px) scale(.9);transition:opacity .18s ease var(--d,0s),transform .24s cubic-bezier(.2,.8,.3,1),background .15s,color .15s}   /* every button slides the same short distance, so they never cross each other on the way out; only the fade is staggered */
+body:not(.layout-list) .card :is(.star,.fs,.save){opacity:0;pointer-events:none;transform:translateX(calc(var(--g,6px) + 2px)) scale(.9);transition:opacity .18s ease var(--d,0s),transform .24s cubic-bezier(.2,.8,.3,1),background .15s,color .15s}   /* every button slides the same short distance, so they never cross each other on the way out; only the fade is staggered */
 body:not(.layout-list) :is(body.ctl-always .card,body.ctl-hover .card:is(:hover,:focus-within),.card.btns-open) :is(.star,.fs,.save){opacity:1;pointer-events:auto;transform:none}
 body.ctl-hover:not(.layout-list) .card .save.nsfwb[aria-pressed=true]{opacity:1;pointer-events:auto;transform:none}   /* a card marked NSFW keeps its mark showing, except when everything is collapsed into the chevron */
 @media (hover:none){body.ctl-hover:not(.layout-list) .card.is-focus :is(.star,.fs,.save){opacity:1;pointer-events:auto;transform:none}}
@@ -408,16 +408,38 @@ body:not(.layout-list) .card .fs{--d:.03s}
 body:not(.layout-list) .card .save{--d:.06s}
 body:not(.layout-list) .card .save.nsfwb{--d:.09s}
 /* collapsed: the chevron takes the top-right corner and the buttons open out to its left */
-body.ctl-collapsed:not(.layout-list) .morebtn{display:grid;place-items:center;position:absolute;top:8px;right:8px;z-index:3;width:30px;height:30px;border:0;border-radius:50%;padding:0;cursor:pointer;background:rgba(12,12,14,.26);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:rgba(255,255,255,.78);transition:background .15s,color .15s,opacity .15s}
+body.ctl-collapsed:not(.layout-list) .morebtn{display:grid;place-items:center;position:absolute;z-index:3;border:0;border-radius:50%;padding:0;cursor:pointer;background:rgba(12,12,14,.26);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:rgba(255,255,255,.78);transition:background .15s,color .15s,opacity .15s}
 body.ctl-collapsed:not(.layout-list) .morebtn:hover{background:rgba(12,12,14,.5);color:#fff}
 body.ctl-collapsed:not(.layout-list) .morebtn svg{transition:transform .22s cubic-bezier(.2,.8,.3,1)}
 body.ctl-collapsed:not(.layout-list) .card.btns-open .morebtn svg{transform:rotate(180deg)}
-body.ctl-collapsed:not(.layout-list) .star{right:44px}
-body.ctl-collapsed:not(.layout-list) .fs{right:80px}
-body.ctl-collapsed:not(.layout-list) .save{right:116px}
-body.ctl-collapsed:not(.layout-list) .nsfwb{right:152px}
-body.ctl-collapsed:not(.layout-list) .card:not(:has(.fs)) .save{right:80px}
-body.ctl-collapsed:not(.layout-list) .card:not(:has(.fs)) .nsfwb{right:116px}
+/* Scaling: the buttons are sized from the tile's own width (the card is a size container), so on a 3-across phone layout they shrink to fit instead of running off the edge.
+   --bs button size, --g gap, --be edge inset, --p pitch; --n is how many sit in the row (4, or 5 with the chevron). Full size (30px, 40px on touch) once the tile is wide enough. */
+body:not(.layout-list) .card :is(.star,.fs,.save,.morebtn,.badges,.badge.rec,.ibtn){--n:4;--bmax:30px;--be:clamp(4px,3cqw,8px);--g:clamp(2px,1.6cqw,6px);--bs:clamp(18px,calc((100cqw - 2*var(--be) - (var(--n) - 1)*var(--g))/var(--n)),var(--bmax));--p:calc(var(--bs) + var(--g))}
+body.ctl-collapsed:not(.layout-list) .card :is(.star,.fs,.save,.morebtn,.badges,.badge.rec,.ibtn){--n:5}
+@media (pointer:coarse){body:not(.layout-list) .card :is(.star,.fs,.save,.morebtn,.ibtn){--bmax:40px}}
+body:not(.layout-list) .card :is(.star,.fs,.save,.morebtn){top:var(--be);width:var(--bs);height:var(--bs)}
+body:not(.layout-list) .card .star{right:var(--be);font-size:calc(var(--bs)*.53)}
+body:not(.layout-list) .card .fs{right:calc(var(--be) + var(--p))}
+body:not(.layout-list) .card .save{right:calc(var(--be) + 2*var(--p))}
+body:not(.layout-list) .card .nsfwb{right:calc(var(--be) + 3*var(--p))}
+body:not(.layout-list) .card:not(:has(.fs)) .save{right:calc(var(--be) + var(--p))}
+body:not(.layout-list) .card:not(:has(.fs)) .nsfwb{right:calc(var(--be) + 2*var(--p))}
+body.ctl-collapsed:not(.layout-list) .card .morebtn{right:var(--be)}
+body.ctl-collapsed:not(.layout-list) .card .star{right:calc(var(--be) + var(--p))}
+body.ctl-collapsed:not(.layout-list) .card .fs{right:calc(var(--be) + 2*var(--p))}
+body.ctl-collapsed:not(.layout-list) .card .save{right:calc(var(--be) + 3*var(--p))}
+body.ctl-collapsed:not(.layout-list) .card .nsfwb{right:calc(var(--be) + 4*var(--p))}
+body.ctl-collapsed:not(.layout-list) .card:not(:has(.fs)) .save{right:calc(var(--be) + 2*var(--p))}
+body.ctl-collapsed:not(.layout-list) .card:not(:has(.fs)) .nsfwb{right:calc(var(--be) + 3*var(--p))}
+body:not(.layout-list) .card .fs svg,body:not(.layout-list) .card .save:not(.nsfwb) svg{width:calc(var(--bs)*.47);height:calc(var(--bs)*.47)}
+body:not(.layout-list) .card .nsfwb svg{width:calc(var(--bs)*.73);height:calc(var(--bs)*.73)}
+body:not(.layout-list) .card .morebtn svg{width:calc(var(--bs)*.53);height:calc(var(--bs)*.53)}
+body:not(.layout-list) .card .ibtn{right:var(--be);width:var(--bs);height:var(--bs)}
+body:not(.layout-list) .card .ibtn svg{width:calc(var(--bs)*.53);height:calc(var(--bs)*.53)}
+body:not(.layout-list) .card .badge.rec{right:var(--be);top:calc(var(--be) + var(--bs) + 8px)}
+/* the label on the left gives up the room the buttons take (only the chevron's room when collapsed) */
+body:not(.layout-list) .card .badges{left:var(--be);top:var(--be);overflow:hidden;max-width:max(0px,calc(100cqw - 2*var(--be) - 4*var(--p) - 4px))}
+body.ctl-collapsed:not(.layout-list) .card .badges{max-width:max(0px,calc(100cqw - 2*var(--be) - var(--p) - 4px))}
 body.layout-list #ctlrow{display:none}   /* List keeps its own arrangement (inline on desktop, folded on phones) */
 /* keep the (i) button clear of the player controls once they are showing */
 .card:has(.ctl) .ibtn{bottom:46px}
@@ -2504,7 +2526,7 @@ const playIO = new IntersectionObserver(es=>{
   if(!auto.all && auto.on && playing.size < MAX_AUTO) document.querySelectorAll('.thumb[data-v]').forEach(t=>{ if(t._inView && !t._playing) syncPlay(t); });
 },{threshold:0.5});
 /* Touch screens: play the one clip whose centre is closest to the middle of the visible area (below the filter bar). */
-let pfRaf = 0;
+let pfRaf = 0, pinned = null, pinY = 0;
 function pickFocus(){
   if(!auto.focus){ if(focusCard){ focusCard.classList.remove('is-focus'); focusCard = null; } return; }
   for(const c of [...cardView]) if(!c.isConnected) cardView.delete(c);
@@ -2520,12 +2542,19 @@ function pickFocus(){
   for(const c of cardView){ const d = score(c); if(d!==null && d<bd){ bd = d; best = c; } }
   /* At the very top of the feed the first card counts as in focus when it is on screen, even if it is short and a taller neighbour sits nearer the middle. */
   if(scrollY < 120){ const first = $('grid').firstElementChild; if(first && first.classList.contains('card') && cardView.has(first)){ const r = first.getBoundingClientRect(); if(Math.min(r.bottom,bottom) - Math.max(r.top,top) > Math.min(r.height,40)*0.5){ best = first; bd = 0; } } }
+  /* a card the person touched (its buttons or its info) stays in focus until it scrolls out of view or the page has moved on by a little */
+  if(pinned){ if(!pinned.isConnected || score(pinned)===null || Math.abs(scrollY-pinY) > 80) pinned = null; else { best = pinned; bd = 0; } }
   // stick with the current tile unless another is clearly more central, so nothing flickers
   if(focusCard && best && focusCard!==best){ const fd = score(focusCard); if(fd!==null && bd > fd-40) best = focusCard; }
   if(best!==focusCard){ if(focusCard) focusCard.classList.remove('is-focus'); focusCard = best; if(best) best.classList.add('is-focus'); }
   const t = best ? best.querySelector('.thumb[data-v]') : null;
   if(t!==focused){ const old = focused; focused = t; if(old){ leftSound(old); syncPlay(old); } if(t) syncPlay(t); }
 }
+document.addEventListener('click',e=>{
+  if(!auto.focus) return;
+  const c = e.target.closest && e.target.closest('.card'); if(!c || !e.target.closest('.star,.fs,.save,.morebtn,.ibtn,.info,.ctl')) return;
+  pinned = c; pinY = scrollY; cardView.add(c); pickFocus();
+}, true);
 const schedFocus = () => { if(pfRaf) return; pfRaf = requestAnimationFrame(()=>{ pfRaf = 0; pickFocus(); }); };
 addEventListener('scroll',schedFocus,{passive:true});
 addEventListener('resize',schedFocus);
