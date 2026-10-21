@@ -326,9 +326,6 @@ body:not(.layout-list) .badge.media{background:none;-webkit-backdrop-filter:none
 .nsfwb[aria-pressed=true] svg text,.nsfwb[aria-pressed=false]:hover svg text{fill:url(#nsfwGrad)}
 .nsfwb[aria-pressed=true]:hover svg{opacity:0}
 .nsfwb[aria-pressed=true]:hover::after{content:"";position:absolute;inset:0;margin:auto;width:14px;height:14px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M3.5 3.5l9 9M12.5 3.5l-9 9'/%3E%3C/svg%3E") center/contain no-repeat}
-body .card .nsfwb[aria-pressed=false]{opacity:0!important;pointer-events:none!important}
-body .card:hover .nsfwb[aria-pressed=false],body .card:focus-within .nsfwb[aria-pressed=false],body .card.is-focus .nsfwb[aria-pressed=false],body .card.info-open .nsfwb[aria-pressed=false],body .card.btns-open .nsfwb[aria-pressed=false]{opacity:1!important;pointer-events:auto!important}
-body .card .nsfwb[aria-pressed=true]{opacity:1!important;pointer-events:auto!important}
 .fs svg{display:block}
 .gnav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:32px;height:32px;display:grid;place-items:center;border:0;border-radius:50%;padding:0;background:rgba(12,12,14,.26);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:rgba(255,255,255,.78);font-size:22px;line-height:1;cursor:pointer;opacity:0;transition:opacity .15s,background .15s}
 .gnav:hover{background:rgba(12,12,14,.6);color:#fff}
@@ -387,22 +384,42 @@ body.info-off .ibtn{display:grid}
   body.info-off .card .ibtn{opacity:0;transition:opacity .18s}
   body.info-off .card:hover .ibtn,body.info-off .card:focus-within .ibtn,body.info-off .card.info-open .ibtn{opacity:1}
 }
-body.info-off .card .star,body.info-off .card .fs,body.info-off .card .save{opacity:0}
-body.info-off .card:hover .star,body.info-off .card:hover .fs,body.info-off .card:hover .save,body.info-off .card:focus-within .star,body.info-off .card:focus-within .fs,body.info-off .card:focus-within .save{opacity:1}
-body.info-hover .card .info,body.info-hover .card .badge,body.info-hover .card .reveal,body.info-hover .card .star,body.info-hover .card .fs,body.info-hover .card .save,body.info-hover .card .ph span{opacity:0}
-body.info-hover .card:hover .info,body.info-hover .card:hover .badge,body.info-hover .card:hover .reveal,body.info-hover .card:hover .star,body.info-hover .card:hover .fs,body.info-hover .card:hover .save,body.info-hover .card:hover .ph span,
-body.info-hover .card:focus-within .info,body.info-hover .card:focus-within .badge,body.info-hover .card:focus-within .reveal,body.info-hover .card:focus-within .star,body.info-hover .card:focus-within .fs,body.info-hover .card:focus-within .save,body.info-hover .card:focus-within .ph span{opacity:1}
-@media (hover:none){body.info-off .card .star,body.info-off .card .fs,body.info-off .card .save{opacity:1}}
+body.info-hover .card .info,body.info-hover .card .badge,body.info-hover .card .reveal,body.info-hover .card .ph span{opacity:0}
+body.info-hover .card:hover .info,body.info-hover .card:hover .badge,body.info-hover .card:hover .reveal,body.info-hover .card:hover .ph span,
+body.info-hover .card:focus-within .info,body.info-hover .card:focus-within .badge,body.info-hover .card:focus-within .reveal,body.info-hover .card:focus-within .ph span{opacity:1}
 @media (hover:none){   /* no hover on a touch screen: Show on hover shows the info of the tile in focus (or opened with its (i) button), the way the star and save buttons already behave */
-  body.info-hover .card .reveal,body.info-hover .card .star,body.info-hover .card .fs,body.info-hover .card .save{opacity:1}
+  body.info-hover .card .reveal{opacity:1}
   body.info-hover .card.is-focus .info,body.info-hover .card.is-focus .badge,body.info-hover .card.is-focus .ph span,body.info-hover .card.info-open .info,body.info-hover .card.info-open .badge,body.info-hover .card.info-open .ph span{opacity:1}
 }
 
-/* touch screens: save, star and the (i) button only appear on the tile in focus (or while its info is open) */
+/* touch screens: the (i) button is faint on every tile and full strength on the tile in focus (or while its info is open) */
 @media (hover:none){
-  .card .star,.card .save,.card .ibtn{transition:opacity .18s}
-  body .card:not(.is-focus):not(.info-open) .star,body .card:not(.is-focus):not(.info-open) .save,body .card:not(.is-focus):not(.info-open) .ibtn{opacity:.5}   /* every card shows its buttons faintly so they are discoverable; the focused card shows them at full strength */
+  .card .ibtn{transition:opacity .18s}
+  body .card:not(.is-focus):not(.info-open) .ibtn{opacity:.5}   /* every card shows its (i) button faintly so it is discoverable; the focused card shows it at full strength */
 }
+/* ---- Card controls: the four round glass buttons (star, full screen, bookmark, NSFW toggle) in Masonry and Grid.
+   Collapsed folds them into one chevron in the top right; Expand on hover slides them out when the card is hovered (or in focus on touch);
+   Always show keeps them out. List has its own arrangement and ignores this setting. ---- */
+body:not(.layout-list) .card :is(.star,.fs,.save){opacity:0;pointer-events:none;transform:translateX(14px) scale(.85);transition:opacity .18s ease,transform .24s cubic-bezier(.2,.8,.3,1),background .15s,color .15s}
+body:not(.layout-list) :is(body.ctl-always .card,body.ctl-hover .card:is(:hover,:focus-within),.card.btns-open) :is(.star,.fs,.save){opacity:1;pointer-events:auto;transform:none}
+@media (hover:none){body.ctl-hover:not(.layout-list) .card.is-focus :is(.star,.fs,.save){opacity:1;pointer-events:auto;transform:none}}
+body:not(.layout-list) .card :is(.star,.fs,.save){transition-delay:0s}
+body:not(.layout-list) .card .fs{transition-delay:.03s}
+body:not(.layout-list) .card .save{transition-delay:.06s}
+body:not(.layout-list) .card .save.nsfwb{transition-delay:.09s}
+body.ctl-always:not(.layout-list) .card :is(.star,.fs,.save){transition-delay:0s}
+/* collapsed: the chevron takes the top-right corner and the buttons open out to its left */
+body.ctl-collapsed:not(.layout-list) .morebtn{display:grid;place-items:center;position:absolute;top:8px;right:8px;z-index:3;width:30px;height:30px;border:0;border-radius:50%;padding:0;cursor:pointer;background:rgba(12,12,14,.26);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:rgba(255,255,255,.78);transition:background .15s,color .15s,opacity .15s}
+body.ctl-collapsed:not(.layout-list) .morebtn:hover{background:rgba(12,12,14,.5);color:#fff}
+body.ctl-collapsed:not(.layout-list) .morebtn svg{transition:transform .22s cubic-bezier(.2,.8,.3,1)}
+body.ctl-collapsed:not(.layout-list) .card.btns-open .morebtn svg{transform:rotate(180deg)}
+body.ctl-collapsed:not(.layout-list) .star{right:44px}
+body.ctl-collapsed:not(.layout-list) .fs{right:80px}
+body.ctl-collapsed:not(.layout-list) .save{right:116px}
+body.ctl-collapsed:not(.layout-list) .nsfwb{right:152px}
+body.ctl-collapsed:not(.layout-list) .card:not(:has(.fs)) .save{right:80px}
+body.ctl-collapsed:not(.layout-list) .card:not(:has(.fs)) .nsfwb{right:116px}
+body.layout-list #ctlrow{display:none}   /* List keeps its own arrangement (inline on desktop, folded on phones) */
 /* keep the (i) button clear of the player controls once they are showing */
 .card:has(.ctl) .ibtn{bottom:46px}
 
@@ -694,6 +711,13 @@ body.layout-list .nsfwb[aria-pressed=true]:hover::after{filter:invert(1)}
             <option value="show">Always visible</option>
             <option value="hover">Show on hover</option>
             <option value="off">Hidden</option>
+          </select>
+        </label>
+        <label class="ctlrow" id="ctlrow"><span>Card controls</span>
+          <select id="ctlmode" class="field" aria-label="Card controls">
+            <option value="collapsed">Collapsed</option>
+            <option value="hover">Expand on hover</option>
+            <option value="always">Always show</option>
           </select>
         </label>
         <label class="toggle" for="autoplay">Auto-play in view<input id="autoplay" type="checkbox"></label>
@@ -2649,6 +2673,21 @@ $('nsfwseg').addEventListener('click',e=>{ const b = e.target.closest('.pill'); 
   };
   window.applyInfoMode();
   sel.addEventListener('change',()=>{ apply(sel.value); try{ localStorage.setItem(key(), sel.value); }catch(e){} });
+})();
+(function(){
+  /* Card controls (the star, full screen, bookmark and NSFW buttons). They follow Card info (Always visible > Always show, Show on hover > Expand on hover, Hidden > Collapsed)
+     whenever Card info is changed, and can then be set on their own. */
+  const sel = $('ctlmode'), info = $('infomode'), KEY = 'saved-posts-ctlmode';
+  const fromInfo = v => ({show:'always', hover:'hover', off:'collapsed'}[v] || 'hover');
+  const apply = v => {
+    for(const m of ['collapsed','hover','always']) document.body.classList.toggle('ctl-'+m, m===v);
+    sel.value = v;
+    document.querySelectorAll('.card.btns-open').forEach(c=>{ c.classList.remove('btns-open'); const b = c.querySelector('.morebtn'); if(b) b.setAttribute('aria-expanded','false'); });
+  };
+  let v = fromInfo(info.value); try{ const sv = localStorage.getItem(KEY); if(['collapsed','hover','always'].includes(sv)) v = sv; }catch(e){}
+  apply(v);
+  sel.addEventListener('change',()=>{ apply(sel.value); try{ localStorage.setItem(KEY, sel.value); }catch(e){} });
+  info.addEventListener('change',()=>{ const m = fromInfo(info.value); apply(m); try{ localStorage.setItem(KEY, m); }catch(e){} });
 })();
 (function(){
   const box = $('hidebroken'), KEY = 'saved-posts-hidebroken';
