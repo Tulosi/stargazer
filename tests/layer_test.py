@@ -19,6 +19,7 @@ with sync_playwright() as p:
     pg.route('**/*', lambda r: r.continue_() if r.request.url.startswith(('file:', 'data:')) else r.abort())
     pg.goto(PAGE); pg.wait_for_timeout(700); ev = pg.evaluate
     ev(SEED, H); pg.wait_for_timeout(1000)
+    check('a closed layer and the tile badges carry no backdrop blur (blur over playing video made the page flash)', ev("(()=>{ const l=document.querySelector('.card .layer'), b=document.querySelector('.card .badge'); const bf=e=>{ const c=getComputedStyle(e); return (c.backdropFilter||c.webkitBackdropFilter||'none'); }; return bf(l)==='none' && (!b || bf(b)==='none'); })()"))
     check('desktop default is Show on hover / focus', ev("document.getElementById('cardmode').value") == 'hover')
     # the layer holds all three components
     ev(SETM, 'always'); pg.wait_for_timeout(300)

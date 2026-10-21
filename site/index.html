@@ -441,6 +441,14 @@ body:not(.layout-list) .card :is(.badges,.ph span,.badge.rec){opacity:0;transiti
 body.cm-always:not(.layout-list) .card .layer,body:not(.layout-list) .card.lay-open .layer{opacity:1;pointer-events:auto;transform:none}
 @media (hover:hover){body.cm-hover:not(.layout-list) .card:is(:hover,:focus-within) .layer{opacity:1;pointer-events:auto;transform:none}}
 @media (hover:none){body.cm-hover:not(.layout-list) .card.is-focus .layer{opacity:1;pointer-events:auto;transform:none}}
+/* Blur costs GPU on every frame of a playing clip behind it. A closed layer is invisible, so it gets none; the small badges on tiles use a plain darker tint instead of their own blur. This is what made the page flash while scrolling through playing clips. */
+body:not(.layout-list) .layer{-webkit-backdrop-filter:none;backdrop-filter:none}
+body.cm-always:not(.layout-list) .card .layer,body:not(.layout-list) .card.lay-open .layer{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+@media (hover:hover){body.cm-hover:not(.layout-list) .card:is(:hover,:focus-within) .layer{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}}
+@media (hover:none){body.cm-hover:not(.layout-list) .card.is-focus .layer{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}}
+body:not(.layout-list) .card :is(.badge,.star,.fs,.save,.reveal){-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(12,12,14,.42)}
+body:not(.layout-list) .layer :is(.star,.fs,.save){background:none}
+body:not(.layout-list) .card .badge.media{background:none}
 body.cm-always:not(.layout-list) .card :is(.badges,.ph span,.badge.rec),body:not(.layout-list) .card.lay-open :is(.badges,.ph span,.badge.rec){opacity:1}
 @media (hover:hover){body.cm-hover:not(.layout-list) .card:is(:hover,:focus-within) :is(.badges,.ph span,.badge.rec){opacity:1}}
 @media (hover:none){body.cm-hover:not(.layout-list) .card.is-focus :is(.badges,.ph span,.badge.rec){opacity:1}}
