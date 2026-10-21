@@ -1123,11 +1123,13 @@ const isAnimUrl = u => { u = String(u).replace(/^https?:\/\/web\.archive\.org\/w
 function freezeFrame(im){
   try{
     const w = im.naturalWidth, h = im.naturalHeight; if(!w || !h) return null;
-    const k = Math.min(1, 900/Math.max(w,h)), c = document.createElement('canvas');
+    const k = Math.min(1, 720/Math.max(w,h)), c = document.createElement('canvas');
     c.width = Math.max(1, Math.round(w*k)); c.height = Math.max(1, Math.round(h*k)); c.className = 'still ready';
     c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); return c;
   }catch(e){ return null; }
 }
+/* Imgur answers NAME.jpg for a video or GIF post with the moving file itself, so a still address is no promise of a still picture: on a GIF / video post an imgur picture is frozen too. */
+const mayMove = (url,p) => isAnimUrl(url) || (/^https?:\/\/(?:i\.)?imgur\.com\//i.test(url) && /^(?:gif|video)$/.test(mediaOf(p)));
 function imgCandidates(p){
   const m = metaOf(p), prim = [], arch = [];
   if(!m) return [];
@@ -1302,8 +1304,9 @@ function startImg(img, attempt){
       if(url){
         done(); anyImgOK = true; noteImgOK(); clearImgFail(p); seenAdd(url);
         node.alt = ''; node.referrerPolicy = 'no-referrer';
-        img.replaceWith((isAnimUrl(url) && freezeFrame(node)) || node);   // reuse the element that already loaded, so the image isn't fetched twice (an animated file is frozen on its first frame)
-        const ph = node.parentNode && node.parentNode.querySelector('.ph'); if(ph) ph.remove();
+        const holder = img.parentNode;
+        img.replaceWith((mayMove(url,p) && freezeFrame(node)) || node);   // reuse the element that already loaded, so the image isn't fetched twice (a file that may move is frozen on its first frame)
+        const ph = holder && holder.querySelector('.ph'); if(ph) ph.remove();
         const m = metaOf(p); if(m && !m.w && node.naturalWidth > 50){ m.w = node.naturalWidth; m.h = node.naturalHeight; layoutCard(el,p); }
         return;
       }
@@ -1454,6 +1457,7 @@ function fillCard(el,p){
       if(!(r && r.confirmed && r.type==='img' && r.kind!=='preview' && el._p===p)) return;
       const t = el.querySelector('.thumb'), phEl = t && t.querySelector('.ph'); if(!phEl) return;
       const im = document.createElement('img'); im.referrerPolicy = 'no-referrer'; im.alt = ''; im.src = r.href; phEl.replaceWith(im);
+      if(mayMove(r.href,p)) im.addEventListener('load',()=>{ const c = freezeFrame(im); if(c && im.isConnected) im.replaceWith(c); },{once:true});
     });
   };
   const img = el.querySelector('.thumb img, .thumb video.still');
@@ -1488,7 +1492,7 @@ let hsT; function saveHealth(){ clearTimeout(hsT); hsT = setTimeout(()=>{ try{ l
 const hashStr = t => { let h = 5381; for(let i=0;i<t.length;i++) h = ((h<<5)+h+t.charCodeAt(i))|0; return (h>>>0).toString(36); };
 const wbRaw = u => 'https://web.archive.org/web/'+WB_TS+'id_/'+u;
 /* Reddit names the mp4 copy of a GIF like the GIF itself (NAME.gif?format=mp4). It is a video: treating it as a picture would put a moving file in an <img>, which Safari plays on its own. */
-const isMp4Fmt = u => /[?&]format=mp4(?:&|#|$)/i.test(String(u));
+const isMp4Fmt = u => /[?&](?:format|fm)=mp4(?:&|#|$)/i.test(String(u));
 const isGifFile = u => /\.gif(\?|#|$)/i.test(String(u)) && !isMp4Fmt(u);
 const vtype = u => isGifFile(u) ? 'img' : 'video';
 

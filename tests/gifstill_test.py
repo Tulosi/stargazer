@@ -34,6 +34,16 @@ with sync_playwright() as p:
     # 2. the preview fails: the animated file is the only picture left, and must be frozen on its first frame
     r = run('frozen', 'https://preview.redd.it/g1.gif?format=png8&s=x', lambda pg: pg.evaluate("()=>{ const t=document.querySelector('.card .thumb'); return {gifimg:[...t.querySelectorAll('img')].some(i=>/\\.gif/.test(i.src)&&!/preview/.test(i.src)), canvas:!!t.querySelector('canvas.still')}; }"), th_ok=False)
     check('when only the animated file is left the tile holds a frozen canvas, not the playing GIF (%s)' % r, r['canvas'] and not r['gifimg'])
+    # imgur answers NAME.jpg for a video post with the moving file: the tile must still be frozen
+    ctx = b.new_context(viewport={'width': 1200, 'height': 800}); pg = ctx.new_page(); pg.on('pageerror', lambda e: errs.append(str(e)))
+    pg.route('**/*', lambda r: r.continue_() if r.request.url.startswith('file:') else (r.fulfill(body=GIF, content_type='image/gif') if 'i.imgur.com/abcdefg.jpg' in r.request.url else r.abort()))
+    pg.goto(PAGE); pg.wait_for_timeout(800)
+    csv = 'id,permalink,starred,updated,deleted\r\ng00001,https://www.reddit.com/r/gifs/comments/g00001/a_gif/,0,1000,0\r\n'
+    pg.evaluate("async(t)=>{ await persistRec({id:'demo',name:'x.csv',text:t,handle:null,updated:Date.now()}); await activate(await idbReq('csv','readonly',s=>s.get('demo'))); for(const k in META) delete META[k]; startCsvMode(); }", csv); pg.wait_for_timeout(700)
+    pg.evaluate("()=>{ META[POSTS[0].id]={t:'Meal prep',o:0,th:'',m:'gif',u:'http://i.imgur.com/abcdefg.mp4',v:'https://g.redditmedia.com/x.gif?fm=mp4&mp4-fragmented=false&s=1',n:3,s:10,a:'u',c:1,w:120,h:80}; refresh(); }"); pg.wait_for_timeout(2500)
+    r = pg.evaluate("()=>{ const t=document.querySelector('.card .thumb'); return {img:!!t.querySelector('img'), canvas:!!t.querySelector('canvas.still'), ph:!!t.querySelector('.ph'), vtype:vtype(META[POSTS[0].id].v)}; }")
+    check('an imgur NAME.jpg on a GIF/video post is frozen on a canvas, placeholder removed, fm=mp4 counts as video (%s)' % r, r['canvas'] and not r['img'] and not r['ph'] and r['vtype']=='video')
+    ctx.close()
     # Reddit's mp4 copy of a GIF (NAME.gif?format=mp4) is a video, not a picture
     pg2 = b.new_page(); pg2.route('**/*', lambda r: r.continue_() if r.request.url.startswith('file:') else r.abort()); pg2.goto(PAGE); pg2.wait_for_timeout(500)
     k = pg2.evaluate("()=>({v:vtype('https://preview.redd.it/a.gif?format=mp4&s=1'), g:vtype('https://i.redd.it/a.gif'), anim:isAnimUrl('https://preview.redd.it/a.gif?format=mp4&s=1'), still:isAnimUrl('https://preview.redd.it/a.jpg?format=pjpg&s=1'), file:isGifFile('https://preview.redd.it/a.gif?format=mp4')})")
