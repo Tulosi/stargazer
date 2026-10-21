@@ -400,7 +400,7 @@ body:not(.layout-list) .lay-cap .nsfwb::before{display:none}
 body:not(.layout-list) .lay-cap .save.nsfwb[aria-pressed=true]{background:none}
 body:not(.layout-list) .lay-cap .nsfwb[aria-pressed=false]{color:rgba(255,255,255,.5)}
 body:not(.layout-list) .lay-cap .nsfwb[aria-pressed=false]:hover{color:#fff}
-body:not(.layout-list) .lay-cap .star{padding:0;font-size:0;color:rgba(255,255,255,.9)}   /* the glyph text stays for state and screen readers; an icon is drawn instead, so it centres like its neighbours */
+body:not(.layout-list) .lay-cap .star{padding:0;font-size:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.9)}   /* the glyph text stays for state and screen readers; an icon is drawn instead, so it centres like its neighbours */
 body:not(.layout-list) .lay-cap .star::before{content:"";display:block;width:calc(var(--gi)*1.14);height:calc(var(--gi)*1.14);background:currentColor;-webkit-mask:var(--ico-star) center/contain no-repeat;mask:var(--ico-star) center/contain no-repeat}
 body:not(.layout-list) .lay-cap .star[aria-pressed=true]::before{-webkit-mask-image:var(--ico-star-on);mask-image:var(--ico-star-on)}
 body:not(.layout-list) .lay-cap .fs svg,body:not(.layout-list) .lay-cap .save:not(.nsfwb) svg{width:calc(var(--gi)*.92);height:calc(var(--gi)*.92)}

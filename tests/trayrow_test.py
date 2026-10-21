@@ -60,6 +60,22 @@ with sync_playwright() as p:
         e = pg.evaluate(EVEN)
         check('%s: icons evenly spaced (pitch spread %.1fpx), one centre line (%.1fpx), symmetric margins (%.0f/%.0f)' % (lab, e['pitch'], e['dy'], e['lm'], e['rm']), e['pitch'] <= 1.5 and e['dy'] <= 1 and abs(e['lm'] - e['rm']) <= 2)
         ctx.close()
+    # optical check: the drawn ink of the star sits on the same centre line as its neighbours (within 1.5px)
+    try:
+        from PIL import Image; import numpy as np, io
+        ctx = b.new_context(viewport={'width':1500,'height':900}, device_scale_factor=4); ctx.add_init_script("localStorage.setItem('saved-posts-cardmode','always')")
+        pg = ctx.new_page(); pg.route('**/*', lambda r: r.continue_() if r.request.url.startswith(('file:', 'data:')) else r.abort())
+        pg.goto(PAGE); pg.wait_for_timeout(800); pg.click('#introSample'); pg.wait_for_timeout(1500)
+        pg.evaluate("()=>{ document.documentElement.style.setProperty('--card','150px'); relayoutAll(); }"); pg.add_style_tag(content='.layer{background:#000!important}'); pg.wait_for_timeout(800)
+        bs = pg.evaluate("()=>[...document.querySelectorAll('.card')[2].querySelectorAll('.layer .actions .btn,.layer .lay-cap button')].filter(e=>e.offsetParent).map(e=>{const r=e.getBoundingClientRect();return [e.className.split(' ')[0],r.left,r.top,r.width,r.height]})")
+        cs = {}
+        for n, l, tp, w, h in bs:
+            a_ = np.array(Image.open(io.BytesIO(pg.screenshot(clip={'x':l,'y':tp,'width':w,'height':h}))).convert('L')) > 150
+            ys = np.where(a_.any(axis=1))[0]; cs[n + str(len(cs))] = (ys.min() + ys.max()) / 8 - h / 2
+        ctx.close()
+        check('star ink is on the icons\' centre line (offsets %s)' % {k: round(v, 1) for k, v in cs.items()}, all(abs(v) <= 1.5 for v in cs.values()))
+    except ImportError:
+        print('skip optical check (PIL/numpy missing)')
     # below 200px NSFW leaves the tray
     rows = run({'width': 390, 'height': 780}, True, lambda pg: pg.evaluate("()=>{const s=document.getElementById('size'); s.value=1; s.dispatchEvent(new Event('input'))}"), 'p2')
     check('2-across tile (%s): five icons fit one line' % sorted(set(r['w'] for r in rows))[:1], rows and all(r['spread'] <= 3 and r['inside'] and r['n'] <= 5 for r in rows))
