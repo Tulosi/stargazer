@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f5f3f9">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#131118">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src * data: blob:; media-src * data: blob:; connect-src *; frame-src https://www.youtube.com https://www.redgifs.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <script src="config.js"></script>
 <meta name="referrer" content="no-referrer">
@@ -626,6 +628,7 @@ body.layout-list .card.info-open .info{padding-right:160px}
 body.layout-list .title{padding-bottom:1px;line-height:1.35}
 body.layout-list .meta{display:flex;flex-wrap:nowrap;gap:0 10px;overflow:hidden;white-space:nowrap}
 body.layout-list .meta>*{flex:none}
+body.layout-list .meta>.sub,body.layout-list .meta>.dt{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .meta .dt{display:none}
 @media (min-width:721px){body.layout-list .meta .dt{display:inline}}
 .morebtn{display:none}
@@ -678,6 +681,7 @@ body.layout-list .nsfwb[aria-pressed=true]{color:var(--hot);background:var(--sur
 body.layout-list .nsfwb[aria-pressed=true] svg text,body.layout-list .nsfwb[aria-pressed=false]:hover svg text{fill:var(--hot)}
 body.layout-list .nsfwb[aria-pressed=true]::before,body.layout-list .nsfwb[aria-pressed=false]:hover::before{background:color-mix(in srgb,var(--hot) 55%,transparent)}
 body.layout-list .nsfwb[aria-pressed=true]:hover::after{filter:invert(1)}
+body:not(.layout-list) .layer .btn{-webkit-backdrop-filter:none;backdrop-filter:none}   /* the layer is already glass: a second blur per button costs GPU on every tile for nothing visible */
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
 #pausebar{position:fixed;left:50%;bottom:64px;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:10px;padding:9px 10px 9px 14px;border-radius:999px;background:var(--panel,#1c1c1f);color:var(--text,#eee);border:1px solid var(--line,rgba(128,128,128,.35));box-shadow:0 6px 24px rgba(0,0,0,.35);font-size:13px;max-width:calc(100vw - 24px)}
@@ -688,6 +692,10 @@ body.layout-list .nsfwb[aria-pressed=true]:hover::after{filter:invert(1)}
 /* press feedback: a pressed control dips a little so it feels heard (not for people who ask for less motion) */
 @media (prefers-reduced-motion:no-preference){:is(.pill,.btn,.chip,.star,.fs,.save,.vol,.pp,.morebtn,.vclose,.vsound,.vpost,.vnav):active{scale:.97}}
 .expnow{margin-left:2px;font-weight:600}
+/* phones: no 300ms tap wait, and inputs at 16px so iOS does not zoom the page when one is focused */
+a,button,summary,label,select,[role=button]{touch-action:manipulation}
+@media (pointer:coarse){input,select,textarea,.field{font-size:16px}}
+.deck{padding-top:env(safe-area-inset-top,0px)}
 </style>
 </head>
 <body class="deck-collapsed src-collapsed">
@@ -932,7 +940,7 @@ const PAGE = 120;
 let shown = 0, list = [];
 const cardEls = new Map();
 const $ = id => document.getElementById(id);
-const fmt = n => n>=10000 ? (n/1000).toFixed(0)+'k' : n>=1000 ? (n/1000).toFixed(1)+'k' : String(n);
+const fmt = n => n>=999500 ? (n/1e6).toFixed(n>=9995000?0:1).replace(/\.0$/,'')+'M' : n>=10000 ? (n/1000).toFixed(0)+'k' : n>=1000 ? (n/1000).toFixed(1)+'k' : String(n);
 const hue = s => { let h=0; for(const c of s) h=(h*31+c.charCodeAt(0))%360; return h; };
 
 /* ---------- favourites (kept in this browser's localStorage) ---------- */
@@ -1326,7 +1334,7 @@ function fillCard(el,p){
   const removed = media==='removed' || (m && m.rec);
   const vs = dead ? [] : playSources(m), v0 = vs[0] || '';
   const gl = m && m.gl && m.gl.length > 1 ? m.gl : null;
-  const stats = m && !m.miss ? ((m.s||0) > 1 ? '<span>'+fmt(m.s)+' pts</span>' : '')+((m.n||0) > 0 ? '<a class="cm" href="'+esc(p.link)+'" target="_blank" rel="noopener noreferrer" title="Open the comments on Reddit">'+fmt(m.n)+' comments</a>' : '') : '';
+  const stats = m && !m.miss ? ((m.s||0) > 1 ? '<span>'+fmt(m.s)+' pts</span>' : '')+((m.n||0) > 0 ? '<a class="cm" href="'+esc(p.link)+'" target="_blank" rel="noopener noreferrer" title="Open the comments on Reddit">'+fmt(m.n)+(m.n===1?' comment':' comments')+'</a>' : '') : '';
   const ph = '<div class="ph'+(!m && !dead ? ' pending' : '')+'" style="--h:'+hue(p.sub)+'"><span>r/'+esc(p.sub)+(dead?'<br><small>media unavailable</small>':'')+'</span></div>';
   el._p = p; el._gi = 0; el.classList.toggle('is-dead', dead); el.classList.toggle('is-text', media==='text');
   el.innerHTML =
@@ -1342,7 +1350,7 @@ function fillCard(el,p){
     + '<div class="layer">'
     + '<button class="lh-close" type="button" aria-label="Hide details and controls" title="Hide"></button>'
     + '<div class="info">'
-    + '<h3 class="title"><a data-open href="'+esc(href)+'" target="_blank" rel="noopener noreferrer">'+esc(titleOf(p))+'</a></h3>'
+    + '<h3 class="title"><a data-open href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" title="'+esc(titleOf(p))+'">'+esc(titleOf(p))+'</a></h3>'
     + '<div class="meta"><button class="sub" type="button" data-sub="'+esc(p.sub)+'" title="Show only r/'+esc(p.sub)+' posts in your list">r/'+esc(p.sub)+'</button>'+stats
     + (m && m.c ? '<span class="dt">'+new Date(m.c*1000).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'})+'</span>' : '')
     + (note ? '<span class="note'+(dead?' dead':'')+'">'+esc(note)+'</span>' : '')+'</div>'
@@ -2226,7 +2234,7 @@ function refresh(){
   measureGrid();
   list = sorted(POSTS.filter(p=>matches(p)));
   $('grid').replaceChildren(); shown = 0;
-  if(!list.length){ $('grid').innerHTML = '<div class="empty">'+(MODE==='sub' ? (FEED.loading ? 'Loading...' : 'No posts match these filters.') : (POSTS.length ? 'No saved posts match these filters.' : introHtml()))+'</div>'; updateMore(); }
+  if(!list.length){ $('grid').innerHTML = '<div class="empty">'+(MODE==='sub' ? (FEED.loading ? 'Loading...' : 'No posts match these filters.') : (POSTS.length ? 'No saved posts match these filters.<p class="emptyact"><button class="pill" id="emptyClear" type="button">Clear filters</button></p>' : introHtml()))+'</div>'; updateMore(); }
   else renderMore();
   updateChips(); updateSummary();
 }
@@ -2797,7 +2805,11 @@ $('nsfwseg').addEventListener('click',e=>{ const b = e.target.closest('.pill'); 
     const x = sel.value;
     if(x==='system') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', x);
     try{ localStorage.setItem(KEY, x); }catch(e){}
+    syncThemeColor();
   });
+  /* the browser's own bar (status bar on phones) follows the page background, including a theme chosen here that differs from the system's */
+  function syncThemeColor(){ requestAnimationFrame(()=>{ const c = getComputedStyle(document.body).backgroundColor; document.querySelectorAll('meta[name=theme-color]').forEach(m=>{ m.removeAttribute('media'); m.setAttribute('content', c); }); }); }
+  syncThemeColor(); try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncThemeColor); }catch(e){}
 })();
 (function(){
   /* Card info & controls: one setting for the glass layer on each Masonry / Grid card (info, the star / bookmark / NSFW / full-screen pill, and playback).
@@ -4219,7 +4231,7 @@ async function openCsvResult(r){
   await persistRec(rec); await activate(rec); startCsvMode(); noteMerge(rec.id, pullTime(r));
   csvStatus('Opened "'+r.name+'" with '+rows.length.toLocaleString()+' posts.');
 }
-document.addEventListener('click',e=>{ if(e.target.closest && e.target.closest('#introOpen')) $('csvOpen').click(); if(e.target.closest && e.target.closest('#introSample')) openSample(); });
+document.addEventListener('click',e=>{ if(e.target.closest && e.target.closest('#emptyClear')){ const c = $('clr'); if(c) c.click(); } if(e.target.closest && e.target.closest('#introOpen')) $('csvOpen').click(); if(e.target.closest && e.target.closest('#introSample')) openSample(); });
 /* A small invented list (generated artwork, nothing from a real account) so the page can be tried before the Reddit export arrives. */
 const SAMPLES = [['pics','Sunrise over the ridge, 6am','dusk_walker',800,560],['art','Layers of dusk','paperlantern',560,800],['wallpapers','Quiet valley after the storm','hillside_notes',800,800],['minimalism','Evening glow, no filter','northwind42',900,520],['pics','Mountain silhouettes at golden hour','quietframes',640,800],['CozyPlaces','Pastel horizon','softfocus',800,600],['art','Last light on the hills','roamingeye',520,800],['itookapicture','Morning mist, third try','lumen_lane',800,640],['wallpapers','Dusk, but make it purple','paperlantern',700,700],['pics','The long way home','dusk_walker',900,600],['minimalism','Two ridges and a sky','northwind42',600,800],['art','Hill study no. 7','hillside_notes',800,520]];
 function sampleArt(i,w,h){
