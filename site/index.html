@@ -2287,7 +2287,7 @@ function updateSummary(){
   $('summary').innerHTML = hidden ? '<b>'+hidden.toLocaleString()+'</b> hidden by filters <button class="clear" id="rvw" type="button">Review</button>'+(active ? ' <button class="clear" id="clr" type="button">Clear filters</button>' : '')
     : (active ? list.length.toLocaleString()+' of '+POSTS.length.toLocaleString()+' posts <button class="clear" id="clr" type="button">Clear filters</button>' : '');
   const rv = $('rvw'); if(rv) rv.onclick = () => $('decktoggle').click();   // a toggle: opens the Filters panel, or closes it if it is already open
-  const c = $('clr'); if(c) c.onclick = ()=>{ state.cats.clear(); state.kinds.clear(); state.media.clear(); state.sub=''; state.q=''; syncBox(); state.fav=false; $('favonly').checked=false; textTouched=false; state.showText=textDefault(); $('showtext').checked=state.showText; if(state.range!=='all'){ setRange('all'); return; } $('subsel').value=''; setNsfw('hide'); };
+  const c = $('clr'); if(c) c.onclick = ()=>{ state.cats.clear(); state.kinds.clear(); state.media.clear(); state.sub=''; state.q=''; syncBox(); state.fav=false; $('favonly').checked=false; textTouched=false; state.showText=textDefault(); $('showtext').checked=state.showText; saveListPrefs(); if(state.range!=='all'){ setRange('all'); return; } $('subsel').value=''; setNsfw('hide'); };
 }
 
 /* ---------- bulk selection ---------- */
@@ -2712,7 +2712,7 @@ function syncSortUI(){
   $('reshuffle').hidden = state.sort!=='random';
   $('range').closest('label').hidden = MODE==='sub' && FEED.live===true && state.sort==='hot';   // the real hot feed has no date range
 }
-$('sort').addEventListener('change',e=>{ state.sort=e.target.value; if(state.sort==='random') state.seed = String(Date.now()); syncSortUI(); refresh(); window.scrollTo({top:0}); });
+$('sort').addEventListener('change',e=>{ state.sort=e.target.value; if(state.sort==='random') state.seed = String(Date.now()); syncSortUI(); saveListPrefs(); refresh(); window.scrollTo({top:0}); });
 function setRange(v){
   state.range = v; $('range').value = v;
   if(MODE==='sub' && FEED.subs.length) startSubMode(FEED.subs.map(x=>x.name), FEED.label);   // a new window means a new fetch
@@ -2730,7 +2730,7 @@ function setNsfw(m){
   document.body.classList.toggle('unblur', m==='show'||m==='only');   // Uncensored and Only show NSFW tiles without the blur
   refresh();
 }
-$('showtext').addEventListener('change',e=>{ state.showText = e.target.checked; textTouched = true; refresh(); paintLayoutHint(); });
+$('showtext').addEventListener('change',e=>{ state.showText = e.target.checked; textTouched = true; saveListPrefs(); refresh(); paintLayoutHint(); });
 $('nsfwseg').addEventListener('click',e=>{ const b = e.target.closest('.pill'); if(b && b.dataset.m!==state.nsfw) setNsfw(b.dataset.m); });
 (function(){
   const fb = $('decktoggle'), sb = $('srctoggle'), body = document.body;
@@ -2799,10 +2799,19 @@ function syncStars(){
     b.setAttribute('aria-pressed', on?'true':'false'); b.textContent = on ? '\u2605' : '\u2606';
   }
 }
-$('favonly').addEventListener('change',e=>{ state.fav = e.target.checked; refresh(); });
+$('favonly').addEventListener('change',e=>{ state.fav = e.target.checked; saveListPrefs(); refresh(); });
 updateFavCount();
 $('subsel').addEventListener('change',e=>setSub(e.target.value));
 /* The layout is remembered per list (a list of text posts suits List, a list of clips suits Masonry); the global choice is the default for lists without one. */
+/* Per-list choices kept in this browser: sort, Starred only, and Show text posts once the person has toggled it. */
+function listPrefs(){ try{ return JSON.parse(localStorage.getItem('saved-posts-listprefs')||'{}') || {}; }catch(e){ return {}; } }
+function saveListPrefs(){ if(!LIB.cur || MODE!=='csv') return; const m = listPrefs(); const o = {sort:state.sort==='random'?'new':state.sort, fav:!!state.fav}; if(textTouched) o.showText = !!state.showText; m[LIB.cur.id] = o; try{ localStorage.setItem('saved-posts-listprefs', JSON.stringify(m)); }catch(e){} }
+function applyListPrefs(){
+  const o = LIB.cur && listPrefs()[LIB.cur.id]; if(!o) return;
+  if(o.sort && $('sort').querySelector('option[value='+o.sort+']')){ state.sort = o.sort; $('sort').value = o.sort; }
+  state.fav = !!o.fav; $('favonly').checked = state.fav;
+  if(typeof o.showText==='boolean'){ state.showText = o.showText; textTouched = true; $('showtext').checked = o.showText; }
+}
 function listLayouts(){ try{ return JSON.parse(localStorage.getItem('saved-posts-layouts')||'{}') || {}; }catch(e){ return {}; } }
 function setListLayout(id, l){ if(id==null) return; const m = listLayouts(); m[id] = l; try{ localStorage.setItem('saved-posts-layouts', JSON.stringify(m)); }catch(e){} }
 function applyListLayout(){
@@ -2841,7 +2850,7 @@ function setCard(px){ document.documentElement.style.setProperty('--card', px+'p
 function buildSizeControl(){
   const sl = $('size'), wrap = sl.closest('.sizewrap'), nt = wrap.querySelector('.notches');
   if(!phoneMQ.matches){
-    if(SIZE_STEPS){ SIZE_STEPS = null; sl.min = 150; sl.max = 360; sl.step = 10; sl.value = 230; wrap.classList.remove('stepped'); nt.replaceChildren(); setCard(230); }
+    if(SIZE_STEPS){ SIZE_STEPS = null; let d = 230; try{ const v = +localStorage.getItem('saved-posts-tile'); if(v>=150&&v<=360) d = v; }catch(e){} sl.min = 150; sl.max = 360; sl.step = 10; sl.value = d; wrap.classList.remove('stepped'); nt.replaceChildren(); setCard(d); }
     return;
   }
   const W = Math.max(240, $('grid').clientWidth || innerWidth - 28), gap = 6;
@@ -2858,9 +2867,15 @@ function buildSizeControl(){
 }
 function paintNotches(){ const i = +$('size').value; document.querySelectorAll('#sizerow .notches i').forEach((t,k)=>t.classList.toggle('on', k===i)); }
 $('size').addEventListener('input',e=>{
-  if(SIZE_STEPS){ const i = +e.target.value; e.target.dataset.idx = i; paintNotches(); setCard(SIZE_STEPS[i]); }
-  else setCard(e.target.value);
+  if(SIZE_STEPS){ const i = +e.target.value; e.target.dataset.idx = i; paintNotches(); setCard(SIZE_STEPS[i]); try{ localStorage.setItem('saved-posts-tile-phone', String(i)); }catch(x){} }
+  else { setCard(e.target.value); try{ localStorage.setItem('saved-posts-tile', String(e.target.value)); }catch(x){} }
 });
+/* Tile size is remembered (desktop pixels and phone column step separately). */
+try{
+  const sl = $('size'), dt = +localStorage.getItem('saved-posts-tile'), pt = parseInt(localStorage.getItem('saved-posts-tile-phone'),10);
+  if(phoneMQ.matches){ if(pt>=0) sl.dataset.idx = pt; }
+  else if(dt>=150 && dt<=360){ sl.value = dt; setCard(dt); }
+}catch(e){}
 buildSizeControl();
 (phoneMQ.addEventListener ? phoneMQ.addEventListener('change', buildSizeControl) : phoneMQ.addListener(buildSizeControl));
 addEventListener('resize', ()=>{ if(SIZE_STEPS){ clearTimeout(buildSizeControl._t); buildSizeControl._t = setTimeout(buildSizeControl, 200); } });
@@ -3835,6 +3850,7 @@ function startCsvMode(){
   for(const id in META) if(!ROWSET.has(id)) delete META[id];   // drop feed previews so they never reach the cache
   ROWS.forEach((r,i)=>POSTS.push(makePost(i,r.id,r.perma)));
   state.sort = 'new'; $('sort').value = 'new';   // newest first by default; Saved order is still one choice away
+  state.fav = false; $('favonly').checked = false; applyListPrefs();
   metaOK = false; syncSortUI();
   setSourceUI(); refresh(); updateFavCount();
   if(Object.keys(META).length) onMeta(POSTS);
