@@ -1477,7 +1477,10 @@ function playSources(m){
   /* A RedGifs post whose real file could not be looked up (the browser blocks the lookup and Reddit's data does not name the file): play RedGifs' own embed on hover, as the full-screen view does. */
   if(YT_PLAY && !m.rgDone && !m.rgGone && !m.g && !/\.(mp4|webm)(\?|$)/i.test(m.v||'')){ const x = RG_RE.exec(m.u||''), sl = x ? x[1].toLowerCase() : (m.rs||''); if(sl) return ['rg:'+sl]; }
   const out = [];
-  if(m.v) out.push(m.v);
+  /* A post that links straight at a video file (imgur NAME.mp4) is best played from that file: Reddit's own mp4 preview of the same clip (g.redditmedia.com NAME.gif?fm=mp4) is listed after it, as a fallback. */
+  const direct = playableFromUrl(m.u||'');
+  if(direct && !isGifFile(direct)) out.push(direct.replace(/^http:\/\/(?=i\.imgur\.com\/)/i,'https://'));
+  if(m.v && !out.includes(m.v)) out.push(m.v);
   if(m.rb) for(const q of ['720','480','360','240','1080']){ const u = m.rb+'/DASH_'+q+'.mp4'; if(!out.includes(u)) out.push(u); }
   return out;
 }
@@ -1929,7 +1932,8 @@ async function openViewer(p, opts){
     updateAdvRg(); toast('Could not load this clip with sound directly, so you are seeing the RedGifs player instead.');
     return;
   }
-  const vurl = m ? (m.vh || m.v || '') : '';
+  const vlist = m ? [m.vh, ...playSources(m).filter(u=>!/^(yt|rg):/.test(u)), m.v].filter((u,i,a)=>u && a.indexOf(u)===i && !isGifFile(u)) : [];
+  const vurl = vlist[0] || (m ? (m.vh || m.v || '') : '');
   if(vurl && !isGifFile(vurl)){
     const v = document.createElement('video');
     v.controls = true; v.loop = true; v.playsInline = true; v.preload = 'auto'; v.src = vurl;
@@ -1938,7 +1942,8 @@ async function openViewer(p, opts){
     v.addEventListener('volumechange',()=>{ if(VIEW.root.hidden) return; AUDIO.muted = v.muted; if(v.volume>0 && v.volume!==AUDIO.vol){ AUDIO.vol = v.volume; saveVol(); } applyAudio(); });
     if(thumbSrc) v.poster = thumbSrc;
     v.addEventListener('loadedmetadata',()=>{ if(opts.t){ try{ v.currentTime = opts.t; }catch(e){} } });
-    v.addEventListener('error',()=>{ if(tok===VIEW.token && !thumbSrc){ toast('Could not load this video.'); closeViewer(); } });
+    let vi = 0;
+    v.addEventListener('error',()=>{ if(tok===VIEW.token && ++vi < vlist.length){ v.src = vlist[vi]; v.play().catch(()=>{}); return; } if(tok===VIEW.token && !thumbSrc){ toast('Could not load this video.'); closeViewer(); } });   // a source that fails hands over to the next one
     VIEW.stage.replaceChildren(v);
     const sb = VIEW.root.querySelector('.vsound'), vr = VIEW.root.querySelector('.vvol'); sb.hidden = true; vr.hidden = true;
     const paintSb = () => { sb.innerHTML = v.muted ? SPK_OFF : SPK_ON; sb.setAttribute('aria-label', v.muted ? 'Unmute' : 'Mute'); vr.value = v.muted ? 0 : Math.round(v.volume*100); };
