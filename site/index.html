@@ -455,11 +455,11 @@ body.layout-list #cardrow{display:none}   /* List keeps its own arrangement (inl
 .ctl .pp,.ctl .vol{flex:none;width:26px;height:26px;border:0;border-radius:50%;padding:0;display:grid;place-items:center;background:rgba(255,255,255,.2);color:#fff;font-size:11px;line-height:1;cursor:pointer}
 .ctl .pp:hover,.ctl .vol:hover{background:rgba(255,255,255,.34)}
 .ctl .vol svg,.ctl .pp svg{display:block}
-.volwrap{display:none;position:relative;flex:none;margin-left:2px;align-items:center;gap:5px}
+.volwrap{display:none;position:relative;flex:none;margin-left:2px;align-items:center}
 .ctl.has-sound .volwrap{display:flex}
-.volwrap .vol{order:0}
-.volfly{order:1;display:block;width:54px;height:18px;position:relative}
-.volr{display:block;width:54px;height:18px;margin:0;accent-color:#fff;cursor:pointer}
+.volfly{display:none;position:absolute;left:50%;bottom:calc(100% + 8px);width:34px;height:108px;margin-left:-17px;border-radius:17px;background:rgba(20,18,30,.94);box-shadow:0 6px 18px rgba(0,0,0,.4);z-index:6}
+.volwrap.open .volfly{display:block}
+.volfly .volr{position:absolute;left:50%;top:50%;display:block;width:84px;max-width:none;height:24px;margin:-12px 0 0 -42px;transform:rotate(-90deg);accent-color:#fff;cursor:pointer}   /* a vertical slider: min at the bottom */
 .ctl .seek{flex:1;min-width:30px;height:14px;margin:0;accent-color:#fff;cursor:pointer}
 .ctl .time{flex:none;font:400 10.5px var(--font);font-variant-numeric:tabular-nums;color:rgba(255,255,255,.9);white-space:nowrap}
 
@@ -2045,7 +2045,7 @@ function showGallery(card,p,m){
 function setLayer(c,on){
   if(!c || !c.classList) return;
   c.classList.toggle('lay-open', !!on);
-  if(on) c.classList.remove('lay-shut');
+  if(on) c.classList.remove('lay-shut'); else c.querySelectorAll('.volwrap.open').forEach(w=>w.classList.remove('open'));
   const h = c.querySelector('.lhandle'); if(h) h.setAttribute('aria-expanded', on?'true':'false');
 }
 /* Is this card's layer showing right now, whatever brought it up (its handle, hover, focus, or Show always)? */
@@ -2060,7 +2060,7 @@ function layerUp(c){
 /* A tap on the tile or the grabber, or the I key: bring the layer up, or put it away by hand even in Show on hover / focus and Show always. A hand-shut layer
    stays shut until the card is tapped or its handle used again (in Show on hover / focus, until the pointer or focus leaves the card; Show always keeps it shut). */
 function toggleLayer(c){
-  if(layerUp(c)){ c.classList.remove('lay-open'); c.classList.add('lay-shut'); const h = c.querySelector('.lhandle'); if(h) h.setAttribute('aria-expanded','false'); }
+  if(layerUp(c)){ c.classList.remove('lay-open'); c.classList.add('lay-shut'); c.querySelectorAll('.volwrap.open').forEach(w=>w.classList.remove('open')); const h = c.querySelector('.lhandle'); if(h) h.setAttribute('aria-expanded','false'); }
   else setLayer(c,true);
 }
 $('grid').addEventListener('mouseout',e=>{
@@ -2068,6 +2068,7 @@ $('grid').addEventListener('mouseout',e=>{
   const c = e.target.closest && e.target.closest('.card'); if(c && !c.contains(e.relatedTarget)) c.classList.remove('lay-shut');
 });
 document.addEventListener('click',e=>{
+  document.querySelectorAll('.volwrap.open').forEach(w=>{ if(!w.contains(e.target)){ w.classList.remove('open'); const b = w.querySelector('.vol'); if(b) b.setAttribute('aria-expanded','false'); } });
   const open = document.querySelectorAll('.card.lay-open'); if(!open.length) return;
   for(const c of open) if(!c.contains(e.target)) setLayer(c,false);
 });
@@ -2405,7 +2406,7 @@ function applyAudio(){
       }
     }
     const st = AUDIO.muted ? 'off' : 'on';
-    if(u.st !== st){ u.st = st; u.vol.innerHTML = AUDIO.muted ? SPK_OFF : SPK_ON; u.vol.setAttribute('aria-label', AUDIO.muted ? 'Unmute' : 'Mute'); }
+    if(u.st !== st){ u.st = st; u.vol.innerHTML = AUDIO.muted ? SPK_OFF : SPK_ON; u.vol.setAttribute('aria-label', AUDIO.muted ? 'Unmute' : 'Volume'); }
     u.volr.value = AUDIO.muted ? 0 : Math.round(AUDIO.vol*100);
   }
 }
@@ -2475,11 +2476,16 @@ function buildControls(t, el, isGif){
   }
   const prog = document.createElement('i'); prog.className = 'cprog'; card.appendChild(prog);
   const seek = ctl.querySelector('.seek'), time = ctl.querySelector('.time');
-  const vol = ctl.querySelector('.vol'), volr = ctl.querySelector('.volr');
+  const vol = ctl.querySelector('.vol'), volr = ctl.querySelector('.volr'), volwrap = ctl.querySelector('.volwrap');
   const entry = {t, el, vol, volr, st:'', aud:null};
   audioUIs.add(entry);
   setupSound(t, el, ctl, entry);
-  vol.addEventListener('click',()=>{ const wasOn = !AUDIO.muted && isAudible(t); if(!wasOn) soundOnlyFor(t); setMuted(wasOn); t._soundOn = !wasOn; applyAudio(); });
+  /* one press on the muted speaker turns sound on; from then on the speaker opens and closes a vertical volume slider (drag it to the bottom to mute) */
+  vol.addEventListener('click',()=>{
+    const wasOn = !AUDIO.muted && isAudible(t);
+    if(!wasOn){ soundOnlyFor(t); setMuted(false); t._soundOn = true; applyAudio(); return; }
+    const open = volwrap.classList.toggle('open'); vol.setAttribute('aria-expanded', open?'true':'false');
+  });
   volr.addEventListener('input',()=>{
     const v = volr.value/100;
     if(v===0) AUDIO.muted = true; else { AUDIO.muted = false; AUDIO.vol = v; saveVol(); t._soundOn = true; soundOnlyFor(t); }
