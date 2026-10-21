@@ -93,9 +93,14 @@ with sync_playwright() as p:
     ev(SEED, H); pg.wait_for_timeout(1000)
     ev("""(()=>{ const t=document.querySelector('.card .thumb'); const im=document.createElement('img'); im.src='%s'; t.appendChild(im); buildControls(t, im, true); window.__pp=0; t.closest('.card').querySelector('.ctl .pp').addEventListener('click',()=>window.__pp++); })()""" % GIF)
     pg.wait_for_timeout(200)
-    tap = "(()=>{ const a=document.querySelector('.card a.thumb'); a.click(); %s })()"
+    ENS = "(()=>{ const t=document.querySelector('.card .thumb'); if(!document.querySelector('.card .lay-play .ctl')){ const im=document.createElement('img'); im.src='%s'; t.appendChild(im); buildControls(t, im, true); } })()" % GIF
+    tap = "(()=>{ const t=document.querySelector('.card .thumb'); if(!document.querySelector('.card .lay-play .ctl')){ const im=document.createElement('img'); im.src='" + GIF + "'; t.appendChild(im); buildControls(t, im, true); } const a=document.querySelector('.card a.thumb'); a.click(); %s })()"
     ev(tap % "setTimeout(()=>a.click(), 80);"); pg.wait_for_timeout(600)
     check('double tap on a clip toggles pause once', ev("window.__pp") == 1)
+    slow = ev("""()=>new Promise(res=>{ const card=document.querySelector('.card'); const t=card.querySelector('.thumb'); const im=document.createElement('img'); im.src='%s'; t.appendChild(im); buildControls(t, im, true); let n=0; card.querySelector('.ctl .pp').addEventListener('click',()=>n++);
+      const a=card.querySelector('a.thumb'); a.click(); setTimeout(()=>{ a.click(); setTimeout(()=>res(n),50); }, 300); })""" % GIF.replace('%', '%%'))
+    check('a slow double tap (300ms apart) still pauses', slow == 1)
+    check('a scrub bar lets a vertical swipe scroll the page; the handle is a small centred target', ev("""(()=>{ const c=document.querySelector('.card .ctl') || (()=>{ const d=document.createElement('div'); d.className='ctl'; document.querySelector('.card .layer').appendChild(d); return d; })(); const i=document.createElement('input'); i.type='range'; i.className='seek'; c.appendChild(i); const ta=getComputedStyle(i).touchAction; i.remove(); const h=document.querySelector('.card .lhandle').getBoundingClientRect(), cr=document.querySelector('.card').getBoundingClientRect(); return ta==='pan-y' && h.width<=80 && h.width<cr.width/2; })()"""))
     ev(SETM, 'collapsed'); pg.mouse.move(2, 2); pg.wait_for_timeout(300)
     ev(tap % ""); pg.wait_for_timeout(600)
     check('a single tap on a clip opens its layer, a moment later (not the post)', ev(LAY, 0) == 1 and ev("window.__pp") == 1)

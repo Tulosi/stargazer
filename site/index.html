@@ -381,8 +381,8 @@ body:not(.layout-list) .layer *{pointer-events:inherit}   /* a layer that is dow
 body:not(.layout-list) .layer .title{font:650 15px/1.25 var(--font);-webkit-line-clamp:2}
 body:not(.layout-list) .layer .meta{margin-top:3px}
 body:not(.layout-list) .layer .arch{display:flex;margin-top:5px}
-body:not(.layout-list) .layer .lh-close{display:block;position:relative;height:16px;margin:-8px -6px -2px;padding:0;border:0;background:none;cursor:pointer;touch-action:none}
-body:not(.layout-list) .layer .lh-close::before{content:"";position:absolute;left:50%;top:6px;width:30px;height:4px;margin-left:-15px;border-radius:3px;background:rgba(255,255,255,.5)}
+body:not(.layout-list) .layer .lh-close{display:block;position:relative;align-self:center;width:72px;height:20px;margin:-8px 0 -4px;padding:0;border:0;background:none;cursor:pointer;touch-action:none}   /* a small target in the middle, so a scroll that starts on the tray rarely grabs it */
+body:not(.layout-list) .layer .lh-close::before{content:"";position:absolute;left:50%;top:8px;width:30px;height:4px;margin-left:-15px;border-radius:3px;background:rgba(255,255,255,.5)}
 body:not(.layout-list) .lay-act{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
 body:not(.layout-list) .lay-cap{display:flex;flex:none;margin-left:auto;background:rgba(255,255,255,.14);border-radius:999px;padding:3px;gap:2px}
 body:not(.layout-list) .lay-cap :is(.star,.fs,.save){position:relative;top:auto;right:auto;width:var(--lb);height:var(--lb);margin:0;padding:0;display:grid;place-items:center;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;color:#fff;font-size:calc(var(--lb)*.55);opacity:1;transform:none}
@@ -400,7 +400,7 @@ body:not(.layout-list) .layer .actions .btn{flex:none;padding:8px 12px;font-size
 body:not(.layout-list) .lay-play:not(:empty){display:block}
 .layer .ctl{position:static;height:auto;padding:0;background:none;opacity:1;pointer-events:auto;z-index:auto}
 /* the handle: a faint pill at the bottom of every tile; its hit area is the lower part of the tile */
-body:not(.layout-list) .lhandle{display:block;position:absolute;left:0;right:0;bottom:0;height:min(clamp(28px,22%,64px),45%);z-index:3;border:0;padding:0;background:none;cursor:pointer;touch-action:none}
+body:not(.layout-list) .lhandle{display:block;position:absolute;left:50%;bottom:0;width:72px;margin-left:-36px;height:min(26px,45%);z-index:3;border:0;padding:0;background:none;cursor:pointer;touch-action:none}
 body:not(.layout-list) .lhandle::before{content:"";position:absolute;left:50%;bottom:7px;width:30px;height:4px;margin-left:-15px;border-radius:3px;background:rgba(255,255,255,.6);box-shadow:0 0 0 .5px rgba(0,0,0,.2);opacity:.75;transition:opacity .15s,width .15s,margin .15s}
 body:not(.layout-list) .lhandle:hover::before,body:not(.layout-list) .lhandle:focus-visible::before{opacity:1;width:38px;margin-left:-19px}
 body.cm-always:not(.layout-list) .lhandle{display:none}
@@ -458,9 +458,9 @@ body.layout-list #cardrow{display:none}   /* List keeps its own arrangement (inl
 .volwrap{display:none;position:relative;flex:none;margin-left:2px;align-items:center}
 .ctl.has-sound .volwrap{display:flex}
 .volfly{display:none;position:absolute;left:50%;bottom:calc(100% + 8px);width:34px;height:108px;margin-left:-17px;border-radius:17px;background:rgba(20,18,30,.94);box-shadow:0 6px 18px rgba(0,0,0,.4);z-index:6}
-.volwrap.open .volfly{display:block}
+.volwrap.open .volfly{display:block;touch-action:none}
 .volfly .volr{position:absolute;left:50%;top:50%;display:block;width:84px;max-width:none;height:24px;margin:-12px 0 0 -42px;transform:rotate(-90deg);accent-color:#fff;cursor:pointer}   /* a vertical slider: min at the bottom */
-.ctl .seek{flex:1;min-width:30px;height:14px;margin:0;accent-color:#fff;cursor:pointer}
+.ctl .seek{flex:1;min-width:30px;height:14px;margin:0;accent-color:#fff;cursor:pointer;touch-action:pan-y}   /* a vertical swipe that starts on the scrubber scrolls the page; only a sideways drag scrubs */
 .ctl .time{flex:none;font:400 10.5px var(--font);font-variant-numeric:tabular-nums;color:rgba(255,255,255,.9);white-space:nowrap}
 
 /* ---- viewer, toast, misc ---- */
@@ -2102,7 +2102,8 @@ $('grid').addEventListener('click',e=>{
       if(card){
         e.preventDefault();
         const toggle = () => toggleLayer(card);
-        if(pp){ if(card._tapT){ clearTimeout(card._tapT); card._tapT = 0; pp.click(); } else card._tapT = setTimeout(()=>{ card._tapT = 0; toggle(); }, 280); }
+        if(card._tapT){ clearTimeout(card._tapT); card._tapT = 0; const q = card.querySelector('.ctl .pp'); if(q) q.click(); else toggle(); }
+        else if(pp) card._tapT = setTimeout(()=>{ card._tapT = 0; toggle(); }, 360);
         else toggle();
         return;
       }
