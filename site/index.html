@@ -402,6 +402,7 @@ body.info-hover .card:focus-within .info,body.info-hover .card:focus-within .bad
    Always show keeps them out. List has its own arrangement and ignores this setting. ---- */
 body:not(.layout-list) .card :is(.star,.fs,.save){opacity:0;pointer-events:none;transform:translateX(14px) scale(.85);transition:opacity .18s ease,transform .24s cubic-bezier(.2,.8,.3,1),background .15s,color .15s}
 body:not(.layout-list) :is(body.ctl-always .card,body.ctl-hover .card:is(:hover,:focus-within),.card.btns-open) :is(.star,.fs,.save){opacity:1;pointer-events:auto;transform:none}
+body.ctl-hover:not(.layout-list) .card .save.nsfwb[aria-pressed=true]{opacity:1;pointer-events:auto;transform:none}   /* a card marked NSFW keeps its mark showing, except when everything is collapsed into the chevron */
 @media (hover:none){body.ctl-hover:not(.layout-list) .card.is-focus :is(.star,.fs,.save){opacity:1;pointer-events:auto;transform:none}}
 body:not(.layout-list) .card :is(.star,.fs,.save){transition-delay:0s}
 body:not(.layout-list) .card .fs{transition-delay:.03s}
@@ -583,6 +584,7 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
 }
 
 /* ---------- List layout: short rows, card info on a blurred preview, no media controls ---------- */
+.apwarn{margin:-2px 0 6px;font-size:12px;line-height:1.45;color:var(--warn)}
 .layouthint{margin:-2px 0 4px;font-size:12px;color:var(--muted)}
 .layouthint .laynote{display:block;margin-top:2px;font-size:12px}
 body.layout-list #sizerow{display:none}
@@ -721,6 +723,8 @@ body.layout-list .nsfwb[aria-pressed=true]:hover::after{filter:invert(1)}
           </select>
         </label>
         <label class="toggle" for="autoplay">Auto-play in view<input id="autoplay" type="checkbox"></label>
+        <label class="toggle" for="autoplayall">Autoplay all media in viewport<input id="autoplayall" type="checkbox"></label>
+        <p class="apwarn" id="apwarn">Warning: this plays every clip and embed on screen at once and stops them as they scroll away. It can be very resource intensive, depending on your screen size and layout.</p>
         <label class="ctlrow"><span>Theme</span>
           <select id="theme" class="field" aria-label="Theme">
             <option value="system">System</option>
@@ -2267,7 +2271,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape' && SEL.on && VIEW.r
 
 /* ---------- hover and auto-play ---------- */
 const touchMQ = matchMedia('(hover: none)');
-const auto = {on:false, focus:touchMQ.matches}, playing = new Set(), MAX_AUTO = 18;
+const auto = {on:false, focus:touchMQ.matches, all:false}, playing = new Set(), MAX_AUTO = 18;
 let focused = null, focusCard = null; const viewSet = new Set(), cardView = new Set();
 const cardIO = new IntersectionObserver(es=>{ for(const e of es){ if(e.isIntersecting) cardView.add(e.target); else { cardView.delete(e.target); const lt = e.target.querySelector('.thumb[data-v]'); if(lt) leftSound(lt); } } if(auto.focus) schedFocus(); },{threshold:[0,.25,.5,.75,1]});   // on touch screens only the media nearest the middle of the screen plays
 function fmtTime(x){ x = Math.max(0,Math.floor(x||0)); return Math.floor(x/60)+':'+String(x%60).padStart(2,'0'); }
@@ -2488,6 +2492,7 @@ function syncPlay(t){
   if(focused && !focused.isConnected) focused = null;
   let want, tracked;
   if(LAYOUT==='list'){ want = false; tracked = false; }   // List rows are static: a blurred preview, no playback
+  else if(auto.all){ want = !!(t._hover || t._inView); tracked = true; }   // Autoplay all media in viewport: no cap, embeds included, on touch too
   else if(auto.focus){ want = auto.on ? t===focused : !!t._hover; tracked = auto.on && t===focused; }
   else { want = t._hover || (auto.on && t._inView && !/^(yt|rg):/.test(t.dataset.v||'') && (playing.has(t) || playing.size < MAX_AUTO)); tracked = !t._hover || (auto.on && t._inView); }
   if(want){ startPlay(t); if(tracked) playing.add(t); }
@@ -2495,10 +2500,10 @@ function syncPlay(t){
   applyAudio();
 }
 const playIO = new IntersectionObserver(es=>{
-  for(const e of es){ e.target._inView = e.isIntersecting; e.isIntersecting ? viewSet.add(e.target) : viewSet.delete(e.target); if(!auto.focus) syncPlay(e.target); }
-  if(auto.focus){ pickFocus(); return; }
+  for(const e of es){ e.target._inView = e.isIntersecting; e.isIntersecting ? viewSet.add(e.target) : viewSet.delete(e.target); if(!auto.focus || auto.all) syncPlay(e.target); }
+  if(auto.focus){ pickFocus(); if(!auto.all) return; }
   // a clip that scrolled away frees a slot for one still in view that was over the cap
-  if(auto.on && playing.size < MAX_AUTO) document.querySelectorAll('.thumb[data-v]').forEach(t=>{ if(t._inView && !t._playing) syncPlay(t); });
+  if(!auto.all && auto.on && playing.size < MAX_AUTO) document.querySelectorAll('.thumb[data-v]').forEach(t=>{ if(t._inView && !t._playing) syncPlay(t); });
 },{threshold:0.5});
 /* Touch screens: play the one clip whose centre is closest to the middle of the visible area (below the filter bar). */
 let pfRaf = 0;
@@ -2567,6 +2572,15 @@ function releasePlayable(t){ t._hover = t._mouse = t._focus = false; t._inView =
   let on = false; try{ const sv = localStorage.getItem(KEY); on = sv===null ? auto.focus : sv==='1'; }catch(e){ on = auto.focus; }   // touch screens default to on
   auto.on = on; box.checked = on;
   if(auto.focus) box.parentNode.firstChild.textContent = 'Auto-play focused media';
+  box.addEventListener('change',()=>{ apply(box.checked); try{ localStorage.setItem(KEY, box.checked?'1':'0'); }catch(e){} });
+})();
+
+(function(){
+  /* Autoplay all media in viewport: every clip and embed on screen plays, and stops as it scrolls out. Off by default; it can be heavy. */
+  const box = $('autoplayall'), KEY = 'saved-posts-autoplayall';
+  const apply = on => { auto.all = on; box.checked = on; document.querySelectorAll('.thumb[data-v]').forEach(syncPlay); schedFocus(); };
+  let on = false; try{ on = localStorage.getItem(KEY)==='1'; }catch(e){}
+  auto.all = on; box.checked = on;
   box.addEventListener('change',()=>{ apply(box.checked); try{ localStorage.setItem(KEY, box.checked?'1':'0'); }catch(e){} });
 })();
 

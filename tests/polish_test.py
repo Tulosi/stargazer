@@ -25,7 +25,7 @@ with sync_playwright() as p:
     check('on: glass button, gradient NS/FW, half-white ring', gc(on, 'backgroundColor') == 'rgba(12, 12, 14, 0.26)' and 'nsfwGrad' in ev("getComputedStyle(document.querySelector('%s .nsfwb text')).fill" % on) and ev("getComputedStyle(document.querySelector('%s .nsfwb'),'::before').backgroundColor" % on) == 'rgba(255, 255, 255, 0.5)')
     check('on: stays visible with the card at rest', gc(on, 'opacity') == '1')
     check('off: hidden until the card is hovered', gc(off, 'opacity') == '0')
-    pg.hover(off + ' .thumb'); pg.wait_for_timeout(300)
+    pg.hover(off + ' .thumb'); pg.wait_for_timeout(600)   # the buttons now slide out with a short stagger
     check('off: appears when the card is hovered', gc(off, 'opacity') == '1')
     pg.hover(off + ' .nsfwb'); pg.wait_for_timeout(300)
     check('off: hovering previews the ring and gradient text', ev("getComputedStyle(document.querySelector('%s .nsfwb'),'::before').backgroundColor" % off) == 'rgba(255, 255, 255, 0.5)' and 'nsfwGrad' in ev("getComputedStyle(document.querySelector('%s .nsfwb text')).fill" % off))
