@@ -35,6 +35,9 @@ with sync_playwright() as p:
     pg.mouse.move(2, 400)
     setm('collapsed'); check('Collapsed: buttons hidden, chevron shown', ev(star)[0] == 0 and ev(chev))
     ev("document.querySelector('.card .morebtn').click()"); pg.wait_for_timeout(450)
+    ev("document.querySelector('.card .morebtn').click()"); pg.wait_for_timeout(500)   # close again, then sample the opening for overlaps
+    ev("(()=>{ window.__max=0; const c=document.querySelector('.card'); const bs=[...c.querySelectorAll('.star,.fs,.save,.morebtn')].filter(b=>b&&!b.hidden); window.__end=performance.now()+700; const tick=()=>{ const r=bs.map(b=>b.getBoundingClientRect()); for(let i=0;i<r.length;i++) for(let j=i+1;j<r.length;j++){ const ov=Math.min(r[i].right,r[j].right)-Math.max(r[i].left,r[j].left); if(ov>window.__max) window.__max=ov; } if(performance.now()<window.__end) requestAnimationFrame(tick); }; tick(); document.querySelector('.card .morebtn').click(); })()"); pg.wait_for_timeout(900)
+    check('Collapsed: the buttons never overlap while they open out', ev("window.__max") < 2)
     check('Collapsed: clicking the chevron opens the buttons', ev(star)[0] == 1 and ev(star)[1] == 'auto')
     setm('hover'); pg.mouse.move(2, 400); pg.wait_for_timeout(300)
     check('Expand on hover: hidden at rest, no chevron', ev(star)[0] == 0 and not ev(chev))

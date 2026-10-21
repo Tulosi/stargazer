@@ -400,15 +400,13 @@ body.info-hover .card:focus-within .info,body.info-hover .card:focus-within .bad
 /* ---- Card controls: the four round glass buttons (star, full screen, bookmark, NSFW toggle) in Masonry and Grid.
    Collapsed folds them into one chevron in the top right; Expand on hover slides them out when the card is hovered (or in focus on touch);
    Always show keeps them out. List has its own arrangement and ignores this setting. ---- */
-body:not(.layout-list) .card :is(.star,.fs,.save){opacity:0;pointer-events:none;transform:translateX(14px) scale(.85);transition:opacity .18s ease,transform .24s cubic-bezier(.2,.8,.3,1),background .15s,color .15s}
+body:not(.layout-list) .card :is(.star,.fs,.save){opacity:0;pointer-events:none;transform:translateX(8px) scale(.9);transition:opacity .18s ease var(--d,0s),transform .24s cubic-bezier(.2,.8,.3,1),background .15s,color .15s}   /* every button slides the same short distance, so they never cross each other on the way out; only the fade is staggered */
 body:not(.layout-list) :is(body.ctl-always .card,body.ctl-hover .card:is(:hover,:focus-within),.card.btns-open) :is(.star,.fs,.save){opacity:1;pointer-events:auto;transform:none}
 body.ctl-hover:not(.layout-list) .card .save.nsfwb[aria-pressed=true]{opacity:1;pointer-events:auto;transform:none}   /* a card marked NSFW keeps its mark showing, except when everything is collapsed into the chevron */
 @media (hover:none){body.ctl-hover:not(.layout-list) .card.is-focus :is(.star,.fs,.save){opacity:1;pointer-events:auto;transform:none}}
-body:not(.layout-list) .card :is(.star,.fs,.save){transition-delay:0s}
-body:not(.layout-list) .card .fs{transition-delay:.03s}
-body:not(.layout-list) .card .save{transition-delay:.06s}
-body:not(.layout-list) .card .save.nsfwb{transition-delay:.09s}
-body.ctl-always:not(.layout-list) .card :is(.star,.fs,.save){transition-delay:0s}
+body:not(.layout-list) .card .fs{--d:.03s}
+body:not(.layout-list) .card .save{--d:.06s}
+body:not(.layout-list) .card .save.nsfwb{--d:.09s}
 /* collapsed: the chevron takes the top-right corner and the buttons open out to its left */
 body.ctl-collapsed:not(.layout-list) .morebtn{display:grid;place-items:center;position:absolute;top:8px;right:8px;z-index:3;width:30px;height:30px;border:0;border-radius:50%;padding:0;cursor:pointer;background:rgba(12,12,14,.26);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:rgba(255,255,255,.78);transition:background .15s,color .15s,opacity .15s}
 body.ctl-collapsed:not(.layout-list) .morebtn:hover{background:rgba(12,12,14,.5);color:#fff}
