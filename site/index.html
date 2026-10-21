@@ -404,6 +404,15 @@ body:not(.layout-list) .lay-cap .fs svg,body:not(.layout-list) .lay-cap .save:no
 body:not(.layout-list) .lay-cap .nsfwb svg{width:calc(var(--lb)*.72);height:calc(var(--lb)*.72)}
 body:not(.layout-list) .layer .actions{display:flex;margin:0;gap:6px;min-width:0}
 body:not(.layout-list) .layer .actions .btn{flex:none;padding:8px 12px;font-size:12px;white-space:nowrap}
+.btn .bi{display:none}
+/* Open post, Comments and the pill share one row. Where words no longer fit beside the pill, the two links become round icon buttons (their names stay in aria-label and the tooltip). */
+body:not(.layout-list) .lay-act{flex-wrap:nowrap}
+@container (max-width:380px){
+  body:not(.layout-list) .layer .actions{gap:5px}
+  body:not(.layout-list) .layer .actions .btn{position:relative;display:grid;place-items:center;width:var(--lb);height:var(--lb);padding:0;border-radius:50%}
+  body:not(.layout-list) .layer .actions .btn .bt{display:none}
+  body:not(.layout-list) .layer .actions .btn .bi{display:block;width:calc(var(--lb)*.5);height:calc(var(--lb)*.5)}
+}
 body:not(.layout-list) .lay-play:not(:empty){display:block}
 .layer .ctl{position:static;height:auto;padding:0;background:none;opacity:1;pointer-events:auto;z-index:auto}
 /* the handle: a faint pill at the bottom of every tile; its hit area is the lower part of the tile */
@@ -441,9 +450,6 @@ body.cm-always:not(.layout-list) .card .peek,body:not(.layout-list) .card.lay-op
   body:not(.layout-list) .layer{--lb:24px;left:4px;right:4px;bottom:4px;padding:6px;gap:5px;border-radius:12px}
   body:not(.layout-list) .layer .title{font-size:11px;-webkit-line-clamp:1}
   body:not(.layout-list) .layer .meta{display:none}
-  body:not(.layout-list) .layer .actions{flex:1 1 100%}
-  body:not(.layout-list) .layer .actions .btn{flex:1;min-width:0;padding:5px 6px;font-size:10.5px;overflow:hidden;text-overflow:ellipsis}
-  body:not(.layout-list) .lay-cap{width:100%;margin-left:0;justify-content:space-between}
   body:not(.layout-list) .layer .ctl{gap:5px}
   body:not(.layout-list) .layer .ctl .pp,body:not(.layout-list) .layer .ctl .vol{width:22px;height:22px}
   body:not(.layout-list) .layer .time{display:none}
@@ -452,6 +458,10 @@ body.cm-always:not(.layout-list) .card .peek,body:not(.layout-list) .card.lay-op
   body:not(.layout-list) .layer{--lb:20px}
   body:not(.layout-list) .layer .arch{display:none}
   body:not(.layout-list) .layer .actions .btn:not(.primary){display:none}
+  body:not(.layout-list) .layer{--lb:clamp(16px,calc((100cqw - 44px) / 4.3),22px);padding:5px}
+  body:not(.layout-list) .lay-cap{padding:2px;gap:0}
+  body:not(.layout-list) .lay-cap .nsfwb{display:none}   /* four controls in one row is all a 3-across tile has room for; NSFW is a size up */
+  body:not(.layout-list) .lay-cap :is(.star,.fs,.save):not(.nsfwb)::after,body:not(.layout-list) .layer .actions .btn::after{content:"";position:absolute;inset:-7px -2px}   /* the picture is small, the thumb is not: a taller catch area */
   body:not(.layout-list) .layer .info{display:none}   /* on the narrowest tiles the layer keeps just Source and the pill, so it still fits a short tile */
 }
 body.layout-list #cardrow{display:none}   /* List keeps its own arrangement (inline on desktop, folded on phones) */
@@ -682,7 +692,20 @@ body.layout-list .nsfwb[aria-pressed=true] svg text,body.layout-list .nsfwb[aria
 body.layout-list .nsfwb[aria-pressed=true]::before,body.layout-list .nsfwb[aria-pressed=false]:hover::before{background:color-mix(in srgb,var(--hot) 55%,transparent)}
 body.layout-list .nsfwb[aria-pressed=true]:hover::after{filter:invert(1)}
 body:not(.layout-list) .layer .btn{-webkit-backdrop-filter:none;backdrop-filter:none}   /* the layer is already glass: a second blur per button costs GPU on every tile for nothing visible */
-@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* Reduced motion means less movement, not none: sliding, scaling and spinning go; fades, colour changes and a pulse that shows something is working stay. */
+@keyframes fadein{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  #panel,#srcpanel,.panel,#selbar{animation:fadein .15s ease-out!important}
+  .srcbadge[data-s=syncing] svg{animation:pulse 1.4s ease-in-out infinite}
+  .card:not(.is-dead) .thumb .ph::after{animation:pulse 1.8s ease-in-out infinite;background:rgba(255,255,255,.1)}
+  body.previews-loading .loaddot::before{animation:none}
+  body.previews-loading .loaddot::after{animation:pulse 2s ease-in-out infinite}
+  body:not(.layout-list) .layer,body:not(.layout-list) .card.lay-shut .layer{transform:none!important}
+  .thumb img,.thumb .still,.thumb .clip{transition-property:filter,opacity}
+  .toggle input::after{transition-property:background-color,opacity}
+  .acctbox>summary::after,body.layout-list .morebtn svg{transition:none}
+}
 
 #pausebar{position:fixed;left:50%;bottom:64px;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:10px;padding:9px 10px 9px 14px;border-radius:999px;background:var(--panel,#1c1c1f);color:var(--text,#eee);border:1px solid var(--line,rgba(128,128,128,.35));box-shadow:0 6px 24px rgba(0,0,0,.35);font-size:13px;max-width:calc(100vw - 24px)}
 #pausebar .pdot{width:8px;height:8px;border-radius:50%;background:#e5a13a;flex:none;animation:pbp 1.2s ease-in-out infinite}
@@ -1357,8 +1380,8 @@ function fillCard(el,p){
     + (removed ? '<div class="arch"><span>Archives:</span><a href="'+esc(wbPostHref(p))+'" target="_blank" rel="noopener noreferrer">Wayback</a></div>' : '')
     + '</div>'
     + '<div class="lay-act">'
-    + '<div class="actions"><a class="btn primary" data-open href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" title="Open the post on Reddit">Open post</a>'
-    + '<a class="btn" href="'+esc(p.link)+'" target="_blank" rel="noopener noreferrer">Comments</a>'
+    + '<div class="actions"><a class="btn primary" data-open href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" title="Open the post on Reddit" aria-label="Open post"><svg class="bi" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5H4.2A1.7 1.7 0 0 0 2.5 5.2v6.6a1.7 1.7 0 0 0 1.7 1.7h6.6a1.7 1.7 0 0 0 1.7-1.7V9.5M9 2.5h4.5V7M13.5 2.5l-6 6"/></svg><span class="bt">Open post</span></a>'
+    + '<a class="btn" href="'+esc(p.link)+'" target="_blank" rel="noopener noreferrer" title="Comments on Reddit" aria-label="Comments"><svg class="bi" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h10a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H8.2L5 14v-3H3a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/></svg><span class="bt">Comments</span></a>'
     + (!m && !dead ? '<a class="btn" href="https://www.reddit.com/comments/'+esc(p.id)+'" target="_blank" rel="noopener noreferrer">Open on Reddit</a><button class="btn retry1" type="button" data-id="'+esc(p.id)+'">Retry this one</button>' : '')
     + '</div>'
     + '<div class="lay-cap">'
@@ -2383,9 +2406,9 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape' && SEL.on && VIEW.r
   const b = $('totop'); let on = false;
   const upd = ()=>{ const w = scrollY > innerHeight*1.5; if(w!==on){ on = w; b.hidden = !w; } };
   addEventListener('scroll', upd, {passive:true}); upd();
-  b.onclick = ()=>window.scrollTo({top:0, behavior:'smooth'});
+  b.onclick = ()=>window.scrollTo({top:0, behavior:matchMedia('(prefers-reduced-motion:reduce)').matches ? 'auto' : 'smooth'});
   const br = document.querySelector('.brand');
-  if(br) br.addEventListener('click', e=>{ if(scrollY > 120){ e.preventDefault(); window.scrollTo({top:0, behavior:'smooth'}); } });
+  if(br) br.addEventListener('click', e=>{ if(scrollY > 120){ e.preventDefault(); window.scrollTo({top:0, behavior:matchMedia('(prefers-reduced-motion:reduce)').matches ? 'auto' : 'smooth'}); } });
   /* touch screens cannot hover: tap a count to read what it means */
   document.querySelectorAll('.stats .st').forEach(st=>st.addEventListener('click', e=>{ e.stopPropagation(); const was = st.classList.contains('open'); document.querySelectorAll('.stats .st.open').forEach(x=>x.classList.remove('open')); if(!was) st.classList.add('open'); }));
   document.addEventListener('click', ()=>document.querySelectorAll('.stats .st.open').forEach(x=>x.classList.remove('open')));
