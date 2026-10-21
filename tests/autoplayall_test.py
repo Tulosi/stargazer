@@ -17,7 +17,7 @@ with sync_playwright() as p:
     pg.route('**/*', lambda r: r.continue_() if r.request.url.startswith(('file:', 'data:')) else r.abort())
     pg.goto(PAGE); pg.wait_for_timeout(700); ev = pg.evaluate
     ev(SEED, H); pg.wait_for_timeout(1500)
-    check('the toggle exists, is off by default and carries a warning', ev("!document.getElementById('autoplayall').checked") and 'resource intensive' in ev("document.getElementById('apwarn').textContent"))
+    check('the toggle exists, is off by default and carries a warning', ev("!document.getElementById('autoplayall').checked") and 'heavy' in ev("document.getElementById('apwarn').textContent"))
     n_view = ev("%s.length" % INVIEW)
     check('there are clips in view to test with', n_view > 3)
     check('off: nothing plays on its own', ev("%s.filter(t=>t._playing).length" % INVIEW) == 0)

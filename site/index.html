@@ -14,6 +14,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
 <script>try{if(!localStorage.getItem("saved-posts-theme-reset1")){localStorage.removeItem("saved-posts-theme");localStorage.setItem("saved-posts-theme-reset1","1")}var t=localStorage.getItem("saved-posts-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>   <!-- one-time reset: everyone starts on System; a choice made afterwards is kept -->
 <style>
+:root{--ease-out:cubic-bezier(.23,1,.32,1)}
+.sronly{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
 /* Quiet chrome, loud media. Neutral monochrome UI; the only colour on the page comes from the posts themselves.
    Tokens keep their old names so existing component rules and scripts keep working. */
 :root{
@@ -118,11 +121,11 @@ button,select,input{font:inherit;color:inherit}
 #q{width:100%;height:38px;border:0;border-radius:999px;background:var(--surface-2);padding:0 14px 0 36px;min-width:0}
 #q::placeholder{color:var(--muted)}
 .pill{height:36px;padding:0 15px;border:0;border-radius:999px;background:var(--surface-2);font-weight:500;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
-.pill:hover{background:var(--line)}
+@media (hover:hover){.pill:hover{background:var(--line)}}
 .pill.primary{background:var(--sel);color:var(--sel-ink)}
-.pill.primary:hover{background:var(--sel);opacity:.88}
+@media (hover:hover){.pill.primary:hover{background:var(--sel);opacity:.88}}
 .pill.warnbtn{background:var(--alert-bg);color:var(--alert-ink)}
-.pill.warnbtn:hover{background:var(--alert-line)}
+@media (hover:hover){.pill.warnbtn:hover{background:var(--alert-line)}}
 .actgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .actgrid .pill{justify-content:center}
 .actgrid .wide{grid-column:1/-1}
@@ -195,7 +198,9 @@ button,select,input{font:inherit;color:inherit}
 @keyframes panelIn{from{opacity:0;transform:translateY(-6px)}}
 body.deck-collapsed #panel,body.src-collapsed #srcpanel{display:none}
 #srcpanel{grid-template-columns:1fr;max-width:460px;gap:12px}
-@media (max-width:720px){.panel{grid-template-columns:1fr;gap:22px;padding:18px}}
+@media (max-width:720px){.panel{grid-template-columns:1fr;gap:22px;padding:18px}
+  body.stats-flat .stats .st:not(:first-child){display:none}
+  #panel::before{order:-3}#panel>.pcol:nth-child(2){order:-2}#panel>#browseCol{order:-1}}   /* on phones the sheet opens on what people came to change: filter and sort, then Browse, then how things look */
 .pcol{display:grid;gap:12px;align-content:start;min-width:0}
 .pcol[hidden]{display:none}
 .kindbadge{display:inline-flex;align-items:center;gap:6px;width:fit-content;max-width:100%;font-size:12px;font-weight:600;padding:0;color:var(--muted)}   /* plain text with an icon: it states a fact, it is not a button */
@@ -227,7 +232,7 @@ input[type=range]{width:100%;accent-color:var(--sel);margin:0}
 .chips{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
 .chip{border:0;background:var(--surface-2);color:var(--ink);border-radius:999px;padding:5px 12px;cursor:pointer;display:inline-flex;gap:7px;align-items:baseline;font-size:12.5px;line-height:1.3}
 .chip small{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
-.chip:hover{background:var(--line)}
+@media (hover:hover){.chip:hover{background:var(--line)}}
 .chip[aria-pressed=true]{background:var(--chip-on);color:var(--accent-ink)}
 .chip[aria-pressed=true] small{color:inherit;opacity:.85}
 .toggle{display:flex;align-items:center;gap:6px;min-height:32px;cursor:pointer;user-select:none;font-size:13px}
@@ -286,7 +291,7 @@ body.previews-loading .loaddot{display:block;animation:dotin .2s ease-out}
 @keyframes dotin{from{opacity:0}}
 .load:has(#loadText:empty) .loaddot{display:none!important}
 body.previews-loading .loaddot::after{animation:dotbreathe 2s ease-in-out infinite}
-body.previews-loading .loaddot::before{animation:dotring 2s cubic-bezier(.15,.6,.3,1) infinite}
+body.previews-loading .loaddot::before{animation:dotring 2s var(--ease-out) infinite}
 @keyframes dotbreathe{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:.8}}
 @keyframes dotring{0%{transform:scale(1);opacity:.5}100%{transform:scale(3.2);opacity:0}}   /* alive while previews are actively loading: the dot breathes and a soft ring spreads and fades */
 .load .bar{height:3px}
@@ -306,7 +311,7 @@ body.unblur .reveal{display:none!important}
 body:not(.layout-list) .badge.media{background:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:5px 2px;color:rgba(255,255,255,.92);text-shadow:0 1px 3px rgba(0,0,0,.7),0 0 8px rgba(0,0,0,.35)}
 /* frosted pills and buttons on top of media */
 .badge,.star,.fs,.save,.reveal{background:rgba(12,12,14,.26);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:rgba(255,255,255,.78);transition:opacity .15s,background .15s,color .15s}
-.star:hover,.fs:hover,.save:hover,.reveal:hover{background:rgba(12,12,14,.5);color:#fff}
+@media (hover:hover){.star:hover,.fs:hover,.save:hover,.reveal:hover{background:rgba(12,12,14,.5);color:#fff}}
 .badge{position:absolute;font:500 11px/1 var(--font);padding:5px 9px;border-radius:999px}
 .badge.playable::before{content:'\25B8\00a0'}
 .badges{position:absolute;left:8px;top:8px;display:flex;gap:6px;align-items:center;max-width:calc(100% - 170px)}
@@ -332,12 +337,12 @@ body:not(.layout-list) .badge.media{background:none;-webkit-backdrop-filter:none
 .nsfwb[aria-pressed=true]:hover::after{content:"";position:absolute;inset:0;margin:auto;width:14px;height:14px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M3.5 3.5l9 9M12.5 3.5l-9 9'/%3E%3C/svg%3E") center/contain no-repeat}
 .fs svg{display:block}
 .gnav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:32px;height:32px;display:grid;place-items:center;border:0;border-radius:50%;padding:0;background:rgba(12,12,14,.26);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:rgba(255,255,255,.78);font-size:22px;line-height:1;cursor:pointer;opacity:0;transition:opacity .15s,background .15s}
-.gnav:hover{background:rgba(12,12,14,.6);color:#fff}
+@media (hover:hover){.gnav:hover{background:rgba(12,12,14,.6);color:#fff}}
 .gprev{left:8px}
 .gnext{right:8px}
 .card:hover .gnav,.card:focus-within .gnav{opacity:1}
 @media (hover:none){.gnav{opacity:1}}
-.star:hover,.fs:hover,.save:hover{background:rgba(12,12,14,.78)}
+@media (hover:hover){.star:hover,.fs:hover,.save:hover{background:rgba(12,12,14,.78)}}
 .star[aria-pressed=true]{color:color-mix(in srgb,var(--hot) 55%,#fff);background:rgba(12,12,14,.55)}   /* a starred card reads differently from one that is only in your list */
 .star{font-size:21px;padding-bottom:4px}
 .save[aria-pressed=true]{color:#fff}
@@ -365,9 +370,9 @@ body.layout-list .meta a.cm:hover,body.layout-list .meta a.cm:focus-visible{colo
 @media (hover:none){.actions,.arch{display:flex}}
 .actions{gap:6px;margin-top:9px}
 .btn{flex:1;text-align:center;text-decoration:none;border:0;border-radius:999px;padding:6px 10px;font-weight:500;font-size:11.5px;background:rgba(255,255,255,.2);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);color:#fff}
-.btn:hover{background:rgba(255,255,255,.32)}
+@media (hover:hover){.btn:hover{background:rgba(255,255,255,.32)}}
 .btn.primary{background:#fff;color:#111}
-.btn.primary:hover{background:rgba(255,255,255,.85)}
+@media (hover:hover){.btn.primary:hover{background:rgba(255,255,255,.85)}}
 .arch{flex-wrap:wrap;gap:2px 10px;font:400 11px var(--font);color:rgba(255,255,255,.75);margin-top:7px}
 .arch a{color:#fff;text-underline-offset:2px}
 
@@ -375,7 +380,7 @@ body.layout-list .meta a.cm:hover,body.layout-list .meta a.cm:focus-visible{colo
    List keeps its own row arrangement: there the layer boxes are display:contents, so the info text and the round buttons sit where they always did. ---- */
 .layer,.lay-act,.lay-cap{display:contents}
 .lhandle,.lh-close,.lay-play,.peek{display:none}
-body:not(.layout-list) .layer{--lb:34px;display:flex;flex-direction:column;gap:8px;position:absolute;left:8px;right:8px;bottom:8px;z-index:4;padding:10px 12px 11px;border-radius:16px;background:rgba(20,18,30,.6);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.28);opacity:0;pointer-events:none;transform:translateY(10px);transition:opacity .2s ease,transform .24s cubic-bezier(.2,.8,.3,1)}
+body:not(.layout-list) .layer{--lb:34px;display:flex;flex-direction:column;gap:8px;position:absolute;left:8px;right:8px;bottom:8px;z-index:4;padding:10px 12px 11px;border-radius:16px;background:rgba(20,18,30,.6);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.28);opacity:0;pointer-events:none;transform:translateY(10px);transition:opacity .2s ease,transform .24s var(--ease-out)}
 body:not(.layout-list) .layer .info{position:static;display:block;padding:0;background:none;transition:none}
 body:not(.layout-list) .layer *{pointer-events:inherit}   /* a layer that is down must not catch taps meant for the media underneath */
 body:not(.layout-list) .layer .title{font:650 15px/1.25 var(--font);-webkit-line-clamp:2}
@@ -386,7 +391,7 @@ body:not(.layout-list) .layer .lh-close::before{content:"";position:absolute;lef
 body:not(.layout-list) .lay-act{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
 body:not(.layout-list) .lay-cap{display:flex;flex:none;margin-left:auto;background:rgba(255,255,255,.14);border-radius:999px;padding:3px;gap:2px}
 body:not(.layout-list) .lay-cap :is(.star,.fs,.save){position:relative;top:auto;right:auto;width:var(--lb);height:var(--lb);margin:0;padding:0;display:grid;place-items:center;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;color:#fff;font-size:calc(var(--lb)*.55);opacity:1;transform:none}
-body:not(.layout-list) .lay-cap :is(.star,.fs,.save):hover{background:rgba(255,255,255,.18)}
+@media (hover:hover){body:not(.layout-list) .lay-cap :is(.star,.fs,.save):hover{background:rgba(255,255,255,.18)}}
 body:not(.layout-list) .lay-cap .nsfwb[hidden]{display:none}
 body:not(.layout-list) .lay-cap .star[aria-pressed=true]{background:rgba(255,255,255,.92);color:#111}
 body:not(.layout-list) .lay-cap .save.nsfwb[aria-pressed=true]{background:none}
@@ -420,7 +425,7 @@ body.cm-always:not(.layout-list) .card :is(.badges,.ph span,.badge.rec),body:not
 @media (hover:hover){body.cm-hover:not(.layout-list) .card:is(:hover,:focus-within) :is(.badges,.ph span,.badge.rec){opacity:1}}
 @media (hover:none){body.cm-hover:not(.layout-list) .card.is-focus :is(.badges,.ph span,.badge.rec){opacity:1}}
 body.cm-always:not(.layout-list) .card .lhandle,body:not(.layout-list) .card.lay-open .lhandle{display:none}
-@media (hover:hover){body.cm-hover:not(.layout-list) .card:is(:hover,:focus-within) .lhandle{display:none}}
+@media (hover:hover){body.cm-hover:not(.layout-list) .lhandle{display:none}}   /* a mouse raises the layer by hovering, so no handle on every tile */
 @media (hover:none){body.cm-hover:not(.layout-list) .card.is-focus .lhandle{display:none}}
 body.cm-always:not(.layout-list) .card .peek,body:not(.layout-list) .card.lay-open .peek{display:none}
 @media (hover:hover){body.cm-hover:not(.layout-list) .card:is(:hover,:focus-within) .peek{display:none}}
@@ -453,7 +458,7 @@ body.layout-list #cardrow{display:none}   /* List keeps its own arrangement (inl
 .cprog{display:none}
 .ctl{position:absolute;left:0;right:0;bottom:0;z-index:4;display:flex;align-items:center;gap:8px;height:38px;padding:0 10px 0 7px}
 .ctl .pp,.ctl .vol{flex:none;width:26px;height:26px;border:0;border-radius:50%;padding:0;display:grid;place-items:center;background:rgba(255,255,255,.2);color:#fff;font-size:11px;line-height:1;cursor:pointer}
-.ctl .pp:hover,.ctl .vol:hover{background:rgba(255,255,255,.34)}
+@media (hover:hover){.ctl .pp:hover,.ctl .vol:hover{background:rgba(255,255,255,.34)}}
 .ctl .vol svg,.ctl .pp svg{display:block}
 .volwrap{display:none;position:relative;flex:none;margin-left:2px;align-items:center}
 .ctl.has-sound .volwrap{display:flex}
@@ -475,7 +480,7 @@ body.layout-list #cardrow{display:none}   /* List keeps its own arrangement (inl
 #viewer img{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-user-drag:none;will-change:transform;transition:none}
 #viewer .vstage{touch-action:none;overflow:hidden}
 #viewer .vclose{position:absolute;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));z-index:2;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:16px;line-height:1;cursor:pointer;display:grid;place-items:center}
-#viewer .vclose:hover,#viewer .vsound:hover{background:rgba(255,255,255,.3)}
+@media (hover:hover){#viewer .vclose:hover,#viewer .vsound:hover{background:rgba(255,255,255,.3)}}
 #viewer .vsound{position:absolute;top:max(12px,env(safe-area-inset-top));right:calc(max(12px,env(safe-area-inset-right)) + 50px);z-index:2;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;cursor:pointer;display:grid;place-items:center}
 #viewer .vsound[hidden],#viewer .vvol[hidden]{display:none}
 #viewer .vvol{position:absolute;top:calc(max(12px,env(safe-area-inset-top)) + 11px);right:calc(max(12px,env(safe-area-inset-right)) + 98px);z-index:2;width:96px;height:18px;margin:0;accent-color:#fff;cursor:pointer}
@@ -484,9 +489,9 @@ body.viewing{overflow:hidden}
 #viewer .vposts{position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2;display:flex;gap:8px}
 #viewer .vpost{border:0;border-radius:999px;padding:8px 14px;background:rgba(255,255,255,.16);color:#fff;font:500 13px var(--font);cursor:pointer;white-space:nowrap}
 #viewer .vpost:disabled{opacity:.35;cursor:default}
-#viewer .vpost:hover:not(:disabled){background:rgba(255,255,255,.28)}
+@media (hover:hover){#viewer .vpost:hover:not(:disabled){background:rgba(255,255,255,.28)}}
 #viewer .vnav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:48px;height:48px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:30px;line-height:1;cursor:pointer;display:grid;place-items:center}
-#viewer .vnav:hover{background:rgba(255,255,255,.3)}
+@media (hover:hover){#viewer .vnav:hover{background:rgba(255,255,255,.3)}}
 #viewer .vprev{left:max(12px,env(safe-area-inset-left))}
 #viewer .vnext{right:max(12px,env(safe-area-inset-right))}
 #viewer .vcount{position:absolute;bottom:calc(62px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:2;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.16);color:#fff;font-size:12.5px;font-variant-numeric:tabular-nums}
@@ -513,7 +518,7 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
 #confirm .danger:hover{background:#a81f1f}
 .srcseg{display:flex;gap:2px;padding:3px;border-radius:999px;background:var(--surface-2)}
 .srcseg .pill{flex:1 1 auto;justify-content:center;height:30px;padding:0 10px;background:transparent}
-.srcseg .pill:hover{background:var(--line)}
+@media (hover:hover){.srcseg .pill:hover{background:var(--line)}}
 .srcseg .pill[aria-pressed=true]{background:var(--sel);color:var(--sel-ink)}
 .nsfwgrp{display:grid;gap:6px;margin-bottom:6px}
 .nsfwlbl{font-size:13px;display:flex;gap:6px;font-variant-numeric:tabular-nums}
@@ -680,20 +685,23 @@ body.layout-list .nsfwb[aria-pressed=true]:hover::after{filter:invert(1)}
 @keyframes pbp{50%{opacity:.3}}
 #pausebar button{border:1px solid var(--line,rgba(128,128,128,.4));background:transparent;color:inherit;border-radius:999px;padding:4px 10px;font:inherit;cursor:pointer}
 #pausebar b{font-variant-numeric:tabular-nums}
+/* press feedback: a pressed control dips a little so it feels heard (not for people who ask for less motion) */
+@media (prefers-reduced-motion:no-preference){:is(.pill,.btn,.chip,.star,.fs,.save,.vol,.pp,.morebtn,.vclose,.vsound,.vpost,.vnav):active{scale:.97}}
+.expnow{margin-left:2px;font-weight:600}
 </style>
 </head>
 <body class="deck-collapsed src-collapsed">
 <section class="deck" aria-label="Search and filters">
   <div class="deck-in">
     <div class="deck-bar">
-      <a class="brand" href="./" aria-label="Stargazer" title="Stargazer"><svg class="logo" viewBox="0 0 187 46" width="163" height="40" role="img" aria-label="Stargazer" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="logoGrad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="187" y2="14"><stop offset="0" stop-color="#7c3aed"/><stop offset=".55" stop-color="#c026d3"/><stop offset="1" stop-color="#ec4899"/></linearGradient></defs><g fill="url(#logoGrad)"><path d="M1.4280000000000002 28.86H7.6160000000000005Q7.752000000000001 30.186 8.534 30.883Q9.316 31.58 10.574000000000002 31.58Q11.866000000000001 31.58 12.614 30.985Q13.362 30.39 13.362 29.336Q13.362 28.451999999999998 12.767 27.874Q12.172 27.296 11.305 26.922Q10.438 26.548000000000002 8.84 26.072Q6.5280000000000005 25.357999999999997 5.066000000000001 24.644Q3.604 23.93 2.55 22.536Q1.496 21.142 1.496 18.898Q1.496 15.565999999999999 3.91 13.678999999999998Q6.324000000000001 11.791999999999998 10.200000000000001 11.791999999999998Q14.144000000000002 11.791999999999998 16.558 13.678999999999998Q18.972 15.565999999999999 19.142000000000003 18.932H12.852Q12.784 17.776 12.002 17.113Q11.22 16.45 9.996 16.45Q8.942 16.45 8.296 17.011Q7.65 17.572 7.65 18.625999999999998Q7.65 19.782 8.738 20.427999999999997Q9.826 21.073999999999998 12.138000000000002 21.822Q14.450000000000001 22.604 15.895 23.317999999999998Q17.34 24.032 18.394 25.392Q19.448 26.752 19.448 28.894Q19.448 30.933999999999997 18.411 32.599999999999994Q17.374000000000002 34.266 15.402000000000001 35.251999999999995Q13.430000000000001 36.238 10.744000000000002 36.238Q8.126000000000001 36.238 6.0520000000000005 35.388Q3.978 34.538 2.737 32.872Q1.496 31.206 1.4280000000000002 28.86ZM32.992 31.07V36.0H30.034Q26.872 36.0 25.104 34.453Q23.336 32.906 23.336 29.404V21.855999999999998H21.023999999999997V17.028H23.336V12.404H29.15V17.028H32.958V21.855999999999998H29.15V29.472Q29.15 30.322 29.558 30.695999999999998Q29.966 31.07 30.918 31.07ZM42.83 16.756Q44.836 16.756 46.349 17.572Q47.861999999999995 18.387999999999998 48.678 19.714V17.028H54.492V36.0H48.678V33.314Q47.827999999999996 34.64 46.315 35.456Q44.80199999999999 36.272 42.79599999999999 36.272Q40.483999999999995 36.272 38.58 35.065Q36.675999999999995 33.858 35.571 31.631Q34.465999999999994 29.404 34.465999999999994 26.479999999999997Q34.465999999999994 23.555999999999997 35.571 21.345999999999997Q36.675999999999995 19.136 38.58 17.945999999999998Q40.483999999999995 16.756 42.83 16.756ZM44.529999999999994 21.822Q42.79599999999999 21.822 41.589 23.063Q40.382 24.304 40.382 26.479999999999997Q40.382 28.656 41.589 29.930999999999997Q42.79599999999999 31.206 44.529999999999994 31.206Q46.263999999999996 31.206 47.471 29.948Q48.678 28.689999999999998 48.678 26.514Q48.678 24.338 47.471 23.08Q46.263999999999996 21.822 44.529999999999994 21.822ZM69.872 16.823999999999998V22.978H68.274Q66.098 22.978 65.00999999999999 23.913Q63.922 24.848 63.922 27.194V36.0H58.108V17.028H63.922V20.189999999999998Q64.94200000000001 18.625999999999998 66.47200000000001 17.724999999999998Q68.002 16.823999999999998 69.872 16.823999999999998ZM85.116 19.714V17.028H90.93V35.966Q90.93 38.584 89.893 40.709Q88.856 42.834 86.731 44.092Q84.606 45.35 81.444 45.35Q77.228 45.35 74.61 43.361000000000004Q71.992 41.372 71.618 37.972H77.364Q77.636 39.06 78.656 39.689Q79.676 40.318 81.172 40.318Q82.974 40.318 84.045 39.281Q85.116 38.244 85.116 35.966V33.28Q84.266 34.606 82.77000000000001 35.439Q81.274 36.272 79.268 36.272Q76.922 36.272 75.018 35.065Q73.114 33.858 72.009 31.631Q70.904 29.404 70.904 26.479999999999997Q70.904 23.555999999999997 72.009 21.345999999999997Q73.114 19.136 75.018 17.945999999999998Q76.922 16.756 79.268 16.756Q81.274 16.756 82.787 17.572Q84.3 18.387999999999998 85.116 19.714ZM80.968 21.822Q79.234 21.822 78.02699999999999 23.063Q76.82 24.304 76.82 26.479999999999997Q76.82 28.656 78.02699999999999 29.930999999999997Q79.234 31.206 80.968 31.206Q82.702 31.206 83.90899999999999 29.948Q85.116 28.689999999999998 85.116 26.514Q85.116 24.338 83.90899999999999 23.08Q82.702 21.822 80.968 21.822ZM101.754 16.756Q103.76 16.756 105.273 17.572Q106.786 18.387999999999998 107.602 19.714V17.028H113.416V36.0H107.602V33.314Q106.75200000000001 34.64 105.239 35.456Q103.726 36.272 101.72 36.272Q99.408 36.272 97.504 35.065Q95.60000000000001 33.858 94.495 31.631Q93.39 29.404 93.39 26.479999999999997Q93.39 23.555999999999997 94.495 21.345999999999997Q95.60000000000001 19.136 97.504 17.945999999999998Q99.408 16.756 101.754 16.756ZM103.45400000000001 21.822Q101.72 21.822 100.513 23.063Q99.306 24.304 99.306 26.479999999999997Q99.306 28.656 100.513 29.930999999999997Q101.72 31.206 103.45400000000001 31.206Q105.188 31.206 106.39500000000001 29.948Q107.602 28.689999999999998 107.602 26.514Q107.602 24.338 106.39500000000001 23.08Q105.188 21.822 103.45400000000001 21.822ZM122.47200000000001 31.206H130.70000000000002V36.0H115.97800000000001V31.375999999999998L123.86600000000001 21.822H116.046V17.028H130.53V21.652ZM151.07800000000003 27.908H137.92000000000002Q138.056 29.676 139.05900000000003 30.610999999999997Q140.062 31.546 141.52400000000003 31.546Q143.70000000000002 31.546 144.55 29.71H150.73800000000003Q150.26200000000003 31.58 149.02100000000002 33.076Q147.78000000000003 34.572 145.91000000000003 35.422Q144.04000000000002 36.272 141.728 36.272Q138.94000000000003 36.272 136.764 35.082Q134.58800000000002 33.892 133.36400000000003 31.682000000000002Q132.14000000000001 29.472 132.14000000000001 26.514Q132.14000000000001 23.555999999999997 133.34700000000004 21.345999999999997Q134.55400000000003 19.136 136.73000000000002 17.945999999999998Q138.906 16.756 141.728 16.756Q144.48200000000003 16.756 146.62400000000002 17.912Q148.76600000000002 19.067999999999998 149.973 21.209999999999997Q151.18 23.351999999999997 151.18 26.208Q151.18 27.024 151.07800000000003 27.908ZM145.23000000000002 24.677999999999997Q145.23000000000002 23.182 144.21000000000004 22.298000000000002Q143.19000000000003 21.414 141.66000000000003 21.414Q140.198 21.414 139.195 22.264Q138.192 23.113999999999997 137.954 24.677999999999997ZM165.40400000000002 16.823999999999998V22.978H163.806Q161.63000000000002 22.978 160.54200000000003 23.913Q159.454 24.848 159.454 27.194V36.0H153.64000000000001V17.028H159.454V20.189999999999998Q160.47400000000002 18.625999999999998 162.00400000000002 17.724999999999998Q163.53400000000002 16.823999999999998 165.40400000000002 16.823999999999998Z"/><path d="M174.484 0 Q175.744 5.74 181.484 7 Q175.744 8.26 174.484 14 Q173.22400000000002 8.26 167.484 7 Q173.22400000000002 5.74 174.484 0Z"/><path d="M166.484 -0.20000000000000018 Q167.06 2.424 169.684 3 Q167.06 3.576 166.484 6.2 Q165.90800000000002 3.576 163.28400000000002 3 Q165.90800000000002 2.424 166.484 -0.20000000000000018Z"/><path d="M179.484 18 Q180.024 20.46 182.484 21 Q180.024 21.54 179.484 24 Q178.94400000000002 21.54 176.484 21 Q178.94400000000002 20.46 179.484 18Z"/><path d="M70 0 Q70.54 2.46 73 3 Q70.54 3.54 70 6 Q69.46 3.54 67 3 Q69.46 2.46 70 0Z"/><path d="M20 1.0 Q20.45 3.05 22.5 3.5 Q20.45 3.95 20 6.0 Q19.55 3.95 17.5 3.5 Q19.55 3.05 20 1.0Z"/></g></svg></a>
+      <h1 class="sronly">Stargazer: your saved Reddit posts</h1><a class="brand" href="./" aria-label="Stargazer" title="Stargazer"><svg class="logo" viewBox="0 0 187 46" width="163" height="40" role="img" aria-label="Stargazer" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="logoGrad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="187" y2="14"><stop offset="0" stop-color="#7c3aed"/><stop offset=".55" stop-color="#c026d3"/><stop offset="1" stop-color="#ec4899"/></linearGradient></defs><g fill="url(#logoGrad)"><path d="M1.4280000000000002 28.86H7.6160000000000005Q7.752000000000001 30.186 8.534 30.883Q9.316 31.58 10.574000000000002 31.58Q11.866000000000001 31.58 12.614 30.985Q13.362 30.39 13.362 29.336Q13.362 28.451999999999998 12.767 27.874Q12.172 27.296 11.305 26.922Q10.438 26.548000000000002 8.84 26.072Q6.5280000000000005 25.357999999999997 5.066000000000001 24.644Q3.604 23.93 2.55 22.536Q1.496 21.142 1.496 18.898Q1.496 15.565999999999999 3.91 13.678999999999998Q6.324000000000001 11.791999999999998 10.200000000000001 11.791999999999998Q14.144000000000002 11.791999999999998 16.558 13.678999999999998Q18.972 15.565999999999999 19.142000000000003 18.932H12.852Q12.784 17.776 12.002 17.113Q11.22 16.45 9.996 16.45Q8.942 16.45 8.296 17.011Q7.65 17.572 7.65 18.625999999999998Q7.65 19.782 8.738 20.427999999999997Q9.826 21.073999999999998 12.138000000000002 21.822Q14.450000000000001 22.604 15.895 23.317999999999998Q17.34 24.032 18.394 25.392Q19.448 26.752 19.448 28.894Q19.448 30.933999999999997 18.411 32.599999999999994Q17.374000000000002 34.266 15.402000000000001 35.251999999999995Q13.430000000000001 36.238 10.744000000000002 36.238Q8.126000000000001 36.238 6.0520000000000005 35.388Q3.978 34.538 2.737 32.872Q1.496 31.206 1.4280000000000002 28.86ZM32.992 31.07V36.0H30.034Q26.872 36.0 25.104 34.453Q23.336 32.906 23.336 29.404V21.855999999999998H21.023999999999997V17.028H23.336V12.404H29.15V17.028H32.958V21.855999999999998H29.15V29.472Q29.15 30.322 29.558 30.695999999999998Q29.966 31.07 30.918 31.07ZM42.83 16.756Q44.836 16.756 46.349 17.572Q47.861999999999995 18.387999999999998 48.678 19.714V17.028H54.492V36.0H48.678V33.314Q47.827999999999996 34.64 46.315 35.456Q44.80199999999999 36.272 42.79599999999999 36.272Q40.483999999999995 36.272 38.58 35.065Q36.675999999999995 33.858 35.571 31.631Q34.465999999999994 29.404 34.465999999999994 26.479999999999997Q34.465999999999994 23.555999999999997 35.571 21.345999999999997Q36.675999999999995 19.136 38.58 17.945999999999998Q40.483999999999995 16.756 42.83 16.756ZM44.529999999999994 21.822Q42.79599999999999 21.822 41.589 23.063Q40.382 24.304 40.382 26.479999999999997Q40.382 28.656 41.589 29.930999999999997Q42.79599999999999 31.206 44.529999999999994 31.206Q46.263999999999996 31.206 47.471 29.948Q48.678 28.689999999999998 48.678 26.514Q48.678 24.338 47.471 23.08Q46.263999999999996 21.822 44.529999999999994 21.822ZM69.872 16.823999999999998V22.978H68.274Q66.098 22.978 65.00999999999999 23.913Q63.922 24.848 63.922 27.194V36.0H58.108V17.028H63.922V20.189999999999998Q64.94200000000001 18.625999999999998 66.47200000000001 17.724999999999998Q68.002 16.823999999999998 69.872 16.823999999999998ZM85.116 19.714V17.028H90.93V35.966Q90.93 38.584 89.893 40.709Q88.856 42.834 86.731 44.092Q84.606 45.35 81.444 45.35Q77.228 45.35 74.61 43.361000000000004Q71.992 41.372 71.618 37.972H77.364Q77.636 39.06 78.656 39.689Q79.676 40.318 81.172 40.318Q82.974 40.318 84.045 39.281Q85.116 38.244 85.116 35.966V33.28Q84.266 34.606 82.77000000000001 35.439Q81.274 36.272 79.268 36.272Q76.922 36.272 75.018 35.065Q73.114 33.858 72.009 31.631Q70.904 29.404 70.904 26.479999999999997Q70.904 23.555999999999997 72.009 21.345999999999997Q73.114 19.136 75.018 17.945999999999998Q76.922 16.756 79.268 16.756Q81.274 16.756 82.787 17.572Q84.3 18.387999999999998 85.116 19.714ZM80.968 21.822Q79.234 21.822 78.02699999999999 23.063Q76.82 24.304 76.82 26.479999999999997Q76.82 28.656 78.02699999999999 29.930999999999997Q79.234 31.206 80.968 31.206Q82.702 31.206 83.90899999999999 29.948Q85.116 28.689999999999998 85.116 26.514Q85.116 24.338 83.90899999999999 23.08Q82.702 21.822 80.968 21.822ZM101.754 16.756Q103.76 16.756 105.273 17.572Q106.786 18.387999999999998 107.602 19.714V17.028H113.416V36.0H107.602V33.314Q106.75200000000001 34.64 105.239 35.456Q103.726 36.272 101.72 36.272Q99.408 36.272 97.504 35.065Q95.60000000000001 33.858 94.495 31.631Q93.39 29.404 93.39 26.479999999999997Q93.39 23.555999999999997 94.495 21.345999999999997Q95.60000000000001 19.136 97.504 17.945999999999998Q99.408 16.756 101.754 16.756ZM103.45400000000001 21.822Q101.72 21.822 100.513 23.063Q99.306 24.304 99.306 26.479999999999997Q99.306 28.656 100.513 29.930999999999997Q101.72 31.206 103.45400000000001 31.206Q105.188 31.206 106.39500000000001 29.948Q107.602 28.689999999999998 107.602 26.514Q107.602 24.338 106.39500000000001 23.08Q105.188 21.822 103.45400000000001 21.822ZM122.47200000000001 31.206H130.70000000000002V36.0H115.97800000000001V31.375999999999998L123.86600000000001 21.822H116.046V17.028H130.53V21.652ZM151.07800000000003 27.908H137.92000000000002Q138.056 29.676 139.05900000000003 30.610999999999997Q140.062 31.546 141.52400000000003 31.546Q143.70000000000002 31.546 144.55 29.71H150.73800000000003Q150.26200000000003 31.58 149.02100000000002 33.076Q147.78000000000003 34.572 145.91000000000003 35.422Q144.04000000000002 36.272 141.728 36.272Q138.94000000000003 36.272 136.764 35.082Q134.58800000000002 33.892 133.36400000000003 31.682000000000002Q132.14000000000001 29.472 132.14000000000001 26.514Q132.14000000000001 23.555999999999997 133.34700000000004 21.345999999999997Q134.55400000000003 19.136 136.73000000000002 17.945999999999998Q138.906 16.756 141.728 16.756Q144.48200000000003 16.756 146.62400000000002 17.912Q148.76600000000002 19.067999999999998 149.973 21.209999999999997Q151.18 23.351999999999997 151.18 26.208Q151.18 27.024 151.07800000000003 27.908ZM145.23000000000002 24.677999999999997Q145.23000000000002 23.182 144.21000000000004 22.298000000000002Q143.19000000000003 21.414 141.66000000000003 21.414Q140.198 21.414 139.195 22.264Q138.192 23.113999999999997 137.954 24.677999999999997ZM165.40400000000002 16.823999999999998V22.978H163.806Q161.63000000000002 22.978 160.54200000000003 23.913Q159.454 24.848 159.454 27.194V36.0H153.64000000000001V17.028H159.454V20.189999999999998Q160.47400000000002 18.625999999999998 162.00400000000002 17.724999999999998Q163.53400000000002 16.823999999999998 165.40400000000002 16.823999999999998Z"/><path d="M174.484 0 Q175.744 5.74 181.484 7 Q175.744 8.26 174.484 14 Q173.22400000000002 8.26 167.484 7 Q173.22400000000002 5.74 174.484 0Z"/><path d="M166.484 -0.20000000000000018 Q167.06 2.424 169.684 3 Q167.06 3.576 166.484 6.2 Q165.90800000000002 3.576 163.28400000000002 3 Q165.90800000000002 2.424 166.484 -0.20000000000000018Z"/><path d="M179.484 18 Q180.024 20.46 182.484 21 Q180.024 21.54 179.484 24 Q178.94400000000002 21.54 176.484 21 Q178.94400000000002 20.46 179.484 18Z"/><path d="M70 0 Q70.54 2.46 73 3 Q70.54 3.54 70 6 Q69.46 3.54 67 3 Q69.46 2.46 70 0Z"/><path d="M20 1.0 Q20.45 3.05 22.5 3.5 Q20.45 3.95 20 6.0 Q19.55 3.95 17.5 3.5 Q19.55 3.05 20 1.0Z"/></g></svg></a>
       <label class="search" id="searchbox">
         <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.6"/><path d="M10.6 10.6L14 14"/></svg>
         <input id="q" type="search" placeholder="Search titles, subreddits, authors" aria-label="Search">
       </label>
       <div class="stats" id="stats" hidden aria-live="off">
         <span class="st" tabindex="0"><b id="stActive">0</b><span class="lb">Active</span><em>(Excludes filtered results)</em></span>
-        <span class="st" tabindex="0"><b id="stGot">0</b><span class="lb">Retrieved</span><em>(Total successfully retrieved from the data source)</em></span>
+        <span class="st" tabindex="0"><b id="stGot">0</b><span class="lb">Loaded</span><em>(Total successfully retrieved from the data source)</em></span>
         <span class="st" tabindex="0"><b id="stAll">0</b><span class="lb">Total</span><em>(The total number of items in the data source, retrievable or not)</em></span>
       </div>
       <nav class="navbtns" id="navbtns" aria-label="Main">
@@ -733,7 +741,7 @@ body.layout-list .nsfwb[aria-pressed=true]:hover::after{filter:invert(1)}
         </label>
         <label class="toggle" for="autoplay">Auto-play in view<input id="autoplay" type="checkbox"></label>
         <label class="toggle" for="autoplayall">Autoplay all media in viewport<input id="autoplayall" type="checkbox"></label>
-        <p class="apwarn" id="apwarn">Warning: this plays every clip and embed on screen at once and stops them as they scroll away. It can be very resource intensive, depending on your screen size and layout.</p>
+        <p class="apwarn" id="apwarn">Plays every clip on screen at once. Can be heavy on your device.</p>
         <label class="ctlrow"><span>Theme</span>
           <select id="theme" class="field" aria-label="Theme">
             <option value="system">System</option>
@@ -1044,7 +1052,7 @@ const FS_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" str
 function imgCandidates(p){
   const m = metaOf(p), prim = [], arch = [];
   if(!m) return [];
-  const add = (arr,u) => { if(u && /^https?:/.test(u) && !prim.includes(u) && !arch.includes(u)) arr.push(u); };
+  const add = (arr,u) => { if(u && /^(?:https?:|data:image\/)/.test(u) && !prim.includes(u) && !arch.includes(u)) arr.push(u); };
   add(prim, m.th);
   const pr = /^https?:\/\/preview\.redd\.it\/([^\/?#]+)/i.exec(m.th||'');
   if(pr) add(prim, 'https://i.redd.it/'+pr[1]);                 // the same image without the signed-URL requirement
@@ -1061,7 +1069,7 @@ function imgCandidates(p){
 /* Full-screen order of preference: the original file (i.redd.it / direct link / imgur) first, then Reddit's full-size preview, then archive copies, and the card's thumbnail last. */
 function fullResCandidates(p, resolved){
   const m = metaOf(p) || {}, out = [];
-  const add = u => { if(u && /^https?:/.test(u) && !out.includes(u)) out.push(u); };
+  const add = u => { if(u && /^(?:https?:|data:image\/)/.test(u) && !out.includes(u)) out.push(u); };
   const direct = m.u && /\.(jpe?g|png|webp|gif)(\?|$)/i.test(m.u) ? m.u : '';
   const h = healthOf(p), trusted = !!(resolved && h && h.k!=='orig');   // the link checker already found the original dead or replaced: its working copy goes first
   if(trusted) add(resolved);
@@ -1341,7 +1349,7 @@ function fillCard(el,p){
     + (removed ? '<div class="arch"><span>Archives:</span><a href="'+esc(wbPostHref(p))+'" target="_blank" rel="noopener noreferrer">Wayback</a></div>' : '')
     + '</div>'
     + '<div class="lay-act">'
-    + '<div class="actions"><a class="btn primary" data-open href="'+esc(href)+'" target="_blank" rel="noopener noreferrer">Source</a>'
+    + '<div class="actions"><a class="btn primary" data-open href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" title="Open the post on Reddit">Open post</a>'
     + '<a class="btn" href="'+esc(p.link)+'" target="_blank" rel="noopener noreferrer">Comments</a>'
     + (!m && !dead ? '<a class="btn" href="https://www.reddit.com/comments/'+esc(p.id)+'" target="_blank" rel="noopener noreferrer">Open on Reddit</a><button class="btn retry1" type="button" data-id="'+esc(p.id)+'">Retry this one</button>' : '')
     + '</div>'
@@ -1369,7 +1377,7 @@ function fillCard(el,p){
   const img = el.querySelector('.thumb img, .thumb video.still');
   if(img){ img._cands = img.tagName==='VIDEO' ? vs : cands; img._p = p; img._el = el; img._rescue = rescue; imgIO.observe(img); }
   else if(!dead && !h) rescue();
-  layoutCard(el,p);
+  layoutCard(el,p); cardTabs(el, !!el._kb);
   rgWatch(el,p);
 }
 
@@ -2042,7 +2050,20 @@ function showGallery(card,p,m){
   const b = card.querySelector('.badge.media'); if(b) b.textContent = (MEDIA_LABEL.gallery||'Gallery')+' '+(i+1)+'/'+n;
 }
 /* A card's layer (info, actions, playback) opens by hand with its handle; one card at a time is the normal case, and a tap elsewhere, Esc, or scrolling the card away closes it. */
+/* Keyboard: a card is one tab stop (its picture). Enter on it moves into the card's own controls; Esc or leaving the card puts them back out of the tab order.
+   Without this a page of cards costs ten tab stops each. List keeps every control tabbable, since its buttons are always on the row. */
+function cardTabs(c, on){
+  const list = LAYOUT==='list';
+  c.querySelectorAll('.lhandle,.lh-close,.layer a,.layer button,.layer input,.layer select,.gnav,.morebtn').forEach(n=>{
+    if(list || (on && !n.matches('.lhandle,.lh-close'))) n.removeAttribute('tabindex'); else n.setAttribute('tabindex','-1');
+  });
+  const th = c.querySelector('a.thumb');
+  if(th){ const raw = th.dataset.lbl || (th.dataset.lbl = (th.getAttribute('aria-label')||'').replace(/^[^:]*:\s*/,'')); th.setAttribute('aria-label', (list ? 'Open: ' : 'Show details and controls: ')+raw); }
+}
+function kbOpen(c){ c._kb = true; setLayer(c,true); cardTabs(c,true); const f = c.querySelector('.layer .actions a, .layer .actions button, .layer .lay-cap button'); if(f) f.focus(); }
+function kbClose(c, refocus){ if(!c._kb) return; c._kb = false; cardTabs(c,false); if(refocus){ const t = c.querySelector('a.thumb'); if(t) t.focus(); } }
 function setLayer(c,on){
+  if(on) try{ localStorage.setItem('saved-posts-trayhint','1'); }catch(e){}
   if(!c || !c.classList) return;
   c.classList.toggle('lay-open', !!on);
   if(on) c.classList.remove('lay-shut'); else c.querySelectorAll('.volwrap.open').forEach(w=>w.classList.remove('open'));
@@ -2093,6 +2114,14 @@ document.addEventListener('keydown',e=>{
   });
   $('grid').addEventListener('click',e=>{ const h = e.target.closest && e.target.closest('.lhandle, .lh-close'); if(h && h._swiped){ e.stopImmediatePropagation(); } },true);
 })();
+$('grid').addEventListener('keydown',e=>{
+  const th = e.target.closest && e.target.closest('a.thumb');
+  if(th && (e.key==='Enter' || e.key===' ') && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && !SEL.on && LAYOUT!=='list'){
+    e.preventDefault(); const kc = th.closest('.card'); if(kc) kbOpen(kc); return;
+  }
+  if(e.key==='Escape'){ const kc = e.target.closest && e.target.closest('.card'); if(kc && kc._kb){ e.stopPropagation(); kbClose(kc,true); } }
+});
+$('grid').addEventListener('focusout',e=>{ const kc = e.target.closest && e.target.closest('.card'); if(kc && kc._kb && !(e.relatedTarget && kc.contains(e.relatedTarget))) kbClose(kc,false); });
 $('grid').addEventListener('click',e=>{
   /* a plain click or tap on a tile opens its layer (Masonry / Grid); the Source button in the layer goes to the post. A double tap on a clip with player controls pauses or resumes it instead,
      so a single tap on those waits a moment to see if a second one follows. List keeps the link. */
@@ -2235,8 +2264,8 @@ function introHtml(){
    + '<h2 class="introh">Get your Reddit data</h2>'
    + '<ol class="steps"><li><span class="n" aria-hidden="true">1</span><span>Request your Reddit User data here: <a href="https://www.reddit.com/settings/data-request" target="_blank" rel="noopener noreferrer">reddit.com/settings/data-request</a>. Reddit can take a few days to prepare it, so you may need to come back.</span></li>'
    + '<li><span class="n" aria-hidden="true">2</span><span>Extract <code>saved_posts.csv</code> and open it here (or from the Source tab). By default everything stays local and nothing is uploaded.</span></li></ol>'
-   + '<p class="introcta"><button class="pill primary" id="introOpen" type="button">Open CSV</button><span class="dropnote">or drop the file anywhere on this page</span></p>'
-   + '<p class="nodata" role="status"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M8 4.6v4"/><path d="M8 11.3v.1"/></svg>You currently have no data source selected.</p>'
+   + '<p class="introcta"><button class="pill primary" id="introOpen" type="button">Open CSV</button><button class="pill" id="introSample" type="button">Try sample posts</button><span class="dropnote">or drop the file anywhere on this page</span></p>'
+   + '<p class="nodata" role="status"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M8 4.6v4"/><path d="M8 11.3v.1"/></svg>Nothing loaded yet. Open your CSV, or look around with the sample posts first.</p>'
    + (CLOUD_ON ? '<p class="introacct"><svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 15.5a3.5 3.5 0 0 1-.4-6.97A5 5 0 0 1 14.7 7.6a4 4 0 0 1-.2 7.9z"/><path d="M10 12.8V8.6M8.3 10.2L10 8.5l1.7 1.7"/></svg><span>Optional: create an account and upload the CSV to sync across devices.</span></p>' : '')
    + '<div class="introfoot"><a href="https://github.com/Tulosi/stargazer" target="_blank" rel="noopener noreferrer">View the project on GitHub</a><span>Created by Tulos and - mostly - Claude</span></div>'
    + '</div>';
@@ -2252,6 +2281,9 @@ let stT; function updateStats(){
     const empty = !POSTS.length && MODE==='csv'; document.body.classList.toggle('no-data', empty);   // nothing loaded: Shuffle has nothing to act on (Filters stays for Layout and Theme; Search stays so the box is not a dead end)
     for(const id of ['shufflebtn']){ const e = $(id); if(e){ e.disabled = empty; } }
     const ld = !!loading; $('stGot').parentNode.classList.toggle('busy', ld && got < POSTS.length); document.body.classList.toggle('previews-loading', ld);
+    /* nothing filtered, nothing still loading: three identical numbers say nothing, so phones show one */
+    const flat = !ld && POSTS.length > 0 && got === POSTS.length && list.length === POSTS.length; document.body.classList.toggle('stats-flat', flat);
+    const alb = $('stActive').parentNode.querySelector('.lb'); if(alb) alb.textContent = flat && matchMedia('(max-width:720px)').matches ? 'Posts' : 'Active';
   },120);
 }
 /* A refresh keeps the view: filters, sort, search and scroll position are remembered for this tab (session only, so NSFW never stays switched on in a later visit). */
@@ -2456,7 +2488,7 @@ function buildControls(t, el, isGif){
   ctl.innerHTML = '<button class="pp" type="button" aria-label="Pause">'+PP_PAUSE+'</button>'
     + (isGif ? '' : '<input class="seek" type="range" min="0" max="1000" step="1" value="0" aria-label="Seek"><span class="time">0:00</span><span class="volwrap"><span class="volfly"><input class="volr" type="range" min="0" max="100" step="1" value="0" aria-label="Volume"></span><button class="vol" type="button" aria-label="Unmute"></button></span>');
   const pp = ctl.querySelector('.pp');
-  card.classList.add('playing'); (card.querySelector('.lay-play') || card).appendChild(ctl);
+  card.classList.add('playing'); (card.querySelector('.lay-play') || card).appendChild(ctl); cardTabs(card, !!card._kb);
   const paint = () => {
     const paused = isGif ? !!t._frozen : (el.paused && t._userPaused);
     pp.innerHTML = paused ? PP_PLAY : PP_PAUSE; pp.setAttribute('aria-label', paused ? 'Play' : 'Pause');
@@ -2830,7 +2862,7 @@ function applyTextDefault(){
   state.showText = textDefault(); const t = $('showtext'); if(t) t.checked = state.showText;
   paintLayoutHint(); if(typeof refresh==='function' && POSTS && POSTS.length) refresh();
 }
-function paintLayout(){ document.querySelectorAll('#layoutseg .pill').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.l===LAYOUT))); document.body.classList.toggle('layout-grid', LAYOUT==='grid'); document.body.classList.toggle('layout-list', LAYOUT==='list'); const h = $('layouthint'); paintLayoutHint();  document.querySelectorAll('.card.btns-open').forEach(c=>{ c.classList.remove('btns-open'); const b = c.querySelector('.morebtn'); if(b) b.setAttribute('aria-expanded','false'); }); }
+function paintLayout(){ document.querySelectorAll('#layoutseg .pill').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.l===LAYOUT))); document.body.classList.toggle('layout-grid', LAYOUT==='grid'); document.body.classList.toggle('layout-list', LAYOUT==='list'); const h = $('layouthint'); paintLayoutHint();  for(const c of cardEls.values()) cardTabs(c, !!c._kb); document.querySelectorAll('.card.btns-open').forEach(c=>{ c.classList.remove('btns-open'); const b = c.querySelector('.morebtn'); if(b) b.setAttribute('aria-expanded','false'); }); }
 document.querySelectorAll('#layoutseg .pill').forEach(b=>b.addEventListener('click',()=>{
   LAYOUT = b.dataset.l; try{ localStorage.setItem('saved-posts-layout', LAYOUT); }catch(e){}
   if(LIB.cur) setListLayout(LIB.cur.id, LAYOUT);
@@ -3383,11 +3415,12 @@ const noteExport = id => { try{ const o = JSON.parse(localStorage.getItem(EXPKEY
 /* A Local list lives only in this browser, so nudge toward keeping a copy. Account lists and linked files already have one. */
 function updateExpHint(){
   const el = $('expHint'), r = LIB.cur; if(!el) return;
-  const need = r && !r.cloud && !r.handle && ROWS.length > 0 && $('mrgHint').hidden;   // one warning at a time: the stale-pull prompt wins
+  const need = r && !r.cloud && !r.handle && !r.sample && ROWS.length > 0 && $('mrgHint').hidden;   // one warning at a time: the stale-pull prompt wins
   el.hidden = !need; if(!need) return;
   const t = lastExport(r.id), days = t ? (Date.now()-t)/86400000 : Infinity;
   el.dataset.warn = days > 14 ? '1' : '0';
-  el.textContent = t ? 'Last exported '+agoText(t)+(days > 14 ? '. A fresh backup is a good idea.' : '.') : 'Not backed up yet. This list lives only in this browser, so export a copy now and then.';
+  el.textContent = (t ? 'Last exported '+agoText(t)+(days > 14 ? '. A fresh backup is a good idea.' : '.') : 'Not backed up yet. This list lives only in this browser.')+' ';
+  const eb = document.createElement('button'); eb.type = 'button'; eb.className = 'linkbtn expnow'; eb.textContent = 'Export now'; eb.onclick = () => $('csvExport').click(); el.appendChild(eb);
 }
 /* A saved-posts list goes stale: Reddit's data export is the only way to pull in what was saved since. After 30 days without a merge, ask for a fresh export. */
 const MRGKEY = 'saved-posts-lastmerge', MRG_DAYS = 30;
@@ -3416,7 +3449,7 @@ function updateMergeHint(){ pickMergeHint(); updateExpHint(); updateSrcDot(); }
 function pickMergeHint(){
   const el = $('mrgHint'), r = LIB.cur; if(!el) return;
   const pl = $('pullLine');
-  if(!r || !ROWS.length){ el.hidden = true; if(pl) pl.hidden = true; return; }
+  if(!r || r.sample || !ROWS.length){ el.hidden = true; if(pl) pl.hidden = true; return; }
   const o = mrgRead(); let e = o[r.id];
   if(!e){ e = o[r.id] = {t:Date.now(), snooze:0, est:true}; mrgWrite(o); }   // a list seen for the first time starts its 30 days now
   const days = (Date.now()-e.t)/86400000, due = days >= MRG_DAYS && Date.now() >= (e.snooze||0);
@@ -3424,7 +3457,7 @@ function pickMergeHint(){
     const fmt = t => new Date(t).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});
     const mid = t => { const x = new Date(t); x.setHours(0,0,0,0); return x.getTime(); };
     const d = Math.round((mid(Date.now())-mid(e.t))/864e5), ago = d < 1 ? 'today' : d+(d===1?' day':' days')+' ago';
-    $('pullTxt').textContent = e.est ? 'Last pulled from Reddit: date unknown (first opened here '+fmt(e.t)+', '+ago+')' : 'Last pulled from Reddit: '+fmt(e.t)+' ('+ago+')'+(days >= MRG_DAYS ? '. Over '+MRG_DAYS+' days old.' : '');
+    $('pullTxt').textContent = e.est ? 'Last pulled from Reddit: date unknown (added here '+ago+')' : 'Last pulled from Reddit: '+fmt(e.t)+' ('+ago+')'+(days >= MRG_DAYS ? '. Over '+MRG_DAYS+' days old.' : '');
     pl.dataset.warn = days >= MRG_DAYS ? '1' : '0'; pl.hidden = false;
   }
   el.hidden = !due; if(!due) return;
@@ -3855,6 +3888,8 @@ function startCsvMode(){
   setSourceUI(); refresh(); updateFavCount();
   if(Object.keys(META).length) onMeta(POSTS);
   loadAll();
+  /* on a touch screen the controls are tucked away: say so once, until the person has opened one */
+  try{ if(POSTS.length && matchMedia('(hover:none)').matches && document.body.classList.contains('cm-collapsed') && !localStorage.getItem('saved-posts-trayhint')) setTimeout(()=>{ try{ if(!localStorage.getItem('saved-posts-trayhint')){ localStorage.setItem('saved-posts-trayhint','1'); toast('Tap a picture to show its details and controls.'); } }catch(e){} }, 2200); }catch(e){}
 }
 function removePosts(ids){
   const set = new Set(ids);
@@ -4184,7 +4219,28 @@ async function openCsvResult(r){
   await persistRec(rec); await activate(rec); startCsvMode(); noteMerge(rec.id, pullTime(r));
   csvStatus('Opened "'+r.name+'" with '+rows.length.toLocaleString()+' posts.');
 }
-document.addEventListener('click',e=>{ if(e.target.closest && e.target.closest('#introOpen')) $('csvOpen').click(); });
+document.addEventListener('click',e=>{ if(e.target.closest && e.target.closest('#introOpen')) $('csvOpen').click(); if(e.target.closest && e.target.closest('#introSample')) openSample(); });
+/* A small invented list (generated artwork, nothing from a real account) so the page can be tried before the Reddit export arrives. */
+const SAMPLES = [['pics','Sunrise over the ridge, 6am','dusk_walker',800,560],['art','Layers of dusk','paperlantern',560,800],['wallpapers','Quiet valley after the storm','hillside_notes',800,800],['minimalism','Evening glow, no filter','northwind42',900,520],['pics','Mountain silhouettes at golden hour','quietframes',640,800],['CozyPlaces','Pastel horizon','softfocus',800,600],['art','Last light on the hills','roamingeye',520,800],['itookapicture','Morning mist, third try','lumen_lane',800,640],['wallpapers','Dusk, but make it purple','paperlantern',700,700],['pics','The long way home','dusk_walker',900,600],['minimalism','Two ridges and a sky','northwind42',600,800],['art','Hill study no. 7','hillside_notes',800,520]];
+function sampleArt(i,w,h){
+  const rnd = n => { const x = Math.sin(i*12.9898+n*78.233)*43758.5453; return x-Math.floor(x); };
+  const hue = [285,300,265,320,250,310][i%6], f = n => Math.round(n*10)/10;
+  let g = '<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="hsl('+hue+',34%,'+(52+rnd(1)*10)+'%)"/><stop offset="1" stop-color="hsl('+(hue+25)+',42%,'+(66+rnd(2)*8)+'%)"/></linearGradient></defs><rect width="'+w+'" height="'+h+'" fill="url(#g)"/>';
+  for(let L=0;L<3;L++){
+    const base = h*(.5+L*.17), amp = h*(.07+rnd(3+L)*.06), fr = 2+rnd(6+L)*4, ph = rnd(9+L)*6.28; let d = 'M0 '+h+' L0 '+f(base);
+    for(let x=0;x<=w;x+=w/24) d += ' L'+f(x)+' '+f(base+amp*Math.sin(x/w*fr*3.14+ph)+amp*.4*Math.sin(x/w*fr*7+ph*2));
+    g += '<path d="'+d+' L'+w+' '+h+' Z" fill="hsl('+(hue+10)+',32%,'+(30-L*8)+'%)" opacity="'+(.55+L*.2)+'"/>';
+  }
+  return 'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+w+' '+h+'" width="'+w+'" height="'+h+'">'+g+'</svg>');
+}
+async function openSample(){
+  const rows = SAMPLES.map((x,i)=>({id:'zsmp'+String(i+1).padStart(3,'0'), sub:x[0]}));
+  const text = 'id,permalink,starred,updated,deleted\r\n'+rows.map((r,i)=>r.id+',https://www.reddit.com/r/'+r.sub+'/comments/'+r.id+'/sample/,'+(i===1||i===4?1:0)+',1000,0\r\n').join('');
+  SAMPLES.forEach((x,i)=>{ const art = sampleArt(i,x[3],x[4]); META[rows[i].id] = {t:x[1],o:0,th:art,m:'image',u:art,n:(i*7)%23+2,s:(i*53)%310+12,a:x[2],c:Math.floor(Date.now()/1000)-(i+1)*86400*9,w:x[3],h:x[4]}; });
+  const rec = {id:'sample-'+Date.now().toString(36), name:'Sample posts (not yours)', text, handle:null, updated:Date.now(), sample:true};
+  await persistRec(rec); await activate(rec); startCsvMode();
+  csvStatus('Opened sample posts. They are invented, so look around freely. Open your own CSV any time from Source.');
+}
 $('csvOpen').addEventListener('click',async()=>{ const r = await pickCsv(false); if(r) await openCsvResult(r); });
 /* Drop a CSV anywhere on the page to open it (files from a drop cannot be linked for saving, like the plain file picker). */
 (function(){
