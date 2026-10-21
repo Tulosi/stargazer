@@ -379,7 +379,6 @@ body:not(.layout-list) .layer .meta{margin-top:3px}
 body:not(.layout-list) .layer .arch{display:flex;margin-top:5px}
 body:not(.layout-list) .layer .lh-close{display:block;position:relative;height:16px;margin:-8px -6px -2px;padding:0;border:0;background:none;cursor:pointer;touch-action:none}
 body:not(.layout-list) .layer .lh-close::before{content:"";position:absolute;left:50%;top:6px;width:30px;height:4px;margin-left:-15px;border-radius:3px;background:rgba(255,255,255,.5)}
-body.cm-always:not(.layout-list) .layer .lh-close{display:none}
 body:not(.layout-list) .lay-act{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
 body:not(.layout-list) .lay-cap{display:flex;flex:none;margin-left:auto;background:rgba(255,255,255,.14);border-radius:999px;padding:3px;gap:2px}
 body:not(.layout-list) .lay-cap :is(.star,.fs,.save){position:relative;top:auto;right:auto;width:var(--lb);height:var(--lb);margin:0;padding:0;display:grid;place-items:center;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;color:#fff;font-size:calc(var(--lb)*.55);opacity:1;transform:none}
@@ -401,6 +400,11 @@ body:not(.layout-list) .lhandle{display:block;position:absolute;left:0;right:0;b
 body:not(.layout-list) .lhandle::before{content:"";position:absolute;left:50%;bottom:7px;width:30px;height:4px;margin-left:-15px;border-radius:3px;background:rgba(255,255,255,.6);box-shadow:0 0 0 .5px rgba(0,0,0,.2);opacity:.75;transition:opacity .15s,width .15s,margin .15s}
 body:not(.layout-list) .lhandle:hover::before,body:not(.layout-list) .lhandle:focus-visible::before{opacity:1;width:38px;margin-left:-19px}
 body.cm-always:not(.layout-list) .lhandle{display:none}
+/* a layer put away by hand stays down whatever the mode says; its handle comes back so it can be raised again */
+body:not(.layout-list) .card.lay-shut .layer{opacity:0!important;pointer-events:none!important;transform:translateY(10px)!important}
+body:not(.layout-list) .card.lay-shut :is(.badges,.ph span,.badge.rec){opacity:0!important}
+body:not(.layout-list) .card.lay-shut .lhandle{display:block!important}
+body:not(.layout-list) .card.is-text.lay-shut .peek{display:block!important}
 /* a text-only post has no picture to say what it is, so its title stays on the tile until its layer opens */
 body:not(.layout-list) .card.is-text .peek{display:block;position:absolute;left:0;right:0;bottom:0;z-index:1;padding:30px 11px 10px;color:#fff;pointer-events:none;background:linear-gradient(to top,rgba(0,0,0,.74),rgba(0,0,0,0));font:500 13px/1.32 var(--font);overflow-wrap:anywhere}
 /* the layer, and everything that belongs to it, appears when this card is open */
@@ -2037,8 +2041,28 @@ function showGallery(card,p,m){
 function setLayer(c,on){
   if(!c || !c.classList) return;
   c.classList.toggle('lay-open', !!on);
+  if(on) c.classList.remove('lay-shut');
   const h = c.querySelector('.lhandle'); if(h) h.setAttribute('aria-expanded', on?'true':'false');
 }
+/* Is this card's layer showing right now, whatever brought it up (its handle, hover, focus, or Show always)? */
+function layerUp(c){
+  if(c.classList.contains('lay-shut')) return false;
+  if(c.classList.contains('lay-open')) return true;
+  const b = document.body.classList;
+  if(b.contains('cm-always')) return true;
+  if(b.contains('cm-hover')) return matchMedia('(hover:hover)').matches ? c.matches(':hover,:focus-within') : c.classList.contains('is-focus');
+  return false;
+}
+/* A tap on the tile or the grabber, or the I key: bring the layer up, or put it away by hand even in Show on hover / focus and Show always. A hand-shut layer
+   stays shut until the card is tapped or its handle used again (in Show on hover / focus, until the pointer or focus leaves the card; Show always keeps it shut). */
+function toggleLayer(c){
+  if(layerUp(c)){ c.classList.remove('lay-open'); c.classList.add('lay-shut'); const h = c.querySelector('.lhandle'); if(h) h.setAttribute('aria-expanded','false'); }
+  else setLayer(c,true);
+}
+$('grid').addEventListener('mouseout',e=>{
+  if(!document.body.classList.contains('cm-hover')) return;
+  const c = e.target.closest && e.target.closest('.card'); if(c && !c.contains(e.relatedTarget)) c.classList.remove('lay-shut');
+});
 document.addEventListener('click',e=>{
   const open = document.querySelectorAll('.card.lay-open'); if(!open.length) return;
   for(const c of open) if(!c.contains(e.target)) setLayer(c,false);
@@ -2050,7 +2074,7 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){ document.querySelectorAll('.card.lay-open').forEach(c=>setLayer(c,false)); return; }
   if((e.key==='i' || e.key==='I') && !document.body.classList.contains('layout-list')){
     const c = (document.activeElement && document.activeElement.closest && document.activeElement.closest('.card')) || hoverCard || document.querySelector('.card.is-focus');
-    if(c){ setLayer(c, !c.classList.contains('lay-open')); e.preventDefault(); }
+    if(c){ toggleLayer(c); e.preventDefault(); }
   }
 });
 /* swipe up on a handle opens the layer, swipe down on its grabber closes it (the handle owns its touches, so this does not fight the page scroll) */
@@ -2060,7 +2084,7 @@ document.addEventListener('keydown',e=>{
   $('grid').addEventListener('pointerup',e=>{
     if(sy===null) return; const dy = e.clientY - sy, h = sc; sy = sc = null;
     const c = h.closest('.card'); if(!c || Math.abs(dy) < 18) return;
-    setLayer(c, dy < 0); e.preventDefault(); h._swiped = true; setTimeout(()=>{ h._swiped = false; },60);
+    if(dy < 0) setLayer(c,true); else if(layerUp(c)) toggleLayer(c); e.preventDefault(); h._swiped = true; setTimeout(()=>{ h._swiped = false; },60);
   });
   $('grid').addEventListener('click',e=>{ const h = e.target.closest && e.target.closest('.lhandle, .lh-close'); if(h && h._swiped){ e.stopImmediatePropagation(); } },true);
 })();
@@ -2072,14 +2096,14 @@ $('grid').addEventListener('click',e=>{
       const card = th.closest('.card'), pp = card && card.querySelector('.ctl .pp');
       if(card){
         e.preventDefault();
-        const toggle = () => setLayer(card, !card.classList.contains('lay-open'));
+        const toggle = () => toggleLayer(card);
         if(pp){ if(card._tapT){ clearTimeout(card._tapT); card._tapT = 0; pp.click(); } else card._tapT = setTimeout(()=>{ card._tapT = 0; toggle(); }, 280); }
         else toggle();
         return;
       }
     } }
   const lh = e.target.closest('button.lhandle, button.lh-close');
-  if(lh){ const c = lh.closest('.card'); if(c) setLayer(c, !c.classList.contains('lay-open')); return; }
+  if(lh){ const c = lh.closest('.card'); if(c) toggleLayer(c); return; }
   const mb = e.target.closest('button.morebtn');
   if(mb){ const c = mb.closest('.card'), on = !c.classList.contains('btns-open'); c.classList.toggle('btns-open', on); mb.setAttribute('aria-expanded', on?'true':'false'); return; }
   const nb = e.target.closest('button.nsfwb');
@@ -2578,7 +2602,7 @@ function pickFocus(){
   if(pinned){ if(!pinned.isConnected || score(pinned)===null || Math.abs(scrollY-pinY) > 80) pinned = null; else { best = pinned; bd = 0; } }
   // stick with the current tile unless another is clearly more central, so nothing flickers
   if(focusCard && best && focusCard!==best){ const fd = score(focusCard); if(fd!==null && bd > fd-40) best = focusCard; }
-  if(best!==focusCard){ if(focusCard) focusCard.classList.remove('is-focus'); focusCard = best; if(best) best.classList.add('is-focus'); }
+  if(best!==focusCard){ if(focusCard){ focusCard.classList.remove('is-focus'); if(document.body.classList.contains('cm-hover')) focusCard.classList.remove('lay-shut'); } focusCard = best; if(best) best.classList.add('is-focus'); }
   const t = best ? best.querySelector('.thumb[data-v]') : null;
   if(t!==focused){ const old = focused; focused = t; if(old){ leftSound(old); syncPlay(old); } if(t) syncPlay(t); }
 }
@@ -2740,7 +2764,7 @@ $('nsfwseg').addEventListener('click',e=>{ const b = e.target.closest('.pill'); 
   const apply = v => {
     for(const m of MODES) document.body.classList.toggle('cm-'+m, m===v);
     sel.value = v;
-    document.querySelectorAll('.card.lay-open').forEach(c=>setLayer(c,false));
+    document.querySelectorAll('.card.lay-open,.card.lay-shut').forEach(c=>{ setLayer(c,false); c.classList.remove('lay-shut'); });
   };
   let v = dflt();
   try{
