@@ -27,7 +27,7 @@ with sync_playwright() as p:
     # clicking a subreddit name on a card filters, says so, and offers a way back
     ev("state.hideBroken=false; state.sub=''; refresh();"); pg.wait_for_timeout(200)
     check('card subreddit button explains itself', 'Show only r/' in (ev("document.querySelector('.card .meta .sub').title") or ''))
-    pg.click('.card .meta .sub'); pg.wait_for_timeout(300)
+    pg.hover('.card .thumb', position={'x': 6, 'y': 6}); pg.wait_for_timeout(500); pg.click('.card .meta .sub'); pg.wait_for_timeout(300)
     sub = ev("state.sub")
     check('clicking filters to that subreddit', bool(sub) and ev("list.every(p=>p.sub===state.sub)") and ev("document.getElementById('subsel').value") == sub)
     check('toast says what happened', ('Showing only r/' + sub) in ev("document.getElementById('toast').textContent"))
@@ -36,7 +36,7 @@ with sync_playwright() as p:
     # the search box shows the subreddit as an r/name word and stays in step with the filter
     ev("state.hideBroken=false; setSub('')"); pg.wait_for_timeout(200)
     check('box is empty with no filter', ev("document.getElementById('q').value") == '')
-    pg.click('.card .meta .sub'); pg.wait_for_timeout(300)
+    pg.hover('.card .thumb', position={'x': 6, 'y': 6}); pg.wait_for_timeout(500); pg.click('.card .meta .sub'); pg.wait_for_timeout(300)
     sub = ev("state.sub"); box = ev("document.getElementById('q').value")
     check('card click puts r/name in the search box', box == 'r/' + sub + ' ')
     check('search button shows it is active', ev("document.getElementById('searchbtn').dataset.active") == '1')
@@ -55,9 +55,9 @@ with sync_playwright() as p:
     check('Clear filters empties the box', ev("document.getElementById('q').value") == '' and ev("state.sub") == '')
     # a second click on the same name undoes the filter
     ev("setSub('')"); pg.wait_for_timeout(200)
-    pg.click('.card .meta .sub'); pg.wait_for_timeout(300)
+    pg.hover('.card .thumb', position={'x': 6, 'y': 6}); pg.wait_for_timeout(500); pg.click('.card .meta .sub'); pg.wait_for_timeout(300)
     on = ev("state.sub")
-    pg.click('.card .meta .sub'); pg.wait_for_timeout(300)
+    pg.hover('.card .thumb', position={'x': 6, 'y': 6}); pg.wait_for_timeout(500); pg.click('.card .meta .sub'); pg.wait_for_timeout(300)
     check('second click on the same name clears the filter, box and dropdown', bool(on) and ev("state.sub") == '' and ev("document.getElementById('q').value") == '' and ev("document.getElementById('subsel').value") == '')
     # several subreddits at once, typed in the box
     ev("state.hideBroken=false; setSub('')"); pg.wait_for_timeout(200)
@@ -77,7 +77,7 @@ with sync_playwright() as p:
     typ('cats+')
     check('half-typed list is only text until it is valid', ev("state.sub") == '')
     typ('cats+pics')
-    pg.click('.card .meta .sub'); pg.wait_for_timeout(300)
+    pg.hover('.card .thumb', position={'x': 6, 'y': 6}); pg.wait_for_timeout(500); pg.click('.card .meta .sub'); pg.wait_for_timeout(300)
     check('clicking a card name narrows a combined feed to that one', ev("state.sub") in ('cats', 'pics') and ev("list.every(p=>p.sub===state.sub)"))
     # Enter tidies a typed combined filter into the r/a+b form
     ev("setSub('')"); pg.wait_for_timeout(200)

@@ -367,90 +367,82 @@ body.layout-list .meta a.cm:hover,body.layout-list .meta a.cm:focus-visible{colo
 .arch{flex-wrap:wrap;gap:2px 10px;font:400 11px var(--font);color:rgba(255,255,255,.75);margin-top:7px}
 .arch a{color:#fff;text-underline-offset:2px}
 
-/* card info modes: always (default markup), on hover, hidden (star and full screen stay reachable) */
-body.info-off .card .info,body.info-off .card .badge,body.info-off .card .ph span{display:none}
-body.info-off .card.info-open .info,body.info-off .card.info-open .badge{display:block}
-body.info-off .card.info-open .ph span{display:inline}
-.card.info-open .info{padding-right:46px}
-/* a text-only post has no picture to say what it is, so in Hidden and Show on hover its title stays on the tile (just the title; hovering, focusing or the (i) button brings the rest) */
-body.info-off:not(.layout-list) .card.is-text .info,body.info-hover:not(.layout-list) .card.is-text .info{display:block;opacity:1}
-body.info-off:not(.layout-list) .card.is-text:not(.info-open) .info :is(.meta,.actions,.arch),
-body.info-hover:not(.layout-list) .card.is-text:not(:hover):not(:focus-within):not(.is-focus):not(.info-open) .info :is(.meta,.actions,.arch){display:none}
-.ibtn{display:none;position:absolute;right:8px;bottom:8px;z-index:5;width:30px;height:30px;place-items:center;border:0;border-radius:50%;padding:0;background:rgba(12,12,14,.26);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:rgba(255,255,255,.78);cursor:pointer}
-.ibtn:hover{background:rgba(12,12,14,.5);color:#fff}
-.ibtn[aria-pressed=true]{background:rgba(255,255,255,.78);color:#111}
-body.info-off .ibtn{display:grid}
-@media (hover:hover){   /* with a mouse the (i) button appears on hover, like the star and save buttons */
-  body.info-off .card .ibtn{opacity:0;transition:opacity .18s}
-  body.info-off .card:hover .ibtn,body.info-off .card:focus-within .ibtn,body.info-off .card.info-open .ibtn{opacity:1}
+/* ---- Card info & controls: one glass layer per card (info, action pill, playback). Collapsed shows media only with a handle; Show on hover / focus raises the layer by itself; Show always keeps it up.
+   List keeps its own row arrangement: there the layer boxes are display:contents, so the info text and the round buttons sit where they always did. ---- */
+.layer,.lay-act,.lay-cap{display:contents}
+.lhandle,.lh-close,.lay-play,.peek{display:none}
+body:not(.layout-list) .layer{--lb:34px;display:flex;flex-direction:column;gap:8px;position:absolute;left:8px;right:8px;bottom:8px;z-index:4;padding:10px 12px 11px;border-radius:16px;background:rgba(20,18,30,.6);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.28);opacity:0;pointer-events:none;transform:translateY(10px);transition:opacity .2s ease,transform .24s cubic-bezier(.2,.8,.3,1)}
+body:not(.layout-list) .layer .info{position:static;display:block;padding:0;background:none;transition:none}
+body:not(.layout-list) .layer *{pointer-events:inherit}   /* a layer that is down must not catch taps meant for the media underneath */
+body:not(.layout-list) .layer .title{font:650 15px/1.25 var(--font);-webkit-line-clamp:2}
+body:not(.layout-list) .layer .meta{margin-top:3px}
+body:not(.layout-list) .layer .arch{display:flex;margin-top:5px}
+body:not(.layout-list) .layer .lh-close{display:block;position:relative;height:16px;margin:-8px -6px -2px;padding:0;border:0;background:none;cursor:pointer;touch-action:none}
+body:not(.layout-list) .layer .lh-close::before{content:"";position:absolute;left:50%;top:6px;width:30px;height:4px;margin-left:-15px;border-radius:3px;background:rgba(255,255,255,.5)}
+body.cm-always:not(.layout-list) .layer .lh-close{display:none}
+body:not(.layout-list) .lay-act{display:flex;align-items:center;gap:8px}
+body:not(.layout-list) .lay-cap{display:flex;flex:none;background:rgba(255,255,255,.14);border-radius:999px;padding:3px;gap:2px}
+body:not(.layout-list) .lay-cap :is(.star,.fs,.save){position:relative;top:auto;right:auto;width:var(--lb);height:var(--lb);margin:0;padding:0;display:grid;place-items:center;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;color:#fff;font-size:calc(var(--lb)*.55);opacity:1;transform:none}
+body:not(.layout-list) .lay-cap :is(.star,.fs,.save):hover{background:rgba(255,255,255,.18)}
+body:not(.layout-list) .lay-cap .nsfwb[hidden]{display:none}
+body:not(.layout-list) .lay-cap .star[aria-pressed=true]{background:rgba(255,255,255,.92);color:#111}
+body:not(.layout-list) .lay-cap .save.nsfwb[aria-pressed=true]{background:none}
+body:not(.layout-list) .lay-cap .nsfwb[aria-pressed=false]{color:rgba(255,255,255,.5)}
+body:not(.layout-list) .lay-cap .nsfwb[aria-pressed=false]:hover{color:#fff}
+body:not(.layout-list) .lay-cap .star{padding-bottom:0;font-size:calc(var(--lb)*.62)}
+body:not(.layout-list) .lay-cap .fs svg,body:not(.layout-list) .lay-cap .save:not(.nsfwb) svg{width:calc(var(--lb)*.47);height:calc(var(--lb)*.47)}
+body:not(.layout-list) .lay-cap .nsfwb svg{width:calc(var(--lb)*.72);height:calc(var(--lb)*.72)}
+body:not(.layout-list) .layer .actions{display:flex;margin:0 0 0 auto;gap:6px;min-width:0}
+body:not(.layout-list) .layer .actions .btn{flex:none;padding:8px 12px;font-size:12px;white-space:nowrap}
+body:not(.layout-list) .layer .actions .btn.primary{display:none}
+body:not(.layout-list) .lay-play:not(:empty){display:block}
+.layer .ctl{position:static;height:auto;padding:0;background:none;opacity:1;pointer-events:auto;z-index:auto}
+/* the handle: a faint pill at the bottom of every tile; its hit area is the lower part of the tile */
+body:not(.layout-list) .lhandle{display:block;position:absolute;left:0;right:0;bottom:0;height:min(clamp(28px,22%,64px),45%);z-index:3;border:0;padding:0;background:none;cursor:pointer;touch-action:none}
+body:not(.layout-list) .lhandle::before{content:"";position:absolute;left:50%;bottom:7px;width:30px;height:4px;margin-left:-15px;border-radius:3px;background:rgba(255,255,255,.6);box-shadow:0 0 0 .5px rgba(0,0,0,.2);opacity:.75;transition:opacity .15s,width .15s,margin .15s}
+body:not(.layout-list) .lhandle:hover::before,body:not(.layout-list) .lhandle:focus-visible::before{opacity:1;width:38px;margin-left:-19px}
+body.cm-always:not(.layout-list) .lhandle{display:none}
+/* a text-only post has no picture to say what it is, so its title stays on the tile until its layer opens */
+body:not(.layout-list) .card.is-text .peek{display:block;position:absolute;left:0;right:0;bottom:0;z-index:1;padding:30px 11px 10px;color:#fff;pointer-events:none;background:linear-gradient(to top,rgba(0,0,0,.74),rgba(0,0,0,0));font:500 13px/1.32 var(--font);overflow-wrap:anywhere}
+/* the layer, and everything that belongs to it, appears when this card is open */
+body:not(.layout-list) .card :is(.badges,.ph span,.badge.rec){opacity:0;transition:opacity .2s ease}
+body.cm-always:not(.layout-list) .card .layer,body:not(.layout-list) .card.lay-open .layer{opacity:1;pointer-events:auto;transform:none}
+@media (hover:hover){body.cm-hover:not(.layout-list) .card:is(:hover,:focus-within) .layer{opacity:1;pointer-events:auto;transform:none}}
+@media (hover:none){body.cm-hover:not(.layout-list) .card.is-focus .layer{opacity:1;pointer-events:auto;transform:none}}
+body.cm-always:not(.layout-list) .card :is(.badges,.ph span,.badge.rec),body:not(.layout-list) .card.lay-open :is(.badges,.ph span,.badge.rec){opacity:1}
+@media (hover:hover){body.cm-hover:not(.layout-list) .card:is(:hover,:focus-within) :is(.badges,.ph span,.badge.rec){opacity:1}}
+@media (hover:none){body.cm-hover:not(.layout-list) .card.is-focus :is(.badges,.ph span,.badge.rec){opacity:1}}
+body.cm-always:not(.layout-list) .card .lhandle,body:not(.layout-list) .card.lay-open .lhandle{display:none}
+@media (hover:hover){body.cm-hover:not(.layout-list) .card:is(:hover,:focus-within) .lhandle{display:none}}
+@media (hover:none){body.cm-hover:not(.layout-list) .card.is-focus .lhandle{display:none}}
+body.cm-always:not(.layout-list) .card .peek,body:not(.layout-list) .card.lay-open .peek{display:none}
+@media (hover:hover){body.cm-hover:not(.layout-list) .card:is(:hover,:focus-within) .peek{display:none}}
+@media (hover:none){body.cm-hover:not(.layout-list) .card.is-focus .peek{display:none}}
+/* small tiles: the same layer, condensed, and never wider than the tile */
+@container (max-width:300px){
+  body:not(.layout-list) .layer{--lb:28px;left:6px;right:6px;bottom:6px;padding:8px 9px 9px;gap:7px;border-radius:14px}
+  body:not(.layout-list) .layer .title{font-size:13px}
 }
-body.info-hover .card .info,body.info-hover .card .badge,body.info-hover .card .reveal,body.info-hover .card .ph span{opacity:0}
-body.info-hover .card:hover .info,body.info-hover .card:hover .badge,body.info-hover .card:hover .reveal,body.info-hover .card:hover .ph span,
-body.info-hover .card:focus-within .info,body.info-hover .card:focus-within .badge,body.info-hover .card:focus-within .reveal,body.info-hover .card:focus-within .ph span{opacity:1}
-@media (hover:none){   /* no hover on a touch screen: Show on hover shows the info of the tile in focus (or opened with its (i) button), the way the star and save buttons already behave */
-  body.info-hover .card .reveal{opacity:1}
-  body.info-hover .card.is-focus .info,body.info-hover .card.is-focus .badge,body.info-hover .card.is-focus .ph span,body.info-hover .card.info-open .info,body.info-hover .card.info-open .badge,body.info-hover .card.info-open .ph span{opacity:1}
+@container (max-width:200px){
+  body:not(.layout-list) .layer{--lb:24px;left:4px;right:4px;bottom:4px;padding:6px;gap:5px;border-radius:12px}
+  body:not(.layout-list) .layer .title{font-size:11px;-webkit-line-clamp:1}
+  body:not(.layout-list) .layer .meta{display:none}
+  body:not(.layout-list) .lay-act{display:block}
+  body:not(.layout-list) .lay-cap{display:flex;justify-content:space-between}
+  body:not(.layout-list) .layer .actions{display:none}
+  body:not(.layout-list) .layer .ctl{gap:5px}
+  body:not(.layout-list) .layer .ctl .pp,body:not(.layout-list) .layer .ctl .vol{width:22px;height:22px}
+  body:not(.layout-list) .layer .time{display:none}
 }
+@container (max-width:140px){
+  body:not(.layout-list) .layer{--lb:20px}
+  body:not(.layout-list) .layer .arch{display:none}
+}
+body.layout-list #cardrow{display:none}   /* List keeps its own arrangement (inline on desktop, folded on phones) */
 
-/* touch screens: the (i) button is faint on every tile and full strength on the tile in focus (or while its info is open) */
-@media (hover:none){
-  .card .ibtn{transition:opacity .18s}
-  body .card:not(.is-focus):not(.info-open) .ibtn{opacity:.5}   /* every card shows its (i) button faintly so it is discoverable; the focused card shows it at full strength */
-}
-/* ---- Card controls: the four round glass buttons (star, full screen, bookmark, NSFW toggle) in Masonry and Grid.
-   Collapsed folds them into one chevron in the top right; Expand on hover slides them out when the card is hovered (or in focus on touch);
-   Always show keeps them out. List has its own arrangement and ignores this setting. ---- */
-body:not(.layout-list) .card :is(.star,.fs,.save){opacity:0;pointer-events:none;transform:translateX(calc(var(--g,6px) + 2px)) scale(.9);transition:opacity .18s ease var(--d,0s),transform .24s cubic-bezier(.2,.8,.3,1),background .15s,color .15s}   /* every button slides the same short distance, so they never cross each other on the way out; only the fade is staggered */
-body:not(.layout-list) :is(body.ctl-always .card,body.ctl-hover .card:is(:hover,:focus-within),.card.btns-open) :is(.star,.fs,.save){opacity:1;pointer-events:auto;transform:none}
-body.ctl-hover:not(.layout-list) .card .save.nsfwb[aria-pressed=true]{opacity:1;pointer-events:auto;transform:none}   /* a card marked NSFW keeps its mark showing, except when everything is collapsed into the chevron */
-@media (hover:none){body.ctl-hover:not(.layout-list) .card.is-focus :is(.star,.fs,.save){opacity:1;pointer-events:auto;transform:none}}
-body:not(.layout-list) .card .fs{--d:.03s}
-body:not(.layout-list) .card .save{--d:.06s}
-body:not(.layout-list) .card .save.nsfwb{--d:.09s}
-/* collapsed: the chevron takes the top-right corner and the buttons open out to its left */
-body.ctl-collapsed:not(.layout-list) .morebtn{display:grid;place-items:center;position:absolute;z-index:3;border:0;border-radius:50%;padding:0;cursor:pointer;background:rgba(12,12,14,.26);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:rgba(255,255,255,.78);transition:background .15s,color .15s,opacity .15s}
-body.ctl-collapsed:not(.layout-list) .morebtn:hover{background:rgba(12,12,14,.5);color:#fff}
-body.ctl-collapsed:not(.layout-list) .morebtn svg{transition:transform .22s cubic-bezier(.2,.8,.3,1)}
-body.ctl-collapsed:not(.layout-list) .card.btns-open .morebtn svg{transform:rotate(180deg)}
-/* Scaling: the buttons are sized from the tile's own width (the card is a size container), so on a 3-across phone layout they shrink to fit instead of running off the edge.
-   --bs button size, --g gap, --be edge inset, --p pitch; --n is how many sit in the row (4, or 5 with the chevron). Full size (30px, 40px on touch) once the tile is wide enough. */
-body:not(.layout-list) .card :is(.star,.fs,.save,.morebtn,.badges,.badge.rec,.ibtn){--n:4;--bmax:30px;--be:clamp(4px,3cqw,8px);--g:clamp(2px,1.6cqw,6px);--bs:clamp(18px,calc((100cqw - 2*var(--be) - (var(--n) - 1)*var(--g))/var(--n)),var(--bmax));--p:calc(var(--bs) + var(--g))}
-body.ctl-collapsed:not(.layout-list) .card :is(.star,.fs,.save,.morebtn,.badges,.badge.rec,.ibtn){--n:5}
-@media (pointer:coarse){body:not(.layout-list) .card :is(.star,.fs,.save,.morebtn,.ibtn){--bmax:40px}}
-body:not(.layout-list) .card :is(.star,.fs,.save,.morebtn){top:var(--be);width:var(--bs);height:var(--bs)}
-body:not(.layout-list) .card .star{right:var(--be);font-size:calc(var(--bs)*.53)}
-body:not(.layout-list) .card .fs{right:calc(var(--be) + var(--p))}
-body:not(.layout-list) .card .save{right:calc(var(--be) + 2*var(--p))}
-body:not(.layout-list) .card .nsfwb{right:calc(var(--be) + 3*var(--p))}
-body:not(.layout-list) .card:not(:has(.fs)) .save{right:calc(var(--be) + var(--p))}
-body:not(.layout-list) .card:not(:has(.fs)) .nsfwb{right:calc(var(--be) + 2*var(--p))}
-body.ctl-collapsed:not(.layout-list) .card .morebtn{right:var(--be)}
-body.ctl-collapsed:not(.layout-list) .card .star{right:calc(var(--be) + var(--p))}
-body.ctl-collapsed:not(.layout-list) .card .fs{right:calc(var(--be) + 2*var(--p))}
-body.ctl-collapsed:not(.layout-list) .card .save{right:calc(var(--be) + 3*var(--p))}
-body.ctl-collapsed:not(.layout-list) .card .nsfwb{right:calc(var(--be) + 4*var(--p))}
-body.ctl-collapsed:not(.layout-list) .card:not(:has(.fs)) .save{right:calc(var(--be) + 2*var(--p))}
-body.ctl-collapsed:not(.layout-list) .card:not(:has(.fs)) .nsfwb{right:calc(var(--be) + 3*var(--p))}
-body:not(.layout-list) .card .fs svg,body:not(.layout-list) .card .save:not(.nsfwb) svg{width:calc(var(--bs)*.47);height:calc(var(--bs)*.47)}
-body:not(.layout-list) .card .nsfwb svg{width:calc(var(--bs)*.73);height:calc(var(--bs)*.73)}
-body:not(.layout-list) .card .morebtn svg{width:calc(var(--bs)*.53);height:calc(var(--bs)*.53)}
-body:not(.layout-list) .card .ibtn{right:var(--be);width:var(--bs);height:var(--bs)}
-body:not(.layout-list) .card .ibtn svg{width:calc(var(--bs)*.53);height:calc(var(--bs)*.53)}
-body:not(.layout-list) .card .badge.rec{right:var(--be);top:calc(var(--be) + var(--bs) + 8px)}
-/* the label on the left gives up the room the buttons take (only the chevron's room when collapsed) */
-body:not(.layout-list) .card .badges{left:var(--be);top:var(--be);overflow:hidden;max-width:max(0px,calc(100cqw - 2*var(--be) - 4*var(--p) - 4px))}
-body.ctl-collapsed:not(.layout-list) .card .badges{max-width:max(0px,calc(100cqw - 2*var(--be) - var(--p) - 4px))}
-body.layout-list #ctlrow{display:none}   /* List keeps its own arrangement (inline on desktop, folded on phones) */
-/* keep the (i) button clear of the player controls once they are showing */
-.card:has(.ctl) .ibtn{bottom:46px}
-
-/* playback: hairline progress while playing, full controls on hover */
-.cprog{position:absolute;left:0;bottom:0;height:2px;width:0;background:#fff;opacity:.9;z-index:3;pointer-events:none;transition:opacity .15s}
-.card:hover .cprog,.card:focus-within .cprog{opacity:0}
-.ctl{position:absolute;left:0;right:0;bottom:0;z-index:4;display:flex;align-items:center;gap:8px;height:38px;padding:0 10px 0 7px;
-  background:linear-gradient(to top,rgba(0,0,0,.72),rgba(0,0,0,0));opacity:0;pointer-events:none;transition:opacity .15s}
-.card:hover .ctl,.card:focus-within .ctl,.ctl.paused{opacity:1;pointer-events:auto}
-@media (hover:none){.ctl{opacity:1;pointer-events:auto}}
+/* playback: the player controls live in the layer (no hairline or bar on a bare tile) */
+.cprog{display:none}
+.ctl{position:absolute;left:0;right:0;bottom:0;z-index:4;display:flex;align-items:center;gap:8px;height:38px;padding:0 10px 0 7px}
 .ctl .pp,.ctl .vol{flex:none;width:26px;height:26px;border:0;border-radius:50%;padding:0;display:grid;place-items:center;background:rgba(255,255,255,.2);color:#fff;font-size:11px;line-height:1;cursor:pointer}
 .ctl .pp:hover,.ctl .vol:hover{background:rgba(255,255,255,.34)}
 .ctl .vol svg,.ctl .pp svg{display:block}
@@ -461,11 +453,6 @@ body.layout-list #ctlrow{display:none}   /* List keeps its own arrangement (inli
 .volr{display:block;width:54px;height:18px;margin:0;accent-color:#fff;cursor:pointer}
 .ctl .seek{flex:1;min-width:30px;height:14px;margin:0;accent-color:#fff;cursor:pointer}
 .ctl .time{flex:none;font:400 10.5px var(--font);font-variant-numeric:tabular-nums;color:rgba(255,255,255,.9);white-space:nowrap}
-@container (max-width:230px){.ctl .time{display:none}}
-.card:hover .info,.card:focus-within .info{transition:none}
-/* Show on hover: the info fades in and out */
-body.info-hover .card .info,body.info-hover .card .badge,body.info-hover .card .ph span{transition:opacity .22s ease}
-.card.playing:hover .info,.card.playing:focus-within .info{padding-bottom:44px}
 
 /* ---- viewer, toast, misc ---- */
 #viewer{position:fixed;inset:0;z-index:200;background:#000;display:flex;align-items:center;justify-content:center}
@@ -728,18 +715,11 @@ body.layout-list .nsfwb[aria-pressed=true]:hover::after{filter:invert(1)}
         <p class="hint layouthint" id="layouthint" role="status"></p>
         <label class="ctlrow" id="sizerow"><span>Tile size</span><span class="sizewrap"><input id="size" type="range" min="150" max="360" step="10" value="230"><span class="notches" aria-hidden="true"></span></span></label>
         <div class="ctlrow" id="colsrow"><span>Columns</span><div class="srcseg" id="colsseg" role="group" aria-label="List columns"><button class="pill" type="button" data-c="1" aria-pressed="false" title="Easiest to scan">1</button><button class="pill" type="button" data-c="2" aria-pressed="false">2</button><button class="pill" type="button" data-c="3" aria-pressed="false">3</button><button class="pill" type="button" data-c="auto" aria-pressed="true" title="As many as fit">Auto</button></div></div>
-        <label class="ctlrow"><span>Card info</span>
-          <select id="infomode" class="field" aria-label="Card info">
-            <option value="show">Always visible</option>
-            <option value="hover">Show on hover</option>
-            <option value="off">Hidden</option>
-          </select>
-        </label>
-        <label class="ctlrow" id="ctlrow"><span>Card controls</span>
-          <select id="ctlmode" class="field" aria-label="Card controls">
+        <label class="ctlrow" id="cardrow"><span>Card info &amp; controls</span>
+          <select id="cardmode" class="field" aria-label="Card info and controls">
             <option value="collapsed">Collapsed</option>
-            <option value="hover">Expand on hover</option>
-            <option value="always">Always show</option>
+            <option value="hover">Show on hover / focus</option>
+            <option value="always">Show always</option>
           </select>
         </label>
         <label class="toggle" for="autoplay">Auto-play in view<input id="autoplay" type="checkbox"></label>
@@ -1340,26 +1320,32 @@ function fillCard(el,p){
     + (m && m.rec ? '<span class="badge rec" title="Rebuilt from an archive">Recovered: '+esc(m.rec)+'</span>' : '')
     + '</a>'
     + (nsfw && thumb ? '<button class="reveal" type="button">Reveal</button>' : '')
-    + '<button class="star" type="button" data-id="'+esc(p.id)+'" aria-pressed="'+(FAVS.has(p.id)?'true':'false')+'" aria-label="Star this post" title="Star this post">'+(FAVS.has(p.id)?'\u2605':'\u2606')+'</button>'
-    + '<button class="save" type="button" data-id="'+esc(p.id)+'" aria-pressed="'+(ROWSET.has(p.id)?'true':'false')+'" aria-label="'+(ROWSET.has(p.id)?'In your list: tap to remove':'Not in your list: tap to add')+'" title="'+(ROWSET.has(p.id)?'In your list: tap to remove':'Not in your list: tap to add')+'">'+(ROWSET.has(p.id)?BM_ON:BM_OFF)+'</button>'
-    + '<button class="save nsfwb" type="button" data-id="'+esc(p.id)+'"'+(ROWSET.has(p.id) ? '' : ' hidden')+' aria-pressed="'+(nsfw?'true':'false')+'" aria-label="'+(nsfw ? 'Unmark as NSFW' : 'Mark as NSFW')+'" title="'+(nsfw ? 'Unmark as NSFW' : 'Mark as NSFW')+'">'+NSFW_ICON+'</button>'
-    + (MEDIA_KINDS.has(media) && (thumb || v0) ? '<button class="fs" type="button" aria-label="Full screen" title="Full screen">'+FS_ICON+'</button>' : '')
-    + '<button class="morebtn" type="button" aria-expanded="false" aria-label="More actions" title="More actions"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5L5.5 8l4.5 4.5"/></svg></button>'
-    + '<button class="ibtn" type="button" aria-label="Show info" aria-pressed="false"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6.3"/><path d="M8 7.2v3.6"/><circle cx="8" cy="5.1" r=".6" fill="currentColor"/></svg></button>'
-    + (gl ? '<button class="gnav gprev" type="button" aria-label="Previous image">&#8249;</button><button class="gnav gnext" type="button" aria-label="Next image">&#8250;</button>' : '')
+    + (media==='text' ? '<div class="peek">'+esc(titleOf(p))+'</div>' : '')
+    + '<button class="lhandle" type="button" aria-expanded="false" aria-label="Show details and controls" title="Details and controls"></button>'
+    + '<div class="layer">'
+    + '<button class="lh-close" type="button" aria-label="Hide details and controls" title="Hide"></button>'
     + '<div class="info">'
     + '<h3 class="title"><a data-open href="'+esc(href)+'" target="_blank" rel="noopener noreferrer">'+esc(titleOf(p))+'</a></h3>'
     + '<div class="meta"><button class="sub" type="button" data-sub="'+esc(p.sub)+'" title="Show only r/'+esc(p.sub)+' posts in your list">r/'+esc(p.sub)+'</button>'+stats
     + (m && m.c ? '<span class="dt">'+new Date(m.c*1000).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'})+'</span>' : '')
     + (note ? '<span class="note'+(dead?' dead':'')+'">'+esc(note)+'</span>' : '')+'</div>'
+    + (removed ? '<div class="arch"><span>Archives:</span><a href="'+esc(wbPostHref(p))+'" target="_blank" rel="noopener noreferrer">Wayback</a></div>' : '')
+    + '</div>'
+    + '<div class="lay-act"><div class="lay-cap">'
+    + '<button class="star" type="button" data-id="'+esc(p.id)+'" aria-pressed="'+(FAVS.has(p.id)?'true':'false')+'" aria-label="Star this post" title="Star this post">'+(FAVS.has(p.id)?'\u2605':'\u2606')+'</button>'
+    + '<button class="save" type="button" data-id="'+esc(p.id)+'" aria-pressed="'+(ROWSET.has(p.id)?'true':'false')+'" aria-label="'+(ROWSET.has(p.id)?'In your list: tap to remove':'Not in your list: tap to add')+'" title="'+(ROWSET.has(p.id)?'In your list: tap to remove':'Not in your list: tap to add')+'">'+(ROWSET.has(p.id)?BM_ON:BM_OFF)+'</button>'
+    + '<button class="save nsfwb" type="button" data-id="'+esc(p.id)+'"'+(ROWSET.has(p.id) ? '' : ' hidden')+' aria-pressed="'+(nsfw?'true':'false')+'" aria-label="'+(nsfw ? 'Unmark as NSFW' : 'Mark as NSFW')+'" title="'+(nsfw ? 'Unmark as NSFW' : 'Mark as NSFW')+'">'+NSFW_ICON+'</button>'
+    + (MEDIA_KINDS.has(media) && (thumb || v0) ? '<button class="fs" type="button" aria-label="Full screen" title="Full screen">'+FS_ICON+'</button>' : '')
+    + '</div>'
     + '<div class="actions"><a class="btn primary" data-open href="'+esc(href)+'" target="_blank" rel="noopener noreferrer">Open source</a>'
     + '<a class="btn" href="'+esc(p.link)+'" target="_blank" rel="noopener noreferrer">Comments</a>'
     + (!m && !dead ? '<a class="btn" href="https://www.reddit.com/comments/'+esc(p.id)+'" target="_blank" rel="noopener noreferrer">Open on Reddit</a><button class="btn retry1" type="button" data-id="'+esc(p.id)+'">Retry this one</button>' : '')
+    + '</div></div>'
+    + '<div class="lay-play"></div>'
     + '</div>'
-    + (removed ? '<div class="arch"><span>Archives:</span><a href="'+esc(wbPostHref(p))+'" target="_blank" rel="noopener noreferrer">Wayback</a></div>' : '')
-    + '</div>';
+    + '<button class="morebtn" type="button" aria-expanded="false" aria-label="More actions" title="More actions"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5L5.5 8l4.5 4.5"/></svg></button>'
+    + (gl ? '<button class="gnav gprev" type="button" aria-label="Previous image">&#8249;</button><button class="gnav gnext" type="button" aria-label="Next image">&#8250;</button>' : '');
   const tEl = el.querySelector('.thumb'); if(tEl && tEl.dataset.v) wirePlayable(tEl);
-  { const ib = el.querySelector('.ibtn'), on = el.classList.contains('info-open'); if(ib){ ib.setAttribute('aria-pressed', on?'true':'false'); ib.setAttribute('aria-label', on?'Hide info':'Show info'); } }
   if(nsfw && tEl && REVEALED.has(p.id)){ tEl.classList.add('show'); const rb = el.querySelector('.reveal'); if(rb) rb.textContent = 'Blur'; }
   // If every preview fails, look for a working full-size copy and show that instead.
   const rescue = () => {
@@ -2045,9 +2031,52 @@ function showGallery(card,p,m){
   img.src = urls[0];
   const b = card.querySelector('.badge.media'); if(b) b.textContent = (MEDIA_LABEL.gallery||'Gallery')+' '+(i+1)+'/'+n;
 }
+/* A card's layer (info, actions, playback) opens by hand with its handle; one card at a time is the normal case, and a tap elsewhere, Esc, or scrolling the card away closes it. */
+function setLayer(c,on){
+  if(!c || !c.classList) return;
+  c.classList.toggle('lay-open', !!on);
+  const h = c.querySelector('.lhandle'); if(h) h.setAttribute('aria-expanded', on?'true':'false');
+}
+document.addEventListener('click',e=>{
+  const open = document.querySelectorAll('.card.lay-open'); if(!open.length) return;
+  for(const c of open) if(!c.contains(e.target)) setLayer(c,false);
+});
+document.addEventListener('keydown',e=>{
+  if(e.ctrlKey || e.metaKey || e.altKey) return;
+  const t = e.target, typing = t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
+  if(typing || viewerOpen() || document.querySelector('dialog[open]')) return;
+  if(e.key==='Escape'){ document.querySelectorAll('.card.lay-open').forEach(c=>setLayer(c,false)); return; }
+  if((e.key==='i' || e.key==='I') && !document.body.classList.contains('layout-list')){
+    const c = (document.activeElement && document.activeElement.closest && document.activeElement.closest('.card')) || hoverCard || document.querySelector('.card.is-focus');
+    if(c){ setLayer(c, !c.classList.contains('lay-open')); e.preventDefault(); }
+  }
+});
+/* swipe up on a handle opens the layer, swipe down on its grabber closes it (the handle owns its touches, so this does not fight the page scroll) */
+(function(){
+  let sy = null, sc = null;
+  $('grid').addEventListener('pointerdown',e=>{ const h = e.target.closest && e.target.closest('.lhandle, .lh-close'); if(h){ sy = e.clientY; sc = h; } });
+  $('grid').addEventListener('pointerup',e=>{
+    if(sy===null) return; const dy = e.clientY - sy, h = sc; sy = sc = null;
+    const c = h.closest('.card'); if(!c || Math.abs(dy) < 18) return;
+    setLayer(c, dy < 0); e.preventDefault(); h._swiped = true; setTimeout(()=>{ h._swiped = false; },60);
+  });
+  $('grid').addEventListener('click',e=>{ const h = e.target.closest && e.target.closest('.lhandle, .lh-close'); if(h && h._swiped){ e.stopImmediatePropagation(); } },true);
+})();
 $('grid').addEventListener('click',e=>{
-  const ib = e.target.closest('button.ibtn');
-  if(ib){ const c = ib.closest('.card'), on = !c.classList.contains('info-open'); c.classList.toggle('info-open', on); ib.setAttribute('aria-pressed', on?'true':'false'); ib.setAttribute('aria-label', on?'Hide info':'Show info'); return; }
+  /* double tap (or double click) on a playing clip pauses or resumes it; a single tap still opens the post, a moment later, only on tiles that have player controls */
+  { const th = e.target.closest('a.thumb');
+    if(th && !SEL.on && e.button===0 && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey){
+      const card = th.closest('.card'), pp = card && card.querySelector('.ctl .pp');
+      if(card && card._tapGo){ card._tapGo = false; }
+      else if(pp){
+        e.preventDefault();
+        if(card._tapT){ clearTimeout(card._tapT); card._tapT = 0; pp.click(); }
+        else card._tapT = setTimeout(()=>{ card._tapT = 0; card._tapGo = true; th.click(); }, 280);
+        return;
+      }
+    } }
+  const lh = e.target.closest('button.lhandle, button.lh-close');
+  if(lh){ const c = lh.closest('.card'); if(c) setLayer(c, !c.classList.contains('lay-open')); return; }
   const mb = e.target.closest('button.morebtn');
   if(mb){ const c = mb.closest('.card'), on = !c.classList.contains('btns-open'); c.classList.toggle('btns-open', on); mb.setAttribute('aria-expanded', on?'true':'false'); return; }
   const nb = e.target.closest('button.nsfwb');
@@ -2293,7 +2322,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape' && SEL.on && VIEW.r
 const touchMQ = matchMedia('(hover: none)');
 const auto = {on:false, focus:touchMQ.matches, all:false}, playing = new Set(), MAX_AUTO = 18;
 let focused = null, focusCard = null; const viewSet = new Set(), cardView = new Set();
-const cardIO = new IntersectionObserver(es=>{ for(const e of es){ if(e.isIntersecting) cardView.add(e.target); else { cardView.delete(e.target); const lt = e.target.querySelector('.thumb[data-v]'); if(lt) leftSound(lt); } } if(auto.focus) schedFocus(); },{threshold:[0,.25,.5,.75,1]});   // on touch screens only the media nearest the middle of the screen plays
+const cardIO = new IntersectionObserver(es=>{ for(const e of es){ if(e.isIntersecting) cardView.add(e.target); else { cardView.delete(e.target); if(e.boundingClientRect.bottom < 0 || e.boundingClientRect.top > innerHeight) setLayer(e.target,false); const lt = e.target.querySelector('.thumb[data-v]'); if(lt) leftSound(lt); } } if(auto.focus) schedFocus(); },{threshold:[0,.25,.5,.75,1]});   // on touch screens only the media nearest the middle of the screen plays
 function fmtTime(x){ x = Math.max(0,Math.floor(x||0)); return Math.floor(x/60)+':'+String(x%60).padStart(2,'0'); }
 function clearPlayUI(t){
   cancelAnimationFrame(t._raf);
@@ -2394,7 +2423,7 @@ function buildControls(t, el, isGif){
   ctl.innerHTML = '<button class="pp" type="button" aria-label="Pause">'+PP_PAUSE+'</button>'
     + (isGif ? '' : '<input class="seek" type="range" min="0" max="1000" step="1" value="0" aria-label="Seek"><span class="time">0:00</span><span class="volwrap"><span class="volfly"><input class="volr" type="range" min="0" max="100" step="1" value="0" aria-label="Volume"></span><button class="vol" type="button" aria-label="Unmute"></button></span>');
   const pp = ctl.querySelector('.pp');
-  card.classList.add('playing'); card.appendChild(ctl);
+  card.classList.add('playing'); (card.querySelector('.lay-play') || card).appendChild(ctl);
   const paint = () => {
     const paused = isGif ? !!t._frozen : (el.paused && t._userPaused);
     pp.innerHTML = paused ? PP_PLAY : PP_PAUSE; pp.setAttribute('aria-label', paused ? 'Play' : 'Pause');
@@ -2552,7 +2581,7 @@ function pickFocus(){
 }
 document.addEventListener('click',e=>{
   if(!auto.focus) return;
-  const c = e.target.closest && e.target.closest('.card'); if(!c || !e.target.closest('.star,.fs,.save,.morebtn,.ibtn,.info,.ctl')) return;
+  const c = e.target.closest && e.target.closest('.card'); if(!c || !e.target.closest('.layer,.lhandle,.morebtn')) return;
   pinned = c; pinY = scrollY; cardView.add(c); pickFocus();
 }, true);
 const schedFocus = () => { if(pfRaf) return; pfRaf = requestAnimationFrame(()=>{ pfRaf = 0; pickFocus(); }); };
@@ -2701,34 +2730,22 @@ $('nsfwseg').addEventListener('click',e=>{ const b = e.target.closest('.pill'); 
   });
 })();
 (function(){
-  /* Card info is remembered per layout: List shows it by default (its rows exist to carry it); the others keep hover on desktop and a hidden (i) button on touch. */
-  const sel = $('infomode'), KEY = 'saved-posts-infomode', KEY_LIST = 'saved-posts-infomode-list';
-  const apply = v => { document.body.classList.toggle('info-hover', v==='hover'); document.body.classList.toggle('info-off', v==='off'); sel.value = v; };
-  const isList = () => typeof LAYOUT!=='undefined' && LAYOUT==='list';
-  const key = () => isList() ? KEY_LIST : KEY;
-  const dflt = () => isList() ? 'show' : (matchMedia('(hover: none)').matches ? 'off' : 'hover');
-  window.applyInfoMode = () => {
-    let v = dflt(); try{ v = localStorage.getItem(key()) || v; }catch(e){}
-    if(!['show','hover','off'].includes(v)) v = dflt();
-    apply(v);
-  };
-  window.applyInfoMode();
-  sel.addEventListener('change',()=>{ apply(sel.value); try{ localStorage.setItem(key(), sel.value); }catch(e){} });
-})();
-(function(){
-  /* Card controls (the star, full screen, bookmark and NSFW buttons). They follow Card info (Always visible > Always show, Show on hover > Expand on hover, Hidden > Collapsed)
-     whenever Card info is changed, and can then be set on their own. */
-  const sel = $('ctlmode'), info = $('infomode'), KEY = 'saved-posts-ctlmode';
-  const fromInfo = v => ({show:'always', hover:'hover', off:'collapsed'}[v] || 'hover');
+  /* Card info & controls: one setting for the glass layer on each Masonry / Grid card (info, the star / bookmark / NSFW / full-screen pill, and playback).
+     Collapsed: media only, with a handle to open one card's layer. Show on hover / focus: the layer rises with the pointer (or the focused tile on touch). Show always: open on every card. List ignores it. */
+  const sel = $('cardmode'), KEY = 'saved-posts-cardmode', MODES = ['collapsed','hover','always'];
+  const dflt = () => matchMedia('(hover: none)').matches ? 'collapsed' : 'hover';
   const apply = v => {
-    for(const m of ['collapsed','hover','always']) document.body.classList.toggle('ctl-'+m, m===v);
+    for(const m of MODES) document.body.classList.toggle('cm-'+m, m===v);
     sel.value = v;
-    document.querySelectorAll('.card.btns-open').forEach(c=>{ c.classList.remove('btns-open'); const b = c.querySelector('.morebtn'); if(b) b.setAttribute('aria-expanded','false'); });
+    document.querySelectorAll('.card.lay-open').forEach(c=>setLayer(c,false));
   };
-  let v = fromInfo(info.value); try{ const sv = localStorage.getItem(KEY); if(['collapsed','hover','always'].includes(sv)) v = sv; }catch(e){}
+  let v = dflt();
+  try{
+    const sv = localStorage.getItem(KEY), old = localStorage.getItem('saved-posts-ctlmode');   // an earlier Card controls choice carries over
+    if(MODES.includes(sv)) v = sv; else if(MODES.includes(old)) v = old;
+  }catch(e){}
   apply(v);
   sel.addEventListener('change',()=>{ apply(sel.value); try{ localStorage.setItem(KEY, sel.value); }catch(e){} });
-  info.addEventListener('change',()=>{ const m = fromInfo(info.value); apply(m); try{ localStorage.setItem(KEY, m); }catch(e){} });
 })();
 (function(){
   const box = $('hidebroken'), KEY = 'saved-posts-hidebroken';
@@ -2766,7 +2783,7 @@ function applyTextDefault(){
   state.showText = textDefault(); const t = $('showtext'); if(t) t.checked = state.showText;
   paintLayoutHint(); if(typeof refresh==='function' && POSTS && POSTS.length) refresh();
 }
-function paintLayout(){ document.querySelectorAll('#layoutseg .pill').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.l===LAYOUT))); document.body.classList.toggle('layout-grid', LAYOUT==='grid'); document.body.classList.toggle('layout-list', LAYOUT==='list'); const h = $('layouthint'); paintLayoutHint(); if(window.applyInfoMode) window.applyInfoMode(); document.querySelectorAll('.card.btns-open').forEach(c=>{ c.classList.remove('btns-open'); const b = c.querySelector('.morebtn'); if(b) b.setAttribute('aria-expanded','false'); }); }
+function paintLayout(){ document.querySelectorAll('#layoutseg .pill').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.l===LAYOUT))); document.body.classList.toggle('layout-grid', LAYOUT==='grid'); document.body.classList.toggle('layout-list', LAYOUT==='list'); const h = $('layouthint'); paintLayoutHint();  document.querySelectorAll('.card.btns-open').forEach(c=>{ c.classList.remove('btns-open'); const b = c.querySelector('.morebtn'); if(b) b.setAttribute('aria-expanded','false'); }); }
 document.querySelectorAll('#layoutseg .pill').forEach(b=>b.addEventListener('click',()=>{
   LAYOUT = b.dataset.l; try{ localStorage.setItem('saved-posts-layout', LAYOUT); }catch(e){}
   if(LIB.cur) setListLayout(LIB.cur.id, LAYOUT);
