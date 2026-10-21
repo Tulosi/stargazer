@@ -16,7 +16,7 @@ with sync_playwright() as p:
     pg.evaluate("()=>{ POSTS.forEach((p,i)=>{ META[p.id]={t:'Clip '+i,o:0,th:'https://b.thumbs.redditmedia.com/t.jpg',m:'video',u:'https://i.imgur.com/abc123'+i+'.mp4',v:'https://i.imgur.com/abc123'+i+'.mp4',n:3,s:10,a:'u',c:1,w:160,h:120}; }); refresh(); }"); pg.wait_for_timeout(2000)
     pg.evaluate("()=>{ state.hideBroken=false; refresh(); }"); pg.wait_for_timeout(300)
     st = lambda: pg.evaluate("()=>[...document.querySelectorAll('.card')].map(c=>!!c.querySelector('.thumb')._playing)")
-    check('auto-play is off in this test', pg.evaluate("auto.on===false && auto.all===false && auto.focus===false"))
+    check('only Autoplay active card is on in this test', pg.evaluate("auto.hover===true && auto.all===false && auto.focus===false"))
     bx = pg.query_selector_all('.card')[0].bounding_box(); cx, cy = bx['x'] + bx['width'] / 2, bx['y'] + bx['height'] / 3
     pg.mouse.move(cx, cy); pg.wait_for_timeout(500); check('hover plays the clip', st()[0])
     pg.mouse.move(5, 700); pg.wait_for_timeout(500); check('moving away stops it', not st()[0])

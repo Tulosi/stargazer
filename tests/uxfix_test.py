@@ -55,7 +55,7 @@ with sync_playwright() as p:
     pg.click('#introSample'); pg.wait_for_timeout(2500)
     check('phone shows one stat when nothing is filtered', ev("[...document.querySelectorAll('#stats .st')].filter(e=>e.offsetParent!==null).length")==1 and ev("document.querySelector('#stats .st .lb').textContent")=='Posts')
     ev("document.getElementById('decktoggle').click()"); pg.wait_for_timeout(500)
-    check('phone Filters opens on Filter and sort', ev("document.getElementById('sort').getBoundingClientRect().top < document.getElementById('layoutseg').getBoundingClientRect().top"))
+    check('phone Filters opens on View, then Filter and sort, then Browse', ev("(()=>{ const t=id=>document.getElementById(id).getBoundingClientRect().top; return t('layoutseg') < t('sort') && t('sort') < t('browseCol'); })()"))
     pg.evaluate("document.getElementById('panel').scrollTo(0, 99999)"); pg.wait_for_timeout(200)
     check('phone: shortcut list comes last in the sheet', ev("document.getElementById('kbhelp').getBoundingClientRect().top > document.getElementById('layoutseg').getBoundingClientRect().top"))
     ev("document.getElementById('decktoggle').click()")
