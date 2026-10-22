@@ -177,7 +177,7 @@ button,select,input{font:inherit;color:inherit}
   .navbtns .pill{margin-bottom:15px;position:relative}
   .navbtns .pill .nl{display:block;position:absolute;top:calc(100% + 3px);left:50%;transform:translateX(-50%);font-size:10px;font-weight:500;color:var(--muted);letter-spacing:.02em;line-height:1.2}
   body{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))}
-  #toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+  body #toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}   /* body: the base #toast rule comes later in the file and would win, putting toasts on top of the bottom bar */
   #pausebar{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
   #panel,#srcpanel{position:fixed;top:auto;max-width:none;margin:0;left:8px;right:8px;bottom:calc(86px + env(safe-area-inset-bottom,0px));max-height:min(72dvh,calc(100dvh - 120px));animation:sheetIn .2s ease-out}
   @keyframes sheetIn{from{opacity:0;transform:translateY(12px)}}
@@ -213,10 +213,10 @@ body.deck-collapsed #panel,body.src-collapsed #srcpanel{display:none}
 .pcol h2{margin:0 0 2px;font-size:12px;font-weight:600;color:var(--muted)}
 .grp{display:grid;gap:7px}
 .linkbtn{border:0;background:none;color:inherit;font:inherit;text-decoration:underline;cursor:pointer;padding:0 0 0 8px;opacity:.8}
-.linkbtn:hover{opacity:1}
+@media (hover:hover) and (pointer:fine){.linkbtn:hover{opacity:1}}
 .linkbtn[hidden]{display:none}
 .linkbtn.quiet{padding:0;font-size:12px;color:var(--muted);opacity:.85;text-decoration-color:color-mix(in srgb,currentColor 35%,transparent);text-underline-offset:3px;margin-left:auto}
-.linkbtn.quiet:hover,.linkbtn.quiet:focus-visible{color:var(--ink);opacity:1;text-decoration-color:currentColor}
+.linkbtn.quiet:focus-visible{color:var(--ink);opacity:1;text-decoration-color:currentColor}@media (hover:hover) and (pointer:fine){.linkbtn.quiet:hover{color:var(--ink);opacity:1;text-decoration-color:currentColor}}
 .lbl{font-size:12px;color:var(--muted)}
 .grp:has(.chips:empty){display:none}
 .ctlrow{display:grid;grid-template-columns:92px minmax(0,1fr);align-items:center;gap:10px;font-size:13px}
@@ -302,7 +302,7 @@ body.previews-loading .loaddot::before{animation:dotring 2s var(--ease-out) infi
 /* A clip starts invisible on top of the still picture and fades in once its first frame is showing, so the card never flashes its background colour between still and playing. */
 .thumb .clip{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:transparent;opacity:0;transition:filter .18s,transform .18s,opacity .25s}
 .thumb .clip.on{opacity:1}
-.thumb.nsfw img,.thumb.nsfw .still,.thumb.nsfw .clip{filter:blur(22px);transform:scale(1.12)}
+.thumb.nsfw img,.thumb.nsfw .still,.thumb.nsfw .clip{filter:blur(18px);transform:scale(1.12)}   /* animated blur stays under 20px: above that it gets expensive, and it runs on every frame of a playing clip */
 @media (hover:hover){.card:hover .thumb.nsfw img,.card:hover .thumb.nsfw .still,.card:hover .thumb.nsfw .clip{filter:none;transform:none}}   /* mouse only: on touch screens a tap leaves the card "hovered", which kept Blur from re-blurring */
 .thumb.nsfw:focus-visible img,.thumb.nsfw:focus-visible .still,.thumb.nsfw:focus-visible .clip,.thumb.nsfw.show img,.thumb.nsfw.show .still,.thumb.nsfw.show .clip{filter:none;transform:none}
 body.unblur .thumb.nsfw img,body.unblur .thumb.nsfw .still,body.unblur .thumb.nsfw .clip{filter:none;transform:none}
@@ -330,13 +330,13 @@ body:not(.layout-list) .badge.media{background:none;-webkit-backdrop-filter:none
 .nsfwb[hidden]{display:none}
 .nsfwb{background:rgba(12,12,14,.26);color:rgba(255,255,255,.36);box-shadow:none;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 /* NSFW toggle: off = glass button with faint text, shown only while the card is hovered or in focus; on = glass button with full white text and a white ring, always visible. Hovering previews the other state (an X for removing the mark). */
-.nsfwb[aria-pressed=false]:hover{background:rgba(12,12,14,.26);color:#fff}
-.nsfwb[aria-pressed=true]::before,.nsfwb[aria-pressed=false]:hover::before{content:"";position:absolute;inset:0;border-radius:50%;padding:2px;background:rgba(255,255,255,.5);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+@media (hover:hover) and (pointer:fine){.nsfwb[aria-pressed=false]:hover{background:rgba(12,12,14,.26);color:#fff}}
+.nsfwb[aria-pressed=true]::before{content:"";position:absolute;inset:0;border-radius:50%;padding:2px;background:rgba(255,255,255,.5);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}@media (hover:hover) and (pointer:fine){.nsfwb[aria-pressed=false]:hover::before{content:"";position:absolute;inset:0;border-radius:50%;padding:2px;background:rgba(255,255,255,.5);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}}
 .save.nsfwb[aria-pressed=true]{background:rgba(12,12,14,.26);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#fff;box-shadow:none}
-.save.nsfwb[aria-pressed=true]:hover{background:rgba(12,12,14,.5);color:#fff}
-.nsfwb[aria-pressed=true] svg text,.nsfwb[aria-pressed=false]:hover svg text{fill:url(#nsfwGrad)}
-.nsfwb[aria-pressed=true]:hover svg{opacity:0}
-.nsfwb[aria-pressed=true]:hover::after{content:"";position:absolute;inset:0;margin:auto;width:14px;height:14px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M3.5 3.5l9 9M12.5 3.5l-9 9'/%3E%3C/svg%3E") center/contain no-repeat}
+@media (hover:hover) and (pointer:fine){.save.nsfwb[aria-pressed=true]:hover{background:rgba(12,12,14,.5);color:#fff}}
+.nsfwb[aria-pressed=true] svg text{fill:url(#nsfwGrad)}@media (hover:hover) and (pointer:fine){.nsfwb[aria-pressed=false]:hover svg text{fill:url(#nsfwGrad)}}
+@media (hover:hover) and (pointer:fine){.nsfwb[aria-pressed=true]:hover svg{opacity:0}}
+@media (hover:hover) and (pointer:fine){.nsfwb[aria-pressed=true]:hover::after{content:"";position:absolute;inset:0;margin:auto;width:14px;height:14px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M3.5 3.5l9 9M12.5 3.5l-9 9'/%3E%3C/svg%3E") center/contain no-repeat}}
 .fs svg{display:block}
 .gnav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:32px;height:32px;display:grid;place-items:center;border:0;border-radius:50%;padding:0;background:rgba(12,12,14,.26);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:rgba(255,255,255,.78);font-size:22px;line-height:1;cursor:pointer;opacity:0;transition:opacity .15s,background .15s}
 @media (hover:hover){.gnav:hover{background:rgba(12,12,14,.6);color:#fff}}
@@ -357,14 +357,14 @@ body:not(.layout-list) .badge.media{background:none;-webkit-backdrop-filter:none
 .info a,.info button{pointer-events:auto}
 .title{margin:0;font:500 13px/1.32 var(--font);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;text-shadow:0 1px 10px rgba(0,0,0,.35)}
 .title a{text-decoration:none;color:#fff}
-.title a:hover{text-decoration:underline;text-underline-offset:2px}
+@media (hover:hover) and (pointer:fine){.title a:hover{text-decoration:underline;text-underline-offset:2px}}
 .meta a.cm{color:inherit;text-decoration:none}
-.meta a.cm:hover,.meta a.cm:focus-visible{text-decoration:underline;text-underline-offset:2px;color:#fff}
-body.layout-list .meta a.cm:hover,body.layout-list .meta a.cm:focus-visible{color:var(--ink)}
+.meta a.cm:focus-visible{text-decoration:underline;text-underline-offset:2px;color:#fff}@media (hover:hover) and (pointer:fine){.meta a.cm:hover{text-decoration:underline;text-underline-offset:2px;color:#fff}}
+body.layout-list .meta a.cm:focus-visible{color:var(--ink)}@media (hover:hover) and (pointer:fine){body.layout-list .meta a.cm:hover{color:var(--ink)}}
 .meta{display:flex;flex-wrap:wrap;gap:1px 10px;align-items:baseline;font:400 11.5px/1.35 var(--font);font-variant-numeric:tabular-nums;color:rgba(255,255,255,.72);margin-top:4px}
 .meta .sub{border:0;background:none;padding:0;cursor:pointer;color:#fff;font:500 11.5px var(--font)}
-.meta .sub:hover,.meta .sub:focus-visible{text-decoration:underline;text-underline-offset:2px}
-.meta .sub:hover{text-decoration:underline;text-underline-offset:2px}
+.meta .sub:focus-visible{text-decoration:underline;text-underline-offset:2px}@media (hover:hover) and (pointer:fine){.meta .sub:hover{text-decoration:underline;text-underline-offset:2px}}
+@media (hover:hover) and (pointer:fine){.meta .sub:hover{text-decoration:underline;text-underline-offset:2px}}
 .meta .note{color:rgba(255,255,255,.72)}
 .meta .note.dead{color:rgba(255,255,255,.72);text-decoration:line-through;text-decoration-thickness:1px}
 .actions,.arch{display:none}
@@ -399,7 +399,7 @@ body:not(.layout-list) .lay-cap .star[aria-pressed=true]{background:none;color:c
 body:not(.layout-list) .lay-cap .nsfwb::before{display:none}
 body:not(.layout-list) .lay-cap .save.nsfwb[aria-pressed=true]{background:none}
 body:not(.layout-list) .lay-cap .nsfwb[aria-pressed=false]{color:rgba(255,255,255,.5)}
-body:not(.layout-list) .lay-cap .nsfwb[aria-pressed=false]:hover{color:#fff}
+@media (hover:hover) and (pointer:fine){body:not(.layout-list) .lay-cap .nsfwb[aria-pressed=false]:hover{color:#fff}}
 body:not(.layout-list) .lay-cap .star{padding:0;font-size:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.9)}   /* the glyph text stays for state and screen readers; an icon is drawn instead, so it centres like its neighbours */
 body:not(.layout-list) .lay-cap .star::before{content:"";display:block;width:calc(var(--gi)*1.14);height:calc(var(--gi)*1.14);background:currentColor;-webkit-mask:var(--ico-star) center/contain no-repeat;mask:var(--ico-star) center/contain no-repeat}
 body:not(.layout-list) .lay-cap .star[aria-pressed=true]::before{-webkit-mask-image:var(--ico-star-on);mask-image:var(--ico-star-on)}
@@ -426,8 +426,8 @@ body:not(.layout-list) .lay-play:not(:empty){display:block}
 .layer .ctl{position:static;height:auto;padding:0;background:none;opacity:1;pointer-events:auto;z-index:auto}
 /* the handle: a faint pill at the bottom of every tile; its hit area is the lower part of the tile */
 body:not(.layout-list) .lhandle{display:block;position:absolute;left:50%;bottom:0;width:72px;margin-left:-36px;height:min(26px,45%);z-index:3;border:0;padding:0;background:none;cursor:pointer;touch-action:none}
-body:not(.layout-list) .lhandle::before{content:"";position:absolute;left:50%;bottom:7px;width:30px;height:4px;margin-left:-15px;border-radius:3px;background:rgba(255,255,255,.6);box-shadow:0 0 0 .5px rgba(0,0,0,.2);opacity:.75;transition:opacity .15s,width .15s,margin .15s}
-body:not(.layout-list) .lhandle:hover::before,body:not(.layout-list) .lhandle:focus-visible::before{opacity:1;width:38px;margin-left:-19px}
+body:not(.layout-list) .lhandle::before{content:"";position:absolute;left:50%;bottom:7px;width:30px;height:4px;margin-left:-15px;border-radius:3px;background:rgba(255,255,255,.6);box-shadow:0 0 0 .5px rgba(0,0,0,.2);opacity:.75;transition:opacity .15s,transform .15s var(--ease-out)}
+body:not(.layout-list) .lhandle:hover::before,body:not(.layout-list) .lhandle:focus-visible::before{opacity:1;transform:scaleX(1.27)}
 body.cm-always:not(.layout-list) .lhandle{display:none}
 /* a layer put away by hand stays down whatever the mode says; its handle comes back so it can be raised again */
 body:not(.layout-list) .card.lay-shut .layer{opacity:0!important;pointer-events:none!important;transform:translateY(10px)!important}
@@ -446,7 +446,7 @@ body:not(.layout-list) .layer{-webkit-backdrop-filter:none;backdrop-filter:none}
 body.cm-always:not(.layout-list) .card .layer,body:not(.layout-list) .card.lay-open .layer{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
 @media (hover:hover){body.cm-hover:not(.layout-list) .card:is(:hover,:focus-within) .layer{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}}
 @media (hover:none){body.cm-hover:not(.layout-list) .card.is-focus .layer{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}}
-body:not(.layout-list) .card :is(.badge,.star,.fs,.save,.reveal){-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(12,12,14,.42)}
+body:not(.layout-list) .card :is(.badge,.star,.fs,.save,.reveal,.gnav){-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(12,12,14,.42)}
 body:not(.layout-list) .layer :is(.star,.fs,.save){background:none}
 body:not(.layout-list) .card .badge.media{background:none}
 body.cm-always:not(.layout-list) .card :is(.badges,.ph span,.badge.rec),body:not(.layout-list) .card.lay-open :is(.badges,.ph span,.badge.rec){opacity:1}
@@ -542,7 +542,7 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
 #confirm h3{margin:0 0 10px;font-size:17px;font-weight:600}
 #confirm p{margin:8px 0;color:var(--muted);font-size:13.5px}
 #confirm .danger{background:#c62828;color:#fff}
-#confirm .danger:hover{background:#a81f1f}
+@media (hover:hover) and (pointer:fine){#confirm .danger:hover{background:#a81f1f}}
 .srcseg{display:flex;gap:2px;padding:3px;border-radius:999px;background:var(--surface-2)}
 .srcseg .pill{flex:1 1 auto;justify-content:center;height:30px;padding:0 10px;background:transparent}
 @media (hover:hover){.srcseg .pill:hover{background:var(--line)}}
@@ -613,7 +613,7 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
 .introacct svg{flex:none;color:var(--sel)}
 .intro .introfoot{margin:40px 0 0;padding-top:16px;border-top:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;color:var(--muted);opacity:.8}
 .intro .introfoot a{color:inherit;text-decoration:underline;text-decoration-color:color-mix(in srgb,currentColor 35%,transparent);text-underline-offset:3px}
-.intro .introfoot a:hover,.intro .introfoot a:focus-visible{color:var(--ink);text-decoration-color:currentColor}
+.intro .introfoot a:focus-visible{color:var(--ink);text-decoration-color:currentColor}@media (hover:hover) and (pointer:fine){.intro .introfoot a:hover{color:var(--ink);text-decoration-color:currentColor}}
 @media (hover:none){.introcta .dropnote{display:none}}
 .dropveil{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--bg) 82%,transparent);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 .dropveil[hidden]{display:none}
@@ -632,7 +632,8 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
 }
 
 /* ---------- List layout: short rows, card info on a blurred preview, no media controls ---------- */
-.apwarn{margin:-2px 0 6px;font-size:12px;line-height:1.45;color:var(--warn)}
+.apwarn{margin:-2px 0 6px;font-size:12px;line-height:1.45;color:var(--muted);transition:color .15s}
+.toggle:has(#autoplayall:checked)+.apwarn{color:var(--warn)}   /* a quiet note while it is off; the warning colour once it is on */
 .layouthint{margin:-2px 0 4px;font-size:12px;color:var(--muted)}
 .layouthint .laynote{display:block;margin-top:2px;font-size:12px}
 body.layout-list #sizerow{display:none}
@@ -682,9 +683,9 @@ body.layout-list .badges{display:contents}
 @media (pointer:coarse){body.layout-list .star,body.layout-list .fs,body.layout-list .save{margin-top:-20px}}
 /* ---- List layout, redesigned: calm rows with a small square thumbnail on the left, text on a solid surface, purple/magenta accents ---- */
 body.layout-list .card{background:var(--surface);border:1px solid var(--line);transition:background .15s,border-color .15s}
-body.layout-list .card:hover,body.layout-list .card:focus-within{background:var(--surface-2);border-color:color-mix(in srgb,var(--g2) 40%,var(--line))}
+body.layout-list .card:focus-within{background:var(--surface-2);border-color:color-mix(in srgb,var(--g2) 40%,var(--line))}@media (hover:hover) and (pointer:fine){body.layout-list .card:hover{background:var(--surface-2);border-color:color-mix(in srgb,var(--g2) 40%,var(--line))}}
 body.layout-list .card::after{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 3px 3px 0;background:linear-gradient(180deg,var(--g1),var(--g2),var(--g3));opacity:0;transition:opacity .15s;pointer-events:none}
-body.layout-list .card:hover::after,body.layout-list .card:focus-within::after,body.layout-list .card.sel::after{opacity:1}
+body.layout-list .card:focus-within::after,body.layout-list .card.sel::after{opacity:1}@media (hover:hover) and (pointer:fine){body.layout-list .card:hover::after{opacity:1}}
 body.layout-list .thumb{inset:auto;left:10px;top:50%;margin-top:-32px;width:64px;height:64px;border-radius:9px;background:var(--surface-2)}
 body.layout-list .thumb img,body.layout-list .thumb .still{filter:none;transform:none}
 body.layout-list .thumb.nsfw img,body.layout-list .thumb.nsfw .still{filter:blur(9px);transform:scale(1.25)}
@@ -698,14 +699,14 @@ body.layout-list .meta .sub{color:var(--sel);font-weight:600}
 body.layout-list .meta .note,body.layout-list .meta .note.dead{color:var(--muted)}
 body.layout-list .badges .badge.tag{background:color-mix(in srgb,var(--g3) 16%,transparent);color:var(--hot);-webkit-backdrop-filter:none;backdrop-filter:none;font-weight:600}
 body.layout-list .star,body.layout-list .fs,body.layout-list .save,body.layout-list .morebtn{background:var(--surface-2);color:var(--muted);-webkit-backdrop-filter:none;backdrop-filter:none}
-body.layout-list .card:hover .star,body.layout-list .card:hover .fs,body.layout-list .card:hover .save{background:color-mix(in srgb,var(--ink) 9%,var(--surface-2))}
-body.layout-list .star:hover,body.layout-list .fs:hover,body.layout-list .save:hover,body.layout-list .morebtn:hover{background:color-mix(in srgb,var(--ink) 14%,var(--surface-2));color:var(--ink)}
+@media (hover:hover) and (pointer:fine){body.layout-list .card:hover .star,body.layout-list .card:hover .fs,body.layout-list .card:hover .save{background:color-mix(in srgb,var(--ink) 9%,var(--surface-2))}}
+@media (hover:hover) and (pointer:fine){body.layout-list .star:hover,body.layout-list .fs:hover,body.layout-list .save:hover,body.layout-list .morebtn:hover{background:color-mix(in srgb,var(--ink) 14%,var(--surface-2));color:var(--ink)}}
 body.layout-list .star[aria-pressed=true]{color:var(--hot)}
 body.layout-list .save[aria-pressed=true]:not(.nsfwb){color:var(--sel)}
 body.layout-list .nsfwb[aria-pressed=true]{color:var(--hot);background:var(--surface-2)}
-body.layout-list .nsfwb[aria-pressed=true] svg text,body.layout-list .nsfwb[aria-pressed=false]:hover svg text{fill:var(--hot)}
-body.layout-list .nsfwb[aria-pressed=true]::before,body.layout-list .nsfwb[aria-pressed=false]:hover::before{background:color-mix(in srgb,var(--hot) 55%,transparent)}
-body.layout-list .nsfwb[aria-pressed=true]:hover::after{filter:invert(1)}
+body.layout-list .nsfwb[aria-pressed=true] svg text{fill:var(--hot)}@media (hover:hover) and (pointer:fine){body.layout-list .nsfwb[aria-pressed=false]:hover svg text{fill:var(--hot)}}
+body.layout-list .nsfwb[aria-pressed=true]::before{background:color-mix(in srgb,var(--hot) 55%,transparent)}@media (hover:hover) and (pointer:fine){body.layout-list .nsfwb[aria-pressed=false]:hover::before{background:color-mix(in srgb,var(--hot) 55%,transparent)}}
+@media (hover:hover) and (pointer:fine){body.layout-list .nsfwb[aria-pressed=true]:hover::after{filter:invert(1)}}
 body:not(.layout-list) .layer .btn{-webkit-backdrop-filter:none;backdrop-filter:none}   /* the layer is already glass: a second blur per button costs GPU on every tile for nothing visible */
 /* Reduced motion means less movement, not none: sliding, scaling and spinning go; fades, colour changes and a pulse that shows something is working stay. */
 @keyframes fadein{from{opacity:0}}
@@ -732,6 +733,7 @@ body:not(.layout-list) .layer .btn{-webkit-backdrop-filter:none;backdrop-filter:
 .expnow{margin-left:2px;font-weight:600}
 /* phones: no 300ms tap wait, and inputs at 16px so iOS does not zoom the page when one is focused */
 a,button,summary,label,select,[role=button]{touch-action:manipulation}
+button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a long press on a control must not select its label */
 @media (pointer:coarse){input,select,textarea,.field{font-size:16px}}
 .deck{padding-top:env(safe-area-inset-top,0px)}
 /* the shortcut list: collapsed, muted, last in the Filters panel */
@@ -866,7 +868,7 @@ a,button,summary,label,select,[role=button]{touch-action:manipulation}
           <dl><dt>Touch and mouse</dt>
             <dd>Tap a picture to show or hide its controls</dd>
             <dd>Swipe the small handle up to open them, down to put them away</dd>
-            <dd>Double tap (or double click) a playing clip to pause or resume it</dd>
+            <dd>Double tap (or double click) a clip to play, pause or resume it</dd>
             <dd>Full screen: pinch to zoom, swipe for the next post</dd>
           </dl>
         </div>
@@ -2229,11 +2231,11 @@ $('grid').addEventListener('click',e=>{
      so a single tap on those waits a moment to see if a second one follows. List keeps the link. */
   { const th = e.target.closest('a.thumb');
     if(th && !SEL.on && !document.body.classList.contains('layout-list') && e.button===0 && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey){
-      const card = th.closest('.card'), pp = card && card.querySelector('.ctl .pp');
+      const card = th.closest('.card'), pp = card && (card.querySelector('.ctl .pp') || (th.dataset.v && !th._playing && !auto.hover && !auto.all));   // with both Autoplay toggles off, a still clip is started by hand with a double tap (only then does a single tap wait for a second one)
       if(card){
         e.preventDefault();
         const toggle = () => toggleLayer(card);
-        if(card._tapT){ clearTimeout(card._tapT); card._tapT = 0; const q = card.querySelector('.ctl .pp'); if(q) q.click(); else toggle(); }
+        if(card._tapT){ clearTimeout(card._tapT); card._tapT = 0; const q = card.querySelector('.ctl .pp'); if(q) q.click(); else if(th.dataset.v){ th._manual = true; syncPlay(th); } else toggle(); }
         else if(pp) card._tapT = setTimeout(()=>{ card._tapT = 0; toggle(); }, 360);
         else toggle();
         return;
@@ -2717,12 +2719,13 @@ function syncPlay(t){
   else if(auto.all){ want = !!(hv || t._inView); tracked = true; }   // Autoplay all media in viewport: no cap, embeds included, on touch too
   else if(auto.focus){ want = auto.hover && (t===focused || hv); tracked = auto.hover && t===focused; }
   else { want = hv; tracked = false; }
+  if(t._manual && LAYOUT!=='list') want = true;   // started by hand (double tap): plays until it leaves the screen
   if(want){ startPlay(t); if(tracked) playing.add(t); }
   else { stopPlay(t); playing.delete(t); }
   applyAudio();
 }
 const playIO = new IntersectionObserver(es=>{
-  for(const e of es){ e.target._inView = e.isIntersecting; e.isIntersecting ? viewSet.add(e.target) : viewSet.delete(e.target); if(!auto.focus || auto.all) syncPlay(e.target); }
+  for(const e of es){ e.target._inView = e.isIntersecting; if(!e.isIntersecting) e.target._manual = false; e.isIntersecting ? viewSet.add(e.target) : viewSet.delete(e.target); if(!auto.focus || auto.all) syncPlay(e.target); }
   if(auto.focus){ pickFocus(); if(!auto.all) return; }
 },{threshold:0.5});
 /* Touch screens: play the one clip whose centre is closest to the middle of the visible area (below the filter bar). */
@@ -2792,7 +2795,7 @@ setInterval(()=>{
     }
   });
 },1000);
-function releasePlayable(t){ t._hover = t._mouse = t._focus = false; t._inView = false; viewSet.delete(t); if(focused===t){ focused = null; schedFocus(); } stopPlay(t); playing.delete(t); playIO.unobserve(t); }
+function releasePlayable(t){ t._manual = false; t._hover = t._mouse = t._focus = false; t._inView = false; viewSet.delete(t); if(focused===t){ focused = null; schedFocus(); } stopPlay(t); playing.delete(t); playIO.unobserve(t); }
 (function(){
   /* Autoplay active card: the card under the pointer, with keyboard focus, or (touch) in focus plays. On by default. */
   const box = $('autohover'), KEY = 'saved-posts-autoplayhover';

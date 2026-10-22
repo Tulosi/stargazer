@@ -53,6 +53,8 @@ with sync_playwright() as p:
     pg.route('**/*', lambda r: r.continue_() if r.request.url.startswith('file:') or r.request.url.startswith('data:') else r.abort())
     pg.goto(PAGE); pg.wait_for_timeout(900); ev = pg.evaluate
     pg.click('#introSample'); pg.wait_for_timeout(2500)
+    ev("toast('Hello')"); pg.wait_for_timeout(300)
+    check('phone toast sits above the bottom bar, not on it', ev("document.getElementById('toast').getBoundingClientRect().bottom <= document.getElementById('navbtns').getBoundingClientRect().top + 1"))
     check('phone shows one stat when nothing is filtered', ev("[...document.querySelectorAll('#stats .st')].filter(e=>e.offsetParent!==null).length")==1 and ev("document.querySelector('#stats .st .lb').textContent")=='Posts')
     ev("document.getElementById('decktoggle').click()"); pg.wait_for_timeout(500)
     check('phone Filters opens on View, then Filter and sort, then Browse', ev("(()=>{ const t=id=>document.getElementById(id).getBoundingClientRect().top; return t('layoutseg') < t('sort') && t('sort') < t('browseCol'); })()"))
