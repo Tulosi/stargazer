@@ -22,7 +22,7 @@
 /* Quiet chrome, loud media. Neutral monochrome UI; the only colour on the page comes from the posts themselves.
    Tokens keep their old names so existing component rules and scripts keep working. */
 :root{
-  --lav:#ddd5f3; --bg:#f5f3f9; --surface:#ffffff; --surface-2:#ece9f3; --ink:#17151f; --muted:#6b6780; --line:#e0dce9;
+  --seg-on:#ffffff; --lav:#ddd5f3; --bg:#f5f3f9; --surface:#ffffff; --surface-2:#ece9f3; --ink:#17151f; --muted:#6b6780; --line:#e0dce9;
   --sel:#4a3b78; --sel-ink:#ffffff; --hot:#b32fb8; --g1:#7c3aed; --g2:#c026d3; --g3:#ec4899;
   --accent:#4a3b78; --accent-ink:#ffffff; --chip-on:#4a3b78; --warn:#9c4607; --alert-ink:#a24743; --alert-bg:rgba(176,74,70,.10); --alert-line:rgba(176,74,70,.38);
   --glass:rgba(245,243,249,.8);
@@ -35,7 +35,7 @@
   color-scheme:light;
 }
 :root[data-theme="dark"]{
-  --lav:#3b3360; --bg:#131118; --surface:#1c1925; --surface-2:#292535; --ink:#ece9f4; --muted:#a09bb4; --line:#353047;
+  --seg-on:#3d3750; --lav:#3b3360; --bg:#131118; --surface:#1c1925; --surface-2:#292535; --ink:#ece9f4; --muted:#a09bb4; --line:#353047;
   --sel:#cbbdf2; --sel-ink:#1b1530; --hot:#e08af0;
   --accent:#cbbdf2; --accent-ink:#1b1530; --chip-on:#cbbdf2; --warn:#f0a35e; --alert-ink:#e49a95; --alert-bg:rgba(214,110,104,.13); --alert-line:rgba(214,110,104,.4);
   --glass:rgba(19,17,24,.78);
@@ -46,7 +46,7 @@
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --lav:#3b3360; --bg:#131118; --surface:#1c1925; --surface-2:#292535; --ink:#ece9f4; --muted:#a09bb4; --line:#353047;
+    --seg-on:#3d3750; --lav:#3b3360; --bg:#131118; --surface:#1c1925; --surface-2:#292535; --ink:#ece9f4; --muted:#a09bb4; --line:#353047;
   --sel:#cbbdf2; --sel-ink:#1b1530; --hot:#e08af0;
     --accent:#cbbdf2; --accent-ink:#1b1530; --chip-on:#cbbdf2; --warn:#f0a35e; --alert-ink:#e49a95; --alert-bg:rgba(214,110,104,.13); --alert-line:rgba(214,110,104,.4);
     --glass:rgba(19,17,24,.78);
@@ -546,7 +546,7 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
 .srcseg{display:flex;gap:2px;padding:3px;border-radius:999px;background:var(--surface-2)}
 .srcseg .pill{flex:1 1 auto;justify-content:center;height:30px;padding:0 10px;background:transparent}
 @media (hover:hover){.srcseg .pill:hover{background:var(--line)}}
-.srcseg .pill[aria-pressed=true]{background:var(--sel);color:var(--sel-ink)}
+.srcseg .pill[aria-pressed=true]{background:var(--seg-on);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.06)}   /* the chosen source is a quiet raised tab, so Open CSV stays the one filled action in the panel */
 .nsfwgrp{display:grid;gap:6px;margin-bottom:6px}
 .nsfwlbl{font-size:13px;display:flex;gap:6px;font-variant-numeric:tabular-nums}
 .nsfwlbl span{color:var(--muted)}
