@@ -35,23 +35,23 @@
   color-scheme:light;
 }
 :root[data-theme="dark"]{
-  --lav:#3b3360; --bg:#131118; --surface:#1c1925; --surface-2:#292535; --ink:#ece9f4; --muted:#9a95ae; --line:#353047;
+  --lav:#3b3360; --bg:#131118; --surface:#1c1925; --surface-2:#292535; --ink:#ece9f4; --muted:#a09bb4; --line:#353047;
   --sel:#cbbdf2; --sel-ink:#1b1530; --hot:#e08af0;
   --accent:#cbbdf2; --accent-ink:#1b1530; --chip-on:#cbbdf2; --warn:#f0a35e; --alert-ink:#e49a95; --alert-bg:rgba(214,110,104,.13); --alert-line:rgba(214,110,104,.4);
   --glass:rgba(19,17,24,.78);
   --shadow:0 18px 50px rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.4);
-  --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%239a95ae' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
+  --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%23a09bb4' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
   --ph-l:22%; --ph-s:16%;
   color-scheme:dark;
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --lav:#3b3360; --bg:#131118; --surface:#1c1925; --surface-2:#292535; --ink:#ece9f4; --muted:#9a95ae; --line:#353047;
+    --lav:#3b3360; --bg:#131118; --surface:#1c1925; --surface-2:#292535; --ink:#ece9f4; --muted:#a09bb4; --line:#353047;
   --sel:#cbbdf2; --sel-ink:#1b1530; --hot:#e08af0;
     --accent:#cbbdf2; --accent-ink:#1b1530; --chip-on:#cbbdf2; --warn:#f0a35e; --alert-ink:#e49a95; --alert-bg:rgba(214,110,104,.13); --alert-line:rgba(214,110,104,.4);
     --glass:rgba(19,17,24,.78);
     --shadow:0 18px 50px rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.4);
-    --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%239a95ae' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
+    --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%23a09bb4' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
     --ph-l:22%; --ph-s:16%;
     color-scheme:dark;
   }
@@ -95,7 +95,7 @@ button,select,input{font:inherit;color:inherit}
   /* beside the logo, right-aligned: number over label, three columns */
   .stats{position:relative;margin-left:auto;flex:0 0 auto;padding:0;display:grid;grid-template-columns:repeat(3,auto);column-gap:0;text-align:center}
   .stats[hidden]{display:none}
-  .stats .st{position:static;display:flex;flex-direction:column;align-items:center;padding:0 11px;line-height:1.15;font-size:9px;text-transform:uppercase;letter-spacing:.05em}
+  .stats .st{position:static;display:flex;flex-direction:column;align-items:center;padding:0 11px;line-height:1.15;font-size:10px;text-transform:uppercase;letter-spacing:.05em}
   .stats .st:last-child{padding-right:2px}
   .stats .st b{font-size:13px;letter-spacing:0;text-transform:none;line-height:1.2}
   .stats .lb{margin-left:0}
@@ -156,7 +156,7 @@ button,select,input{font:inherit;color:inherit}
 .acctbox>summary .acico{flex:none;margin-right:-2px;color:color-mix(in srgb,var(--g1) 75%,var(--muted))}
 .acctbox>summary::after{content:"";margin-left:auto;width:7px;height:7px;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:rotate(45deg);transition:transform .2s}
 .acctbox[open]>summary::after{transform:rotate(-135deg)}
-.optbadge{font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted)}
+.optbadge{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted)}
 .acctbox>summary .sumnote{font-size:12px;color:var(--muted)}
 .acctbox[open]>summary .sumnote{display:none}
 .acctbox[open]>summary{margin-bottom:6px}
@@ -175,7 +175,7 @@ button,select,input{font:inherit;color:inherit}
   .deck{-webkit-backdrop-filter:none;backdrop-filter:none;background:color-mix(in srgb,var(--bg) 96%,transparent)}   /* a blurred parent would trap the fixed bottom bar */
   .navbtns{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:45;justify-content:space-around;align-items:flex-start;padding:8px 10px calc(10px + env(safe-area-inset-bottom,0px));background:color-mix(in srgb,var(--bg) 90%,transparent);-webkit-backdrop-filter:saturate(1.4) blur(16px);backdrop-filter:saturate(1.4) blur(16px);border-top:1px solid var(--line)}
   .navbtns .pill{margin-bottom:15px;position:relative}
-  .navbtns .pill .nl{display:block;position:absolute;top:calc(100% + 3px);left:50%;transform:translateX(-50%);font-size:10px;font-weight:500;color:var(--muted);letter-spacing:.02em;line-height:1.2}
+  .navbtns .pill .nl{display:block;position:absolute;top:calc(100% + 3px);left:50%;transform:translateX(-50%);font-size:11px;font-weight:500;color:var(--muted);letter-spacing:.01em;line-height:1.2}
   body{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))}
   body #toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}   /* body: the base #toast rule comes later in the file and would win, putting toasts on top of the bottom bar */
   #pausebar{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
@@ -596,6 +596,7 @@ body.selecting #totop{bottom:90px}
 #toast .tact{margin-left:12px;background:none;border:0;color:inherit;font:700 12.5px var(--font);text-decoration:underline;cursor:pointer;padding:2px 0}
 .intro{max-width:620px;margin:0 auto;text-align:left;color:var(--ink)}
 p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100%;margin:0 0 28px;padding:0;color:var(--muted);font-size:13px;font-weight:500;line-height:1.4}
+.intro p.nodata{font-size:13px;font-weight:400}   /* a status line under the buttons: quieter than the steps and the call to action, not louder */
 .nodata svg{flex:none}
 .steps{list-style:none;margin:0 0 30px;padding:0;display:grid;gap:12px}
 .steps li{display:flex;gap:12px;align-items:flex-start;font-size:13.5px;line-height:1.55;color:var(--muted)}
@@ -1333,7 +1334,7 @@ function startImg(img, attempt){
       else loadFirst(arch, 8000, settle);
     });
   };
-  if(live.length && SEEN.has(imgKey(hostLast(live)[0]))) run(()=>{});   // seen before: no need to queue
+  if(live.length && (SEEN.has(imgKey(hostLast(live)[0])) || /^data:image\//.test(live[0]))) run(()=>{});   // seen before, or a built-in picture (sample posts): no network, so no need to queue
   else imgSlot(run);
 }
 /* No thumbnail but a video file: show its first frame as the still. */

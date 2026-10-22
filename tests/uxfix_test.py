@@ -12,9 +12,10 @@ with sync_playwright() as p:
     pg.route('**/*', lambda r: r.continue_() if r.request.url.startswith('file:') or r.request.url.startswith('data:') else r.abort())
     pg.goto(PAGE); pg.wait_for_timeout(900); ev = pg.evaluate
     check('first run offers sample posts next to Open CSV', ev("!!document.getElementById('introSample')") and 'Nothing loaded yet' in ev("document.querySelector('.nodata').textContent"))
-    pg.click('#introSample'); pg.wait_for_timeout(2500)
+    pg.click('#introSample'); pg.wait_for_timeout(1200)
     check('sample opens 12 invented posts', ev("POSTS.length")==12 and ev("document.querySelectorAll('.card').length")==12)
     check('sample pictures draw (data art)', ev("[...document.querySelectorAll('.card img')].filter(i=>i.naturalWidth>0).length")>=6)
+    check('every sample picture draws at once (built-in art skips the image queue)', ev("[...document.querySelectorAll('.card')].every(c=>{ const i=c.querySelector('.thumb img'); return i && i.naturalWidth>0; })"))
     check('two sample posts are starred', ev("FAVS.size")==2)
     check('sample has no backup or pull warnings', ev("document.getElementById('expHint').hidden") and ev("document.getElementById('pullLine').hidden"))
     check('one h1 for screen readers', ev("document.querySelectorAll('h1').length")==1)
