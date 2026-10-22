@@ -382,7 +382,7 @@ body.layout-list .meta a.cm:focus-visible{color:var(--ink)}@media (hover:hover) 
    List keeps its own row arrangement: there the layer boxes are display:contents, so the info text and the round buttons sit where they always did. ---- */
 .layer,.lay-act,.lay-cap{display:contents}
 .lhandle,.lh-close,.lay-play,.peek{display:none}
-body:not(.layout-list) .layer{--ico-star:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8' stroke-linejoin='round'%3E%3Cpath d='M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 17l-5.2 2.7 1-5.9-4.3-4.1 5.9-.8z'/%3E%3C/svg%3E");--ico-star-on:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23000' stroke='%23000' stroke-width='1.8' stroke-linejoin='round'%3E%3Cpath d='M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 17l-5.2 2.7 1-5.9-4.3-4.1 5.9-.8z'/%3E%3C/svg%3E");--lw:36px;--lh:32px;--gi:19px;display:flex;flex-direction:column;gap:3px;position:absolute;left:6px;right:6px;bottom:6px;z-index:4;padding:5px 10px 4px;border-radius:14px;background:rgba(20,18,30,.6);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.28);opacity:0;pointer-events:none;transform:translateY(10px);transition:opacity .2s ease,transform .24s var(--ease-out)}
+body:not(.layout-list) .layer{--ico-star:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8' stroke-linejoin='round'%3E%3Cpath d='M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 17l-5.2 2.7 1-5.9-4.3-4.1 5.9-.8z'/%3E%3C/svg%3E");--ico-star-on:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23000' stroke='%23000' stroke-width='1.8' stroke-linejoin='round'%3E%3Cpath d='M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 17l-5.2 2.7 1-5.9-4.3-4.1 5.9-.8z'/%3E%3C/svg%3E");--lw:36px;--lh:32px;--gi:19px;display:flex;flex-direction:column;gap:3px;position:absolute;left:0;right:0;bottom:0;z-index:4;padding:5px 16px 10px;border-radius:0;background:rgba(20,18,30,.6);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:#fff;box-shadow:inset 0 .5px 0 rgba(255,255,255,.14);opacity:0;pointer-events:none;transform:translateY(10px);transition:opacity .2s ease,transform .24s var(--ease-out)}
 body:not(.layout-list) .layer .info{position:static;display:block;padding:0;background:none;transition:none}
 body:not(.layout-list) .layer *{pointer-events:inherit}   /* a layer that is down must not catch taps meant for the media underneath */
 body:not(.layout-list) .layer .title{font:650 15px/1.25 var(--font);-webkit-line-clamp:2}
@@ -460,11 +460,11 @@ body.cm-always:not(.layout-list) .card .peek,body:not(.layout-list) .card.lay-op
 @media (hover:none){body.cm-hover:not(.layout-list) .card.is-focus .peek{display:none}}
 /* small tiles: the same layer, condensed, and never wider than the tile */
 @container (max-width:300px){
-  body:not(.layout-list) .layer{--lw:clamp(28px,calc((100cqw - 28px) / 6),34px);--lh:30px;--gi:18px;padding:4px 8px 3px}
+  body:not(.layout-list) .layer{--lw:clamp(28px,calc((100cqw - 28px) / 6),34px);--lh:30px;--gi:18px;padding:4px 14px 9px}
   body:not(.layout-list) .layer .title{font-size:13px}
 }
 @container (max-width:200px){
-  body:not(.layout-list) .layer{--lw:clamp(22px,calc((100cqw - 16px) / 5),28px);--lh:30px;--gi:17px;left:4px;right:4px;bottom:4px;padding:3px 4px 2px;gap:2px;border-radius:12px}
+  body:not(.layout-list) .layer{--lw:clamp(22px,calc((100cqw - 16px) / 5),28px);--lh:30px;--gi:17px;padding:3px 8px 6px;gap:2px}
   body:not(.layout-list) .lay-cap .nsfwb{display:none}   /* five icons is what a 2-across phone tile has room for; NSFW stays in Bulk Actions, Filters and the full-screen view */
   body:not(.layout-list) .layer .title{font-size:11px;-webkit-line-clamp:1}
   body:not(.layout-list) .layer .meta{display:none}
@@ -475,7 +475,7 @@ body.cm-always:not(.layout-list) .card .peek,body:not(.layout-list) .card.lay-op
 @container (max-width:140px){
   body:not(.layout-list) .layer .arch{display:none}
   body:not(.layout-list) .layer .actions .btn:not(.primary){display:none}
-  body:not(.layout-list) .layer{--lw:clamp(22px,calc((100cqw - 14px) / 4),28px);--lh:26px;--gi:calc(var(--lw)*.62);left:3px;right:3px;bottom:3px;padding:2px 3px 1px;border-radius:11px}   /* four icons share the tile; the catch areas (44px tall) do the rest */
+  body:not(.layout-list) .layer{--lw:clamp(22px,calc((100cqw - 14px) / 4),28px);--lh:26px;--gi:calc(var(--lw)*.62);padding:2px 6px 4px}   /* four icons share the tile; the catch areas (44px tall) do the rest */
   body:not(.layout-list) .lay-cap :is(.star,.fs,.save):not(.nsfwb)::after,body:not(.layout-list) .layer .actions .btn::after{inset:-9px 0}
   body:not(.layout-list) .layer .info{display:none}   /* on the narrowest tiles the layer keeps just Source and the pill, so it still fits a short tile */
 }
