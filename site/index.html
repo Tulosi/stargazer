@@ -547,7 +547,8 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
 .srcseg{display:flex;gap:2px;padding:3px;border-radius:999px;background:var(--surface-2)}
 .srcseg .pill{flex:1 1 auto;justify-content:center;height:30px;padding:0 10px;background:transparent}
 @media (hover:hover){.srcseg .pill:hover{background:var(--line)}}
-.srcseg .pill[aria-pressed=true]{background:var(--seg-on);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.06)}   /* the chosen source is a quiet raised tab, so Open CSV stays the one filled action in the panel */
+.srcseg .pill[aria-pressed=true]{background:var(--sel);color:var(--sel-ink)}
+#srcpanel .srcseg .pill[aria-pressed=true]{background:var(--seg-on);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.06)}   /* the chosen source is a quiet raised tab, so Open CSV stays the one filled action in the panel */
 .nsfwgrp{display:grid;gap:6px;margin-bottom:6px}
 .nsfwlbl{font-size:13px;display:flex;gap:6px;font-variant-numeric:tabular-nums}
 .nsfwlbl span{color:var(--muted)}
@@ -622,6 +623,8 @@ p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100
 .dropveil>div{padding:36px 54px;border:2px dashed var(--sel);border-radius:22px;font-size:18px;font-weight:600;color:var(--ink);background:var(--surface)}
 .intro code{font-size:.92em;background:var(--surface-2);padding:1px 6px;border-radius:6px}
 .empty{padding:90px 0;text-align:center;color:var(--muted);grid-column:1/-1;grid-row:span 12}
+.empty .emptynote{max-width:46ch;margin:10px auto 0;font-size:13px;line-height:1.5}
+.empty .emptyact{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}
 #sentinel{height:1px}
 @media (max-width:560px){:root{--card:360px}}   /* phones: the largest tile size, one column */
 @media (pointer:coarse){
@@ -2332,7 +2335,7 @@ function refresh(){
   measureGrid();
   list = sorted(POSTS.filter(p=>matches(p)));
   $('grid').replaceChildren(); shown = 0;
-  if(!list.length){ $('grid').innerHTML = '<div class="empty">'+(MODE==='sub' ? (FEED.loading ? 'Loading...' : 'No posts match these filters.') : (POSTS.length ? 'No saved posts match these filters.<p class="emptyact"><button class="pill" id="emptyClear" type="button">Clear filters</button></p>' : introHtml()))+'</div>'; updateMore(); }
+  if(!list.length){ $('grid').innerHTML = '<div class="empty">'+(MODE==='sub' ? (FEED.loading ? 'Loading...' : subEmptyHtml()) : (POSTS.length ? 'No saved posts match these filters.<p class="emptyact"><button class="pill" id="emptyClear" type="button">Clear filters</button></p>' : introHtml()))+'</div>'; updateMore(); }
   else renderMore();
   updateChips(); updateSummary();
 }
@@ -2346,6 +2349,34 @@ function chip(label,count,on,onClick){
   b.addEventListener('click',onClick); return b;
 }
 function toggle(set,v){ set.has(v)?set.delete(v):set.add(v); refresh(); }
+/* Subreddit mode with nothing to show: say whether the archives returned nothing (and what that usually means) or which filters hid what loaded. */
+function subEmptyHtml(){
+  const names = FEED.subs.map(s=>'r/'+esc(s.name)).join(', ');
+  if(!POSTS.length){
+    const failed = FEED.subs.filter(s=>s.err);
+    if(failed.length) return 'Could not reach the archives for '+failed.map(s=>'r/'+esc(s.name)).join(', ')+'. They are rate limited and sometimes slow; try again in a minute.';
+    return 'The archives returned no posts for '+names+'.<p class="emptynote">The subreddit may be private, banned or quarantined, spelled differently, or too new or small to be archived. Recent posts can also take a while to reach the archives.</p>';
+  }
+  let nsfw = 0, text = 0, broken = 0;
+  for(const p of POSTS){
+    if(state.nsfw==='hide' && isNsfw(p)) nsfw++;
+    else if(!state.showText && kindOf(p)==='text') text++;
+    else if(state.hideBroken && isUnavailable(p)) broken++;
+  }
+  const parts = [], acts = [];
+  if(nsfw){ parts.push(nsfw.toLocaleString()+' NSFW'); acts.push('<button class="pill" type="button" data-empty="nsfw">Blur NSFW instead</button>'); }
+  if(text){ parts.push(text.toLocaleString()+' text '+(text===1?'post':'posts')); acts.push('<button class="pill" type="button" data-empty="text">Show text posts</button>'); }
+  if(broken){ parts.push(broken.toLocaleString()+' with broken media'); acts.push('<button class="pill" type="button" data-empty="broken">Show broken media</button>'); }
+  acts.push('<button class="pill" id="emptyClear" type="button">Clear filters</button>');
+  return (parts.length ? POSTS.length.toLocaleString()+' posts loaded, all hidden by filters: '+parts.join(', ')+'.' : 'No posts match these filters.')+'<p class="emptyact">'+acts.join(' ')+'</p>';
+}
+document.addEventListener('click',e=>{
+  const b = e.target.closest && e.target.closest('[data-empty]'); if(!b) return;
+  const k = b.dataset.empty;
+  if(k==='nsfw') setNsfw('blur');
+  else if(k==='text'){ const c = $('showtext'); if(!c.checked) c.click(); }
+  else if(k==='broken'){ const c = $('hidebroken'); if(c.checked) c.click(); }
+});
 function updateChips(){
   const cc = {}, mc = {}, kc = {}; let nn = 0, tn = 0;
   for(const p of POSTS){
@@ -4192,15 +4223,16 @@ async function liveHotPage(names, after){
     if(/^https?:$/.test(location.protocol)) tries.push(rel);
     tries.push('http://localhost:8765'+rel, 'https://www.reddit.com'+path, 'https://old.reddit.com'+path);
   }
-  let last;
+  let last, redditErr;   // a missing relay (a 404 from this page's own host, or nothing on localhost) is expected and never the reason we report
   for(const url of tries){
+    const isReddit = /reddit\.com\//.test(url);
     try{
       const j = await timed(url, 20000, 'json');
-      if(j && j.data && Array.isArray(j.data.children)){ if(!/reddit\.com\//.test(url)) FEED.relay = url.slice(0, url.indexOf('/relay/')); return j.data; }
-      last = new Error('unexpected reply');
-    }catch(e){ if(!last || !(e instanceof TypeError) || last instanceof TypeError) last = last && !(last instanceof TypeError) ? last : e; }
+      if(j && j.data && Array.isArray(j.data.children)){ if(!isReddit) FEED.relay = url.slice(0, url.indexOf('/relay/')); return j.data; }
+      const e = new Error('unexpected reply'); if(isReddit) redditErr = redditErr || e; last = e;
+    }catch(e){ if(isReddit && (!redditErr || redditErr instanceof TypeError)) redditErr = e; last = last || e; }
   }
-  throw last;
+  throw redditErr || last;
 }
 async function feedLive(gen){
   const names = FEED.subs.map(s=>s.name);
@@ -4239,7 +4271,9 @@ async function feedRound(){
         FEED.loading = false; $('loadText').innerHTML = '<span class="err">Reddit: '+esc(e.message||'request failed')+'. Try again in a moment.</span>'; updateMore(); return;
       }
       FEED.live = false; syncSortUI();
-      FEED.note = 'Could not read Reddit\'s hot feed from this page ('+(e instanceof TypeError ? 'blocked by the browser' : (e.message||'failed'))+'), so this is an approximation built from the archives.';
+      FEED.note = e instanceof TypeError
+        ? 'Reddit does not let web pages read its live feed, so these are the newest posts from public archives (Arctic Shift, PullPush), not Reddit\'s Hot order. The optional local relay gets the real feed.'
+        : 'Reddit refused the live feed ('+(e.message||'failed')+'), so these are the newest posts from public archives instead of Reddit\'s Hot order.';
     }
   }
   const limit = Math.min(100, Math.max(4, Math.ceil(ROUND/todo.length)));

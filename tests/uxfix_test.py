@@ -15,6 +15,7 @@ with sync_playwright() as p:
     pg.click('#introSample'); pg.wait_for_timeout(1200)
     check('sample opens 12 invented posts', ev("POSTS.length")==12 and ev("document.querySelectorAll('.card').length")==12)
     check('sample pictures draw (data art)', ev("[...document.querySelectorAll('.card img')].filter(i=>i.naturalWidth>0).length")>=6)
+    check('Filters switches keep the filled accent; only the Source switch is a quiet tab', ev("(()=>{ const bg=s=>getComputedStyle(document.querySelector(s+' .pill[aria-pressed=true]')).backgroundColor; return bg('#layoutseg')===bg('#nsfwseg') && bg('#layoutseg')!==bg('#srcpanel .srcseg') && bg('#layoutseg')!=='rgba(0, 0, 0, 0)'; })()"))
     check('every sample picture draws at once (built-in art skips the image queue)', ev("[...document.querySelectorAll('.card')].every(c=>{ const i=c.querySelector('.thumb img'); return i && i.naturalWidth>0; })"))
     check('two sample posts are starred', ev("FAVS.size")==2)
     check('sample has no backup or pull warnings', ev("document.getElementById('expHint').hidden") and ev("document.getElementById('pullLine').hidden"))
