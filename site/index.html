@@ -514,6 +514,12 @@ body.layout-list #cardrow{display:none}   /* List keeps its own arrangement (inl
 #viewer .vvol{position:absolute;top:calc(max(12px,env(safe-area-inset-top)) + 11px);right:calc(max(12px,env(safe-area-inset-right)) + 98px);z-index:2;width:96px;height:18px;margin:0;accent-color:#fff;cursor:pointer}
 #viewer :focus-visible{outline-color:#fff}
 body.viewing{overflow:hidden}
+#viewer .vctl{left:50%;right:auto;bottom:calc(64px + env(safe-area-inset-bottom,0px));width:min(720px,calc(100% - 32px));transform:translateX(-50%);height:46px;padding:0 14px 0 10px;gap:12px;border-radius:14px;background:linear-gradient(100deg,rgba(52,38,71,.72),rgba(67,37,68,.72));-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);z-index:3;transition:opacity .2s ease}
+#viewer .vctl::before{content:"";position:absolute;left:14px;right:14px;top:0;height:1px;background:linear-gradient(90deg,rgba(124,58,237,.42),rgba(192,38,211,.36),rgba(236,72,153,.42));pointer-events:none}
+#viewer .vctl .pp,#viewer .vctl .vol{width:32px;height:32px}
+#viewer .vctl .time{font-size:12px}
+#viewer.vidle .vctl,#viewer.vidle .vposts{opacity:0;pointer-events:none}
+#viewer.vidle{cursor:none}
 #viewer .vposts{position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2;display:flex;gap:8px}
 #viewer .vpost{border:0;border-radius:999px;padding:8px 14px;background:rgba(255,255,255,.16);color:#fff;font:500 13px var(--font);cursor:pointer;white-space:nowrap}
 #viewer .vpost:disabled{opacity:.35;cursor:default}
@@ -868,13 +874,13 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
             <dd><kbd>Tab</kbd> moves from card to card</dd>
             <dd><kbd>Enter</kbd> on a card steps into its controls; <kbd>Esc</kbd> steps back out</dd>
             <dd><kbd>I</kbd> shows or hides the controls of the card under the pointer or in focus</dd>
-            <dd>Full screen: <kbd>&larr;</kbd> <kbd>&rarr;</kbd> pictures in a gallery, <kbd>&uarr;</kbd> <kbd>&darr;</kbd> previous / next post, <kbd>Esc</kbd> closes</dd>
+            <dd>Full screen: <kbd>&larr;</kbd> <kbd>&rarr;</kbd> pictures in a gallery, <kbd>&uarr;</kbd> <kbd>&darr;</kbd> previous / next post, <kbd>Space</kbd> or <kbd>K</kbd> plays / pauses a clip, <kbd>M</kbd> mutes, <kbd>Esc</kbd> closes</dd>
           </dl>
           <dl><dt>Touch and mouse</dt>
             <dd>Tap a picture to show or hide its controls</dd>
             <dd>Swipe the small handle up to open them, down to put them away</dd>
             <dd>Double tap (or double click) a clip to play, pause or resume it</dd>
-            <dd>Full screen: pinch to zoom, swipe for the next post</dd>
+            <dd>Full screen: pinch to zoom, swipe for the next post; tap a clip to show or hide its player bar (a click plays or pauses it)</dd>
           </dl>
         </div>
       </details>
@@ -1869,6 +1875,7 @@ function viewerPost(d){
   VIEW.root.querySelectorAll('.vnav,.vcount').forEach(x=>x.hidden = true);
   if(VIEW.aud){ VIEW.aud.pause(); VIEW.aud.removeAttribute('src'); VIEW.aud = null; }
   VIEW.root.querySelector('.vsound').hidden = true; VIEW.root.querySelector('.vvol').hidden = true;
+  VIEW.root.querySelectorAll('.vctl').forEach(n=>n.remove()); VIEW.root.classList.remove('vidle','vplaying'); clearTimeout(vIdleT);
   VIEW.stage.querySelectorAll('video').forEach(v=>{ v.pause(); v.removeAttribute('src'); try{ v.load(); }catch(e){} });
   VIEW.stage.replaceChildren();
   zReset(); zApply();
@@ -1887,6 +1894,7 @@ function closeViewer(){
   VIEW.root.querySelectorAll('.vnav,.vcount').forEach(x=>x.hidden = true);
   if(VIEW.aud){ VIEW.aud.pause(); VIEW.aud.removeAttribute('src'); VIEW.aud = null; }
   VIEW.root.querySelector('.vsound').hidden = true; VIEW.root.querySelector('.vvol').hidden = true;
+  VIEW.root.querySelectorAll('.vctl').forEach(n=>n.remove()); VIEW.root.classList.remove('vidle','vplaying'); clearTimeout(vIdleT);
   VIEW.stage.querySelectorAll('video').forEach(v=>{ v.pause(); v.removeAttribute('src'); try{ v.load(); }catch(e){} });
   VIEW.stage.replaceChildren();
   VIEW.root.hidden = true; document.body.classList.remove('viewing');
@@ -1904,7 +1912,7 @@ async function openViewer(p, opts){
   const mkImg = url => { const im = new Image(); im.referrerPolicy = 'no-referrer'; im.alt = titleOf(p); im.src = url; return im; };
   if(!opts.keep) VIEW.opener = document.activeElement;
   VIEW.cur = p; updatePostNav();
-  VIEW.stage.replaceChildren();
+  VIEW.stage.replaceChildren(); VIEW.root.querySelectorAll('.vctl').forEach(n=>n.remove()); VIEW.root.classList.remove('vidle','vplaying');
   VIEW.root.hidden = false; document.body.classList.add('viewing');
   applyAudio();
   if(!VIEW.hist){ try{ history.pushState({sgViewer:1}, ''); VIEW.hist = true; }catch(e){} }   // so the phone's Back gesture closes the viewer instead of leaving the page   // silence the card behind the viewer
@@ -1936,41 +1944,41 @@ async function openViewer(p, opts){
     return;
   }
   if(rgNeeds(p) && !rgBusy.has(p.id)){ rgBusy.add(p.id); try{ await rgRun(p); }catch(e){} if(tok!==VIEW.token) return; m = metaOf(p); }
-  if(m && !m.rgDone && !m.rgGone && rgSlug(p)){
-    /* RedGifs could not be asked for the real file (the browser blocked the lookup), so the clip we hold is Reddit's silent preview.
-       Show RedGifs' own player instead: it has sound and its own controls. */
+  const vlist = m ? [m.vh, ...playSources(m).filter(u=>!/^(yt|rg):/.test(u)), m.v].filter((u,i,a)=>u && a.indexOf(u)===i && !isGifFile(u)) : [];
+  const rgEmbed = () => {
+    /* No clip file to play at all (or every file failed): fall back to RedGifs' own player, which has sound and its own controls. */
     const f = document.createElement('iframe');
     f.className = 'vyt vrg'; f.title = titleOf(p); f.allowFullscreen = true; f.referrerPolicy = 'strict-origin-when-cross-origin';
     f.setAttribute('allow','autoplay; encrypted-media; picture-in-picture; fullscreen');
     f.src = 'https://www.redgifs.com/ifr/'+rgSlug(p);
-    VIEW.stage.replaceChildren(f);
-    updateAdvRg(); toast('Could not load this clip with sound directly, so you are seeing the RedGifs player instead.');
-    return;
-  }
-  const vlist = m ? [m.vh, ...playSources(m).filter(u=>!/^(yt|rg):/.test(u)), m.v].filter((u,i,a)=>u && a.indexOf(u)===i && !isGifFile(u)) : [];
+    VIEW.stage.replaceChildren(f); VIEW.root.querySelectorAll('.vctl').forEach(n=>n.remove());
+    updateAdvRg(); toast('Could not load this clip directly, so you are seeing the RedGifs player instead.');
+  };
+  const isRg = !!(m && !m.rgGone && rgSlug(p));
+  if(isRg && !vlist.length){ rgEmbed(); return; }   // otherwise a RedGifs clip plays from the file the card uses, in our own player (RedGifs' player would need its own full-screen button)
   const vurl = vlist[0] || (m ? (m.vh || m.v || '') : '');
   if(vurl && !isGifFile(vurl)){
     const v = document.createElement('video');
-    v.controls = true; v.loop = true; v.playsInline = true; v.preload = 'auto'; v.src = vurl;
+    v.controls = false; v.loop = true; v.playsInline = true; v.preload = 'auto'; v.src = vurl;
     /* Sound is always off when a clip opens; the speaker button or slider turns it on. */
     v.muted = true; v.volume = AUDIO.vol;
     v.addEventListener('volumechange',()=>{ if(VIEW.root.hidden) return; AUDIO.muted = v.muted; if(v.volume>0 && v.volume!==AUDIO.vol){ AUDIO.vol = v.volume; saveVol(); } applyAudio(); });
     if(thumbSrc) v.poster = thumbSrc;
     v.addEventListener('loadedmetadata',()=>{ if(opts.t){ try{ v.currentTime = opts.t; }catch(e){} } });
     let vi = 0;
-    v.addEventListener('error',()=>{ if(tok===VIEW.token && ++vi < vlist.length){ v.src = vlist[vi]; v.play().catch(()=>{}); return; } if(tok===VIEW.token && !thumbSrc){ toast('Could not load this video.'); closeViewer(); } });   // a source that fails hands over to the next one
+    v.addEventListener('error',()=>{ if(tok===VIEW.token && ++vi < vlist.length){ v.src = vlist[vi]; v.play().catch(()=>{}); return; } if(tok===VIEW.token && isRg){ rgEmbed(); return; } if(tok===VIEW.token && !thumbSrc){ toast('Could not load this video.'); closeViewer(); } });   // a source that fails hands over to the next one
     VIEW.stage.replaceChildren(v);
-    const sb = VIEW.root.querySelector('.vsound'), vr = VIEW.root.querySelector('.vvol'); sb.hidden = true; vr.hidden = true;
-    const paintSb = () => { sb.innerHTML = v.muted ? SPK_OFF : SPK_ON; sb.setAttribute('aria-label', v.muted ? 'Unmute' : 'Mute'); vr.value = v.muted ? 0 : Math.round(v.volume*100); };
-    const showSnd = () => { if(tok!==VIEW.token) return; sb.hidden = false; vr.hidden = false; paintSb(); };   // only for clips that really have sound
-    v.addEventListener('volumechange',paintSb);
-    sb.onclick = () => { v.muted = !v.muted; if(!v.muted && v.volume < 0.05) v.volume = 0.6; };
-    vr.oninput = () => { const x = vr.value/100; if(x===0) v.muted = true; else { v.muted = false; v.volume = x; } };
+    VIEW.root.querySelector('.vsound').hidden = true; VIEW.root.querySelector('.vvol').hidden = true;
+    const vc = viewerControls(v);
+    const showSnd = () => { if(tok!==VIEW.token) return; vc.classList.add('has-sound'); };   // the speaker shows only for clips that really have sound
+    /* a mouse click on the clip plays or pauses it; a tap on a touch screen shows or hides the bar instead */
+    let ptype = 'mouse'; v.addEventListener('pointerdown',e=>{ ptype = e.pointerType; });
+    v.addEventListener('click',e=>{ e.stopPropagation(); if(ptype==='mouse'){ if(v.paused) v.play().catch(()=>{}); else v.pause(); } else if(VIEW.root.classList.contains('vidle')) viewerWake(); else { clearTimeout(vIdleT); if(!v.paused) VIEW.root.classList.add('vidle'); } });
     if(m && m.ab){
       // Reddit video: sound comes from a separate file, kept in step with the picture
       const cands = [m.ab+'/DASH_AUDIO_128.mp4', m.ab+'/DASH_AUDIO_64.mp4', m.ab+'/DASH_audio.mp4'];
       const a = document.createElement('audio'); a.preload = 'auto'; a.loop = true; let ci = 0; a.src = cands[0];
-      a.addEventListener('error',()=>{ if(++ci < cands.length) a.src = cands[ci]; else { sb.hidden = true; vr.hidden = true; VIEW.aud = null; } });
+      a.addEventListener('error',()=>{ if(++ci < cands.length) a.src = cands[ci]; else { vc.classList.remove('has-sound'); VIEW.aud = null; } });
       a.addEventListener('loadedmetadata',showSnd);
       const drive = () => { a.volume = v.volume; a.muted = v.muted; if(!v.paused && !v.muted && a.paused){ try{ a.currentTime = v.currentTime; }catch(e){} a.play().catch(()=>{ a.muted = true; }); } if(v.muted || v.paused) a.pause(); };
       v.addEventListener('volumechange',drive); v.addEventListener('play',drive); v.addEventListener('pause',()=>a.pause());
@@ -2022,9 +2030,14 @@ async function openViewer(p, opts){
 }
 VIEW.root.querySelector('.vclose').addEventListener('click',closeViewer);
 VIEW.root.addEventListener('click',e=>{ if(e.target===VIEW.root || e.target===VIEW.stage) closeViewer(); });
+['pointermove','pointerdown'].forEach(ev=>VIEW.root.addEventListener(ev,e=>{ if(ev==='pointermove' && e.pointerType!=='mouse') return; viewerWake(); }));
 document.addEventListener('keydown',e=>{
   if(VIEW.root.hidden) return;
+  viewerWake();
+  const vv = VIEW.stage.querySelector('video');
   if(e.key==='Escape'){ e.preventDefault(); closeViewer(); }
+  else if(vv && (e.key===' ' || e.key==='k' || e.key==='K') && !(e.target.closest && e.target.closest('.vctl button,.vctl input,.vposts button'))){ e.preventDefault(); if(vv.paused) vv.play().catch(()=>{}); else vv.pause(); }
+  else if(vv && (e.key==='m' || e.key==='M')){ e.preventDefault(); vv.muted = !vv.muted; if(!vv.muted && vv.volume < 0.05) vv.volume = 0.6; }
   else if(e.key==='ArrowLeft' && VIEW.gal){ e.preventDefault(); viewerStep(-1); }
   else if(e.key==='ArrowRight' && VIEW.gal){ e.preventDefault(); viewerStep(1); }
   else if(e.key==='ArrowUp' || e.key==='PageUp' || (e.key==='ArrowLeft' && !VIEW.gal)){ e.preventDefault(); viewerPost(-1); }
@@ -2618,12 +2631,54 @@ function setupSound(t, el, ctl, entry){
 function setMuted(m){ AUDIO.muted = m; if(!m && AUDIO.vol < 0.05){ AUDIO.vol = 0.6; saveVol(); } applyAudio(); }
 const PP_PAUSE = '<svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><rect x="3.5" y="2.5" width="3" height="11" rx=".8"/><rect x="9.5" y="2.5" width="3" height="11" rx=".8"/></svg>';
 const PP_PLAY = '<svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M4.5 2.7v10.6a.6.6 0 00.92.5l8.3-5.3a.6.6 0 000-1L5.42 2.2a.6.6 0 00-.92.5z"/></svg>';
+/* The player bar's buttons, shared by the cards and the full-screen viewer so both look and behave the same. */
+const ctlHtml = isGif => '<button class="pp" type="button" aria-label="Pause">'+PP_PAUSE+'</button>'
+  + (isGif ? '' : '<input class="seek" type="range" min="0" max="1000" step="1" value="0" aria-label="Seek"><span class="time">0:00</span><span class="volwrap"><span class="volfly"><input class="volr" type="range" min="0" max="100" step="1" value="0" aria-label="Volume"></span><button class="vol" type="button" aria-label="Unmute"></button></span>');
+/* Full screen's own player bar for a video: play / pause, scrubber, time, and the speaker with its volume flyout, the same as on a card. It replaces the browser's
+   controls and RedGifs' player, so every clip plays in one first-party player. The bar fades while a clip plays untouched and comes back on any movement. */
+function viewerControls(v){
+  VIEW.root.querySelectorAll('.vctl').forEach(n=>n.remove());
+  const ctl = document.createElement('div'); ctl.className = 'ctl vctl'; ctl.innerHTML = ctlHtml(false);
+  VIEW.root.appendChild(ctl);
+  const pp = ctl.querySelector('.pp'), seek = ctl.querySelector('.seek'), time = ctl.querySelector('.time'),
+        vol = ctl.querySelector('.vol'), volr = ctl.querySelector('.volr'), volwrap = ctl.querySelector('.volwrap');
+  let scrubbing = false;
+  const paint = () => {
+    pp.innerHTML = v.paused ? PP_PLAY : PP_PAUSE; pp.setAttribute('aria-label', v.paused ? 'Play' : 'Pause');
+    vol.innerHTML = v.muted ? SPK_OFF : SPK_ON; vol.setAttribute('aria-label', v.muted ? 'Unmute' : 'Volume');
+    volr.value = v.muted ? 0 : Math.round(v.volume*100);
+    ctl.classList.toggle('paused', v.paused); VIEW.root.classList.toggle('vplaying', !v.paused); viewerWake();
+  };
+  const sync = () => { const d = v.duration; if(d && isFinite(d)){ if(!scrubbing) seek.value = Math.round(v.currentTime/d*1000); time.textContent = fmtTime(v.currentTime)+' / '+fmtTime(d); } };
+  pp.addEventListener('click',e=>{ e.stopPropagation(); if(v.paused) v.play().catch(()=>{}); else v.pause(); });
+  vol.addEventListener('click',e=>{
+    e.stopPropagation();
+    if(v.muted){ v.muted = false; if(v.volume < 0.05) v.volume = 0.6; return; }   // one press on the muted speaker turns sound on
+    const open = volwrap.classList.toggle('open'); vol.setAttribute('aria-expanded', open?'true':'false');   // after that it opens and closes the volume flyout
+  });
+  volr.addEventListener('input',()=>{ const x = volr.value/100; if(x===0) v.muted = true; else { v.muted = false; v.volume = x; } });
+  seek.addEventListener('input',()=>{ scrubbing = true; const d = v.duration; if(d && isFinite(d)){ v.currentTime = seek.value/1000*d; sync(); } });
+  seek.addEventListener('change',()=>{ scrubbing = false; });
+  ctl.addEventListener('click',e=>e.stopPropagation());
+  ['play','pause','volumechange'].forEach(ev=>v.addEventListener(ev,paint));
+  ['loadedmetadata','timeupdate','seeked'].forEach(ev=>v.addEventListener(ev,sync));
+  const tick = () => { if(!ctl.isConnected) return; if(!v.paused || scrubbing) sync(); requestAnimationFrame(tick); };
+  paint(); tick();
+  return ctl;
+}
+let vIdleT = 0;
+function viewerWake(){
+  VIEW.root.classList.remove('vidle'); clearTimeout(vIdleT);
+  vIdleT = setTimeout(()=>{
+    const c = VIEW.root.querySelector('.vctl');
+    if(!VIEW.root.hidden && c && VIEW.root.classList.contains('vplaying') && !c.querySelector('.volwrap.open') && !c.matches(':hover') && !c.querySelector(':focus-visible')) VIEW.root.classList.add('vidle');
+  }, 2600);
+}
 function buildControls(t, el, isGif){
   const card = t.closest('.card'); if(!card) return;
   card.querySelectorAll('.ctl,.cprog').forEach(n=>n.remove());
   const ctl = document.createElement('div'); ctl.className = 'ctl';
-  ctl.innerHTML = '<button class="pp" type="button" aria-label="Pause">'+PP_PAUSE+'</button>'
-    + (isGif ? '' : '<input class="seek" type="range" min="0" max="1000" step="1" value="0" aria-label="Seek"><span class="time">0:00</span><span class="volwrap"><span class="volfly"><input class="volr" type="range" min="0" max="100" step="1" value="0" aria-label="Volume"></span><button class="vol" type="button" aria-label="Unmute"></button></span>');
+  ctl.innerHTML = ctlHtml(isGif);
   const pp = ctl.querySelector('.pp');
   card.classList.add('playing'); (card.querySelector('.lay-play') || card).appendChild(ctl); cardTabs(card, !!card._kb);
   const paint = () => {
