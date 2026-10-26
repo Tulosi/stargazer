@@ -3131,22 +3131,38 @@ function slim(d,rec){
   return {t:d.title||'', o:d.over_18?1:0, th:pickThumb(s).replace(/&amp;/g,'&') || oth, g:gm?gm[1]:undefined, rs:(!gm && rs) ? rs.toLowerCase() : undefined, pv:/^https?:/.test(pvu) ? pvu : undefined, ab:ab||undefined, rb:rb||undefined, yt:ym?ym[1]:undefined, gl, rd:rd?rd[1]:undefined,
     m:type, u:(useLink || rd)?'':u, n:d.num_comments||0, s:d.score||0, a:d.author||'', c:d.created_utc||0, rec:rec||undefined, v:pickVideo(s), w, h};
 }
+/* One archive request for a batch of ids. A 400 (the archive refused the request) is retried in smaller pieces, so one odd id or an archive-side limit
+   does not cost the whole batch; pieces that are still refused are left for the next source. */
+async function askSource(url, ids, piece){
+  try{ return (await timed(url(ids), 60000, 'json')).data || []; }
+  catch(err){
+    if(err.status!==400 || piece || ids.length<=10) throw err;   // one level of splitting only, so a refusing archive is not flooded
+    const step = Math.ceil(ids.length/4); let out = [], ok = false, last = err;
+    for(let i=0;i<ids.length;i+=step){
+      try{ out = out.concat(await askSource(url, ids.slice(i,i+step), true)); ok = true; }
+      catch(e){ if(e.status===429) throw e; last = e; }
+    }
+    if(!ok) throw last;
+    return out;
+  }
+}
 async function fetchBatch(ids){
-  /* Ask each archive in turn; later sources are only asked for ids the earlier ones lacked. */
-  let remaining = ids.slice(), out = [], last, anyOk = false;
+  /* Ask each archive in turn; later sources are only asked for ids the earlier ones lacked. Only real post ids are sent (base 36). */
+  let remaining = ids.filter(i=>/^[a-z0-9]{1,13}$/i.test(i)), out = [], anyOk = false;
+  const errs = [];
   for(const [label,url] of SOURCES){
     if(!remaining.length) break;
     try{
       let data;
-      try{ data = (await timed(url(remaining), 60000, 'json')).data || []; }
-      catch(err){ if(err.status===429){ const e = new Error(label+' asked to slow down'); e.rate = true; throw e; } throw new Error(label+': '+err.message); }
+      try{ data = await askSource(url, remaining); }
+      catch(err){ if(err.status===429){ const e = new Error(label+' asked to slow down'); e.rate = true; throw e; } throw new Error(label+': '+(err instanceof TypeError ? 'could not connect' : err.message)); }
       anyOk = true;
       const got = new Set(data.map(d=>d.id));
       out = out.concat(data);
       remaining = remaining.filter(i=>!got.has(i));
-    }catch(e){ last=e; if(e.rate && !anyOk) throw e; }
+    }catch(e){ errs.push(e); if(e.rate && !anyOk) throw e; }
   }
-  if(!anyOk) throw last;
+  if(!anyOk){ const e = new Error(errs.map(x=>x.message).join('; ')); e.rate = errs.some(x=>x.rate); throw e; }   // say what every archive answered, not just the last one
   return out;
 }
 const sleep = ms => new Promise(r=>setTimeout(r,ms));
@@ -3178,7 +3194,7 @@ async function loadAll(){
         else if(tries>=4 || !e.rate){
           if(tries>=2 && ++chunkFails < 3){ data = []; skipped += chunk.length; break; }   // skip this batch (retried next visit), keep going
           if(tries>=2){
-            setProgress('Could not reach the Reddit archives ('+esc(e.message)+'). Showing titles only.',true);
+            setProgress('Could not reach the Reddit archives ('+esc(e.message)+'). Showing titles only. The archives are volunteer-run and go down from time to time; Retry, or come back later.',true);
             const b=document.createElement('button'); b.textContent='Retry'; b.onclick=()=>{ loading=false; loadAll(); };
             $('loadText').appendChild(document.createElement('br')); $('loadText').appendChild(b);
             loading = false; recoverAll(); return;
