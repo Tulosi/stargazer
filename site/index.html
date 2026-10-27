@@ -500,7 +500,7 @@ body.layout-list #cardrow{display:none}   /* List keeps its own arrangement (inl
 #viewer{position:fixed;inset:0;z-index:200;background:#000;display:flex;align-items:center;justify-content:center}
 #viewer[hidden]{display:none}
 #viewer .vstage{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
-#viewer img,#viewer video{max-width:100%;max-height:100%;object-fit:contain}
+#viewer img,#viewer video{width:100%;height:100%;object-fit:contain;background:#000}   /* fill the screen like the browser's own full screen: a 480p clip scales up instead of sitting at its own small size */
 #viewer iframe.vyt.vrg{width:100%;height:100%;aspect-ratio:auto;max-height:none}
 #viewer .vstage:has(iframe.vrg){height:calc(100% - 64px - env(safe-area-inset-bottom,0px));align-self:flex-start}   /* RedGifs' own player has its controls along the bottom, so leave a band for the previous/next post buttons instead of covering them */
 #viewer iframe.vyt{border:0;background:#000;width:min(100%,calc(100vh*16/9));aspect-ratio:16/9;max-height:100%}
@@ -1166,8 +1166,11 @@ function imgCandidates(p){
   if(m.yt){ add(prim, 'https://i.ytimg.com/vi/'+m.yt+'/maxresdefault.jpg'); add(prim, 'https://i.ytimg.com/vi/'+m.yt+'/hqdefault.jpg'); }
   if(m.gl && m.gl.length) add(prim, 'https://i.redd.it/'+m.gl[0]);
   add(arch, m.th && wbImg(m.th)); add(arch, direct && wbImg(direct)); add(arch, ij && wbImg(ij));
-  const still = prim.filter(u=>!isAnimUrl(u)), anim = prim.filter(isAnimUrl);   // an animated file plays by itself in an <img>, so it is only a fallback behind every still picture
-  return still.concat(anim, arch);
+  /* Reddit's own preview (m.th) always goes first: it is small, even when it is an animated GIF copy (it is frozen on its first frame when it loads).
+     Full-size files that move (an original .gif, imgur's ID.jpg on a GIF/video post, which is the whole animated file, often many MB) go last:
+     asking for them first held the image queue for seconds per tile, so every thumbnail on the page waited. */
+  const big = u => u!==m.th && mayMove(u,p);
+  return prim.filter(u=>!big(u)).concat(prim.filter(big), arch);
 }
 /* Full-screen order of preference: the original file (i.redd.it / direct link / imgur) first, then Reddit's full-size preview, then archive copies, and the card's thumbnail last. */
 function fullResCandidates(p, resolved){

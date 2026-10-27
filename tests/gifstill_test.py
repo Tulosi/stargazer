@@ -48,6 +48,13 @@ with sync_playwright() as p:
     pg2 = b.new_page(); pg2.route('**/*', lambda r: r.continue_() if r.request.url.startswith('file:') else r.abort()); pg2.goto(PAGE); pg2.wait_for_timeout(500)
     k = pg2.evaluate("()=>({v:vtype('https://preview.redd.it/a.gif?format=mp4&s=1'), g:vtype('https://i.redd.it/a.gif'), anim:isAnimUrl('https://preview.redd.it/a.gif?format=mp4&s=1'), still:isAnimUrl('https://preview.redd.it/a.jpg?format=pjpg&s=1'), file:isGifFile('https://preview.redd.it/a.gif?format=mp4')})")
     check('a .gif?format=mp4 address is a video, animated, and not a GIF file (%s)' % k, k['v']=='video' and k['g']=='img' and k['anim'] and not k['still'] and not k['file'])
+    o = pg2.evaluate("""()=>{
+      META.ord1 = {t:'x',o:0,m:'gif',th:'https://external-preview.redd.it/abc.gif?format=png8&s=1',u:'https://imgur.com/AbCdEf1',n:0,s:0,a:'',c:1};
+      META.ord2 = {t:'x',o:0,m:'gif',th:'https://preview.redd.it/q1.png?s=1',u:'https://i.redd.it/q1.gif',n:0,s:0,a:'',c:1};
+      return [imgCandidates({id:'ord1',sub:'gifs'}), imgCandidates({id:'ord2',sub:'gifs'})]; }""")
+    check('the small Reddit preview is asked for first, even when it is an animated copy (%s)' % o[0][:2], o[0][0].startswith('https://external-preview.redd.it/abc.gif'))
+    check('the full animated imgur file (ID.jpg on a GIF post) is asked for last, not first (%s)' % o[0], o[0].index('https://i.imgur.com/AbCdEf1.jpg') == len([u for u in o[0] if 'web.archive.org' not in u]) - 1)
+    check('a full-size original .gif goes behind the still preview (%s)' % o[1], o[1][0].startswith('https://preview.redd.it/q1.png') and o[1].index('https://i.redd.it/q1.gif') > 0)
     pg2.close()
     check('no page errors', not errs)
     b.close()

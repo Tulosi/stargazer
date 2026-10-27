@@ -87,6 +87,7 @@ with sync_playwright() as p:
     check('slider to 0 mutes', ev("document.querySelector('#viewer video').muted===true"))
     ev("(()=>{ const r=document.querySelector('#viewer .vctl .volr'); r.value=40; r.dispatchEvent(new Event('input')); })()"); pg.wait_for_timeout(200)
     check('slider unmutes and sets level', ev("(()=>{ const v=document.querySelector('#viewer video'); return v.muted===false && Math.abs(v.volume-0.4)<0.02; })()"))
+    check('a small clip is scaled to fill the full-screen stage', ev("(()=>{ const v=document.querySelector('#viewer video'), s=document.querySelector('#viewer .vstage').getBoundingClientRect(), r=v.getBoundingClientRect(); return Math.abs(r.width-s.width)<2 && Math.abs(r.height-s.height)<2; })()"))
     ev("document.querySelector('#viewer .vctl .volwrap').classList.remove('open')"); pg.mouse.move(600, 200); pg.wait_for_timeout(300)
     playing = lambda: ev("!document.querySelector('#viewer video').paused")
     ev("document.activeElement.blur()"); was = playing(); pg.keyboard.press(' '); pg.wait_for_timeout(300)
