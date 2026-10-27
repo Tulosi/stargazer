@@ -516,7 +516,9 @@ body.layout-list #cardrow{display:none}   /* List keeps its own arrangement (inl
 body.viewing{overflow:hidden}
 #viewer .vctl{left:50%;right:auto;bottom:calc(64px + env(safe-area-inset-bottom,0px));width:min(720px,calc(100% - 32px));transform:translateX(-50%);height:46px;padding:0 14px 0 10px;gap:12px;border-radius:14px;background:linear-gradient(100deg,rgba(52,38,71,.72),rgba(67,37,68,.72));-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);z-index:3;transition:opacity .2s ease}
 #viewer .vctl::before{content:"";position:absolute;left:14px;right:14px;top:0;height:1px;background:linear-gradient(90deg,rgba(124,58,237,.42),rgba(192,38,211,.36),rgba(236,72,153,.42));pointer-events:none}
-#viewer .vctl .pp,#viewer .vctl .vol{width:32px;height:32px}
+#viewer .vctl .pp,#viewer .vctl .vol,#viewer .vctl .vfs{width:32px;height:32px}
+#viewer .vctl .vfs{flex:none;border:0;border-radius:50%;padding:0;display:grid;place-items:center;background:rgba(255,255,255,.2);color:#fff;cursor:pointer}
+@media (hover:hover) and (pointer:fine){#viewer .vctl .vfs:hover{background:rgba(255,255,255,.34)}}
 #viewer .vctl .time{font-size:12px}
 #viewer.vidle .vctl,#viewer.vidle .vposts{opacity:0;pointer-events:none}
 #viewer.vidle{cursor:none}
@@ -740,7 +742,7 @@ body:not(.layout-list) .layer .btn{-webkit-backdrop-filter:none;backdrop-filter:
 #pausebar button{border:1px solid var(--line,rgba(128,128,128,.4));background:transparent;color:inherit;border-radius:999px;padding:4px 10px;font:inherit;cursor:pointer}
 #pausebar b{font-variant-numeric:tabular-nums}
 /* press feedback: a pressed control dips a little so it feels heard (not for people who ask for less motion) */
-@media (prefers-reduced-motion:no-preference){:is(.pill,.btn,.chip,.star,.fs,.save,.vol,.pp,.morebtn,.vclose,.vsound,.vpost,.vnav):active{scale:.97}}
+@media (prefers-reduced-motion:no-preference){:is(.pill,.btn,.chip,.star,.fs,.save,.vol,.pp,.vfs,.morebtn,.vclose,.vsound,.vpost,.vnav):active{scale:.97}}
 .expnow{margin-left:2px;font-weight:600}
 /* phones: no 300ms tap wait, and inputs at 16px so iOS does not zoom the page when one is focused */
 a,button,summary,label,select,[role=button]{touch-action:manipulation}
@@ -1138,6 +1140,7 @@ function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 const WB_TS = '20230601';
 const wbImg = u => 'https://web.archive.org/web/'+WB_TS+'im_/'+u;
 const NSFW_ICON = '<svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><g text-anchor="middle" font-family="Geist,Inter,system-ui,sans-serif" font-weight="700" font-size="6.8" fill="currentColor"><text x="8" y="7.2">NS</text><text x="8" y="13.2">FW</text></g></svg>';
+const FS_EXIT_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2v4H2M10 2v4h4M14 10h-4v4M2 10h4v4"/></svg>';
 const FS_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>';
 const isAnimUrl = u => { u = String(u).replace(/^https?:\/\/web\.archive\.org\/web\/\d+[a-z_]*\//i,''); return /\.gif(\?|#|$)/i.test(u) || isMp4Fmt(u); };   // Reddit's own preview copies of a GIF (external-preview.redd.it/NAME.gif?format=png8) are animated GIFs too
 /* A GIF used as a tile's picture would play whether or not anyone asked: draw its first frame on a canvas instead (the full-screen view and the hover / in-view play still use the real file). */
@@ -2641,7 +2644,8 @@ const ctlHtml = isGif => '<button class="pp" type="button" aria-label="Pause">'+
    controls and RedGifs' player, so every clip plays in one first-party player. The bar fades while a clip plays untouched and comes back on any movement. */
 function viewerControls(v){
   VIEW.root.querySelectorAll('.vctl').forEach(n=>n.remove());
-  const ctl = document.createElement('div'); ctl.className = 'ctl vctl'; ctl.innerHTML = ctlHtml(false);
+  const ctl = document.createElement('div'); ctl.className = 'ctl vctl'; ctl.innerHTML = ctlHtml(false)
+    + '<button class="vfs" type="button" aria-label="Exit full screen" title="Exit full screen">'+FS_EXIT_ICON+'</button>';   // the same place to leave full screen as the button that opened it, so nobody has to reach for the corner
   VIEW.root.appendChild(ctl);
   const pp = ctl.querySelector('.pp'), seek = ctl.querySelector('.seek'), time = ctl.querySelector('.time'),
         vol = ctl.querySelector('.vol'), volr = ctl.querySelector('.volr'), volwrap = ctl.querySelector('.volwrap');
@@ -2662,6 +2666,7 @@ function viewerControls(v){
   volr.addEventListener('input',()=>{ const x = volr.value/100; if(x===0) v.muted = true; else { v.muted = false; v.volume = x; } });
   seek.addEventListener('input',()=>{ scrubbing = true; const d = v.duration; if(d && isFinite(d)){ v.currentTime = seek.value/1000*d; sync(); } });
   seek.addEventListener('change',()=>{ scrubbing = false; });
+  ctl.querySelector('.vfs').addEventListener('click',e=>{ e.stopPropagation(); closeViewer(); });
   ctl.addEventListener('click',e=>e.stopPropagation());
   ['play','pause','volumechange'].forEach(ev=>v.addEventListener(ev,paint));
   ['loadedmetadata','timeupdate','seeked'].forEach(ev=>v.addEventListener(ev,sync));

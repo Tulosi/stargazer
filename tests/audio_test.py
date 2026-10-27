@@ -99,7 +99,8 @@ with sync_playwright() as p:
     check('the player bar fades while a clip plays untouched', ev("document.getElementById('viewer').classList.contains('vidle')"))
     pg.mouse.move(640, 160); pg.wait_for_timeout(200)
     check('moving the mouse brings it back', not ev("document.getElementById('viewer').classList.contains('vidle')"))
-    pg.keyboard.press('Escape'); pg.wait_for_timeout(300)
+    pg.click('#viewer .vctl .vfs'); pg.wait_for_timeout(300)
+    check('the exit full screen button in the player bar closes full screen', ev("document.getElementById('viewer').hidden"))
     pg.dispatch_event('article.card[data-id="quiet2"] button.fs', 'click'); pg.wait_for_timeout(1500)
     check('full screen: no speaker for a clip without sound', ev("(()=>{ const c=document.querySelector('#viewer .vctl'); return !!c && !c.classList.contains('has-sound'); })()"))
     # RedGifs refused in the browser, but the Supabase helper answers: the real file with sound is used
