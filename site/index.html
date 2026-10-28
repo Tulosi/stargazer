@@ -1978,8 +1978,9 @@ async function openViewer(p, opts){
     const vc = viewerControls(v);
     const showSnd = () => { if(tok!==VIEW.token) return; vc.classList.add('has-sound'); };   // the speaker shows only for clips that really have sound
     /* a mouse click on the clip plays or pauses it; a tap on a touch screen shows or hides the bar instead */
-    let ptype = 'mouse'; v.addEventListener('pointerdown',e=>{ ptype = e.pointerType; });
-    v.addEventListener('click',e=>{ e.stopPropagation(); if(ptype==='mouse'){ if(v.paused) v.play().catch(()=>{}); else v.pause(); } else if(VIEW.root.classList.contains('vidle')) viewerWake(); else { clearTimeout(vIdleT); if(!v.paused) VIEW.root.classList.add('vidle'); } });
+    /* Whether the bar was hidden is read on pointerdown, before the viewer's own pointerdown wakes it: reading it at click time saw the bar already woken, so a tap meant to bring it back hid it again at once. */
+    let ptype = 'mouse', wasIdle = false; v.addEventListener('pointerdown',e=>{ ptype = e.pointerType; wasIdle = VIEW.root.classList.contains('vidle'); });
+    v.addEventListener('click',e=>{ e.stopPropagation(); if(ptype==='mouse'){ if(v.paused) v.play().catch(()=>{}); else v.pause(); } else if(wasIdle) viewerWake(); else { clearTimeout(vIdleT); if(!v.paused) VIEW.root.classList.add('vidle'); } });
     if(m && m.ab){
       // Reddit video: sound comes from a separate file, kept in step with the picture
       const cands = [m.ab+'/DASH_AUDIO_128.mp4', m.ab+'/DASH_AUDIO_64.mp4', m.ab+'/DASH_audio.mp4'];
