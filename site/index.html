@@ -497,9 +497,10 @@ body.layout-list #cardrow{display:none}   /* List keeps its own arrangement (inl
 .ctl .time{flex:none;font:400 10.5px var(--font);font-variant-numeric:tabular-nums;color:rgba(255,255,255,.9);white-space:nowrap}
 
 /* ---- viewer, toast, misc ---- */
-#viewer{position:fixed;inset:0;z-index:200;background:#000;display:flex;align-items:center;justify-content:center}
+#viewer{position:fixed;inset:0;z-index:200;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden}
 #viewer[hidden]{display:none}
 #viewer .vstage{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+#viewer .vghost{position:absolute;inset:0;pointer-events:none;z-index:1}   /* the post sliding away while the next one slides in */
 #viewer img,#viewer video{width:100%;height:100%;object-fit:contain;background:#000}   /* fill the screen like the browser's own full screen: a 480p clip scales up instead of sitting at its own small size */
 #viewer iframe.vyt.vrg{width:100%;height:100%;aspect-ratio:auto;max-height:none}
 #viewer .vstage:has(iframe.vrg){height:calc(100% - 64px - env(safe-area-inset-bottom,0px));align-self:flex-start}   /* RedGifs' own player has its controls along the bottom, so leave a band for the previous/next post buttons instead of covering them */
@@ -1884,6 +1885,50 @@ function neighbour(d){
   return null;
 }
 function updatePostNav(){ const a = VIEW.root.querySelector('.vpp'), b = VIEW.root.querySelector('.vpn'); a.disabled = !neighbour(-1); b.disabled = !neighbour(1); }
+/* Moving between posts by swipe or button slides: the post follows the finger, then leaves upward (next) or downward (previous) while the
+   next one slides in from the other edge. Below a swipe the post springs back. A quick flick counts even when short. Keyboard steps stay instant
+   (they are repeated fast), and reduced motion skips the slide. The stage is what moves; the player bar and buttons stay put. */
+const SLIDE = {busy:false};
+const slideOK = () => !matchMedia('(prefers-reduced-motion: reduce)').matches;
+const SLIDE_EASE = 'cubic-bezier(.32,.72,0,1)';
+function stageY(px, anim){ const s = VIEW.stage; s.style.transition = anim || 'none'; s.style.transform = px ? 'translate3d(0,'+px+'px,0)' : ''; }
+function dragFollow(dx, dy){
+  if(SLIDE.busy || !slideOK()) return;
+  if(Math.abs(dy) < Math.abs(dx)*1.2){ stageY(0); return; }   // a sideways move belongs to the gallery
+  const d = dy < 0 ? 1 : -1;
+  stageY(neighbour(d) ? dy : dy*0.25);   // no post that way: it gives a little and comes back
+}
+function dragEnd(dx, dy, ms){
+  if(SLIDE.busy) return true;
+  const ay = Math.abs(dy), vertical = ay > Math.abs(dx)*1.5, d = dy < 0 ? 1 : -1;
+  const go = vertical && (ay > 70 || (ay > 24 && ay/Math.max(ms,1) > 0.35)) && neighbour(d);
+  if(go){ slideTo(d, dy); return true; }
+  if(VIEW.stage.style.transform) stageY(0, 'transform 260ms '+SLIDE_EASE);
+  return false;
+}
+function slideTo(d){
+  if(SLIDE.busy) return;
+  if(!slideOK() || !neighbour(d)){ stageY(0); viewerPost(d); return; }
+  SLIDE.busy = true;
+  const H = VIEW.root.clientHeight || innerHeight, st = VIEW.stage;
+  const from = new DOMMatrix(getComputedStyle(st).transform).m42 || 0;   // where the finger left it
+  /* The post on screen moves into a ghost copy of the stage that slides away, while the real stage loads the next post and slides in behind it,
+     so both are seen moving together, like a feed. A clip in the ghost is paused on its current frame and dropped once it is off screen. */
+  const ghost = document.createElement('div'); ghost.className = 'vstage vghost'; ghost.setAttribute('aria-hidden','true');
+  ghost.append(...st.childNodes); ghost.querySelectorAll('video').forEach(v=>{ try{ v.pause(); }catch(e){} });
+  ghost.style.transform = 'translate3d(0,'+from+'px,0)';
+  VIEW.root.insertBefore(ghost, st);
+  stageY(d > 0 ? H + from : -H + from);
+  viewerPost(d);
+  void st.offsetHeight;
+  const t = 'transform 320ms '+SLIDE_EASE;
+  ghost.style.transition = t; ghost.style.transform = 'translate3d(0,'+(d > 0 ? -H : H)+'px,0)';
+  stageY(0, t);
+  setTimeout(()=>{
+    ghost.querySelectorAll('video').forEach(v=>{ v.removeAttribute('src'); try{ v.load(); }catch(e){} }); ghost.remove();
+    SLIDE.busy = false; st.style.transition = ''; st.style.transform = '';
+  }, 340);
+}
 /* A swipe that means "next / previous post": mostly vertical (up = next, as in a feed) or mostly sideways (left = next). */
 function swipeStep(dx, dy){
   const ax = Math.abs(dx), ay = Math.abs(dy);
@@ -1918,6 +1963,7 @@ const viewerStep = d => { if(VIEW.gal && !VIEW.root.hidden) viewerGallery(VIEW.g
 addEventListener('popstate',()=>{ if(!VIEW.root.hidden){ VIEW.popping = true; try{ closeViewer(); }finally{ VIEW.popping = false; } } });
 function closeViewer(){
   if(VIEW.root.hidden) return;
+  SLIDE.busy = false; stageY(0); VIEW.root.querySelectorAll('.vghost').forEach(g=>g.remove());
   VIEW.token++;
   if(VIEW.gal){
     const g = VIEW.gal, card = cardEls.get(g.p.id);
@@ -2105,8 +2151,8 @@ document.addEventListener('keydown',e=>{
   else if(e.key==='ArrowUp' || e.key==='PageUp' || (e.key==='ArrowLeft' && !VIEW.gal)){ e.preventDefault(); viewerPost(-1); }
   else if(e.key==='ArrowDown' || e.key==='PageDown' || (e.key==='ArrowRight' && !VIEW.gal)){ e.preventDefault(); viewerPost(1); }
 });
-VIEW.root.querySelector('.vpp').addEventListener('click',e=>{ e.stopPropagation(); viewerPost(-1); });
-VIEW.root.querySelector('.vpn').addEventListener('click',e=>{ e.stopPropagation(); viewerPost(1); });
+VIEW.root.querySelector('.vpp').addEventListener('click',e=>{ e.stopPropagation(); slideTo(-1); });
+VIEW.root.querySelector('.vpn').addEventListener('click',e=>{ e.stopPropagation(); slideTo(1); });
 VIEW.root.querySelector('.vprev').addEventListener('click',e=>{ e.stopPropagation(); viewerStep(-1); });
 VIEW.root.querySelector('.vnext').addEventListener('click',e=>{ e.stopPropagation(); viewerStep(1); });
 /* Pinch to zoom, drag to pan, double-tap (or double-click) to toggle zoom, mouse wheel to zoom. Swipe between gallery images only while not zoomed. */
@@ -2130,11 +2176,11 @@ function zAt(cx, cy, ns){   // zoom to scale ns keeping the point under (cx,cy) 
 new MutationObserver(()=>{ zReset(); }).observe(VIEW.stage,{childList:true});
 (function(){
   const st = VIEW.stage, dist = () => { const [a,b] = [...ZOOM.pts.values()]; return Math.hypot(a.x-b.x, a.y-b.y); }, mid = () => { const [a,b] = [...ZOOM.pts.values()]; return {x:(a.x+b.x)/2, y:(a.y+b.y)/2}; };
-  let d0 = 0, s0 = 1, m0 = null, t0 = null, sx = 0, sy = 0;
+  let d0 = 0, s0 = 1, m0 = null, t0 = null, sx = 0, sy = 0, st0 = 0;
   /* Touch events drive touch screens (they behave the same in every mobile browser, including iOS Safari); pointer events drive mouse and pen. */
   const down = (id,x,y) => {
     ZOOM.pts.set(id,{x,y});
-    if(ZOOM.pts.size===1){ sx = x; sy = y; ZOOM.moved = false; ZOOM.multi = false; t0 = {x:ZOOM.x, y:ZOOM.y, cx:x, cy:y}; }
+    if(ZOOM.pts.size===1){ sx = x; sy = y; st0 = Date.now(); ZOOM.moved = false; ZOOM.multi = false; t0 = {x:ZOOM.x, y:ZOOM.y, cx:x, cy:y}; }
     if(ZOOM.pts.size===2){ ZOOM.multi = true; d0 = dist() || 1; s0 = ZOOM.s; m0 = mid(); t0 = {x:ZOOM.x, y:ZOOM.y}; }
   };
   const move = (id,x,y) => {
@@ -2145,6 +2191,8 @@ new MutationObserver(()=>{ zReset(); }).observe(VIEW.stage,{childList:true});
       const px0 = m0.x-(r.left+r.width/2), py0 = m0.y-(r.top+r.height/2), px1 = m1.x-(r.left+r.width/2), py1 = m1.y-(r.top+r.height/2);
       const qx = (px0 - t0.x)/s0, qy = (py0 - t0.y)/s0;
       ZOOM.s = ns; ZOOM.x = px1 - qx*ns; ZOOM.y = py1 - qy*ns; ZOOM.moved = true; zApply();
+    }else if(ZOOM.pts.size===1 && ZOOM.s===1 && !ZOOM.multi && String(id)[0]==='t'){
+      dragFollow(x - sx, y - sy);   // the picture follows a vertical drag
     }else if(ZOOM.pts.size===1 && ZOOM.s>1){
       ZOOM.x = t0.x + (x - t0.cx); ZOOM.y = t0.y + (y - t0.cy);
       if(Math.abs(x-t0.cx)+Math.abs(y-t0.cy) > 4) ZOOM.moved = true; zApply();
@@ -2158,7 +2206,8 @@ new MutationObserver(()=>{ zReset(); }).observe(VIEW.stage,{childList:true});
     const dx = x - sx, dy = y - sy;
     if(ZOOM.s===1 && !ZOOM.moved){
       const sw = swipeStep(dx, dy);
-      if(sw && sw.axis==='y'){ viewerPost(sw.d); return; }   // swipe up for the next post, down for the previous one
+      if(String(id)[0]==='t'){ if(dragEnd(dx, dy, Date.now()-st0)) return; }   // touch: swipe up for the next post, down for the previous one (slides)
+      else if(sw && sw.axis==='y'){ viewerPost(sw.d); return; }
       if(VIEW.gal && Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)){ viewerStep(dx<0 ? 1 : -1); return; }   // sideways in a gallery: the next picture
       if(sw){ viewerPost(sw.d); return; }   // sideways elsewhere: the next post too
     }
@@ -2177,12 +2226,14 @@ new MutationObserver(()=>{ zReset(); }).observe(VIEW.stage,{childList:true});
   /* Clips: a swipe on the video moves between posts the same way. Its touches are only watched (not taken over), so a plain tap still reaches the
      video and shows or hides the player bar; a swipe cancels that tap. Embedded players (YouTube, RedGifs) keep their own touches, so the buttons stay. */
   let vsw = null;
-  st.addEventListener('touchstart',e=>{ const v = e.target.closest && e.target.closest('video'); vsw = (v && e.touches.length===1) ? {x:e.touches[0].clientX, y:e.touches[0].clientY} : null; },{passive:true});
-  st.addEventListener('touchmove',e=>{ if(vsw && e.touches.length > 1) vsw = null; },{passive:true});
+  st.addEventListener('touchstart',e=>{ const v = e.target.closest && e.target.closest('video'); vsw = (v && e.touches.length===1) ? {x:e.touches[0].clientX, y:e.touches[0].clientY, t:Date.now()} : null; },{passive:true});
+  st.addEventListener('touchmove',e=>{ if(!vsw) return; if(e.touches.length > 1){ vsw = null; stageY(0); return; } dragFollow(e.touches[0].clientX - vsw.x, e.touches[0].clientY - vsw.y); },{passive:true});
   st.addEventListener('touchend',e=>{
-    if(!vsw) return; const t = e.changedTouches[0], sw = swipeStep(t.clientX - vsw.x, t.clientY - vsw.y); vsw = null;
-    if(sw){ e.preventDefault(); viewerPost(sw.d); }
+    if(!vsw) return; const t = e.changedTouches[0], dx = t.clientX - vsw.x, dy = t.clientY - vsw.y, ms = Date.now() - vsw.t; vsw = null;
+    if(dragEnd(dx, dy, ms)){ e.preventDefault(); return; }
+    const sw = swipeStep(dx, dy); if(sw && sw.axis==='x'){ e.preventDefault(); slideTo(sw.d); }
   },{passive:false});
+  st.addEventListener('touchcancel',()=>{ if(vsw){ vsw = null; stageY(0, 'transform 260ms '+SLIDE_EASE); } },{passive:true});
   // iOS Safari reports pinches as gestures; keep the page itself from zooming
   ['gesturestart','gesturechange','gestureend'].forEach(ev=>VIEW.root.addEventListener(ev,e=>e.preventDefault()));
   // mouse and pen
