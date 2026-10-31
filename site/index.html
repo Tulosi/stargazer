@@ -522,6 +522,7 @@ body.viewing{overflow:hidden}
 #viewer .vctl .time{font-size:12px}
 #viewer.vidle .vctl,#viewer.vidle .vposts{opacity:0;pointer-events:none}
 #viewer.vidle{cursor:none}
+#viewer .vgone{margin:auto;padding:0 24px;max-width:36ch;text-align:center;color:rgba(255,255,255,.82);font:500 15px/1.5 var(--font)}
 #viewer .vposts{position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2;display:flex;gap:8px}
 #viewer .vpost{border:0;border-radius:999px;padding:8px 14px;background:rgba(255,255,255,.16);color:#fff;font:500 13px var(--font);cursor:pointer;white-space:nowrap}
 #viewer .vpost:disabled{opacity:.35;cursor:default}
@@ -1773,6 +1774,16 @@ async function rgFetchMany(slugs){
 /* If the API can't be reached from the browser, fall back to the file names Reddit's own embed data reveals. */
 const rgGuess = m => m.g ? {v:'https://media.redgifs.com/'+m.g+'.mp4', th:'', w:0, h:0} : null;   // the full file is the one that carries sound; the -mobile one is silent
 /* Reddit's own copy of a RedGifs clip is a silent preview, so a RedGifs post is always looked up on RedGifs (once) to get the real file with its sound. */
+/* Every file for a RedGifs post failed as "not there" (not a network hiccup), and RedGifs itself has not vouched for the clip: it has been deleted.
+   Mark it gone so it counts as broken media (Hide broken media hides it, the dead count includes it) instead of showing RedGifs' own "Error loading" player. */
+async function rgFilesGone(p, url){
+  const m = metaOf(p); if(!m || !rgSlug(p) || m.rgDone || m.rgGone) return !!(m && m.rgGone);
+  /* A <video> reports a missing file and a dropped connection the same way, so ask the server once: an answer of any kind (an opaque reply,
+     which is what a 404 gives here) means the file is not there; a request that never gets an answer is a network problem, not a deletion. */
+  try{ await fetch(url || m.v, {method:'HEAD', mode:'no-cors', cache:'no-store'}); }catch(e){ return false; }
+  rgApply(p, {gone:1}); return true;
+}
+const goneNote = msg => { const d = document.createElement('p'); d.className = 'vgone'; d.textContent = msg; return d; };
 const rgNeeds = p => { const m = metaOf(p); return !!(m && !m.rgDone && !m.rgGone && m.m!=='removed' && rgSlug(p)); };
 function rgApply(p,res){
   const m = metaOf(p); if(!m) return;
@@ -1908,7 +1919,26 @@ function closeViewer(){
   if(VIEW.hist){ VIEW.hist = false; if(!VIEW.popping){ try{ history.back(); }catch(e){} } }
   if(fsEl()){ try{ (document.exitFullscreen || document.webkitExitFullscreen).call(document); }catch(e){} }
   VIEW.fs = false;
+  const last = VIEW.cur;
+  if(last && last!==VIEW.first && list.includes(last)){ landOn(last); return; }   // moved on through posts in full screen: the feed picks up at the last one shown
   if(VIEW.opener && VIEW.opener.isConnected) try{ VIEW.opener.focus({preventScroll:true}); }catch(e){}
+}
+/* After full screen, bring the feed to the card of the post that was showing last: render far enough down the list, then centre that card once the
+   browser has finished leaving full screen and going back in history (both can move the page), and make it the card in focus on touch screens. */
+function landOn(p){
+  const idx = list.indexOf(p);
+  while(idx >= shown && shown < list.length) renderMore();
+  const card = cardEls.get(p.id); if(!card) return;
+  const go = again => {
+    if(!card.isConnected || !VIEW.root.hidden) return;
+    const r = card.getBoundingClientRect(), mid = (r.top + r.bottom)/2;
+    const th = card.querySelector('a.thumb');
+    if(again && mid > innerHeight*0.1 && mid < innerHeight*0.9){ if(th && !card.contains(document.activeElement)) try{ th.focus({preventScroll:true}); }catch(e){} return; }   // later passes only fix a page that leaving full screen or going back in history moved (the browser restores the old scroll position)
+    card.scrollIntoView({block:'center', behavior:'instant'});
+    pinned = card; pinY = scrollY; cardView.add(card); schedFocus();
+    if(th) try{ th.focus({preventScroll:true}); }catch(e){}
+  };
+  go(false); setTimeout(()=>go(true), 120); setTimeout(()=>go(true), 450);
 }
 async function openViewer(p, opts){
   opts = opts || {};
@@ -1916,7 +1946,7 @@ async function openViewer(p, opts){
   const thumbImg = card && card.querySelector('.thumb img');
   const thumbSrc = thumbImg ? (thumbImg.currentSrc || thumbImg.src) : '';
   const mkImg = url => { const im = new Image(); im.referrerPolicy = 'no-referrer'; im.alt = titleOf(p); im.src = url; return im; };
-  if(!opts.keep) VIEW.opener = document.activeElement;
+  if(!opts.keep){ VIEW.opener = document.activeElement; VIEW.first = p; }
   VIEW.cur = p; updatePostNav();
   VIEW.stage.replaceChildren(); VIEW.root.querySelectorAll('.vctl').forEach(n=>n.remove()); VIEW.root.classList.remove('vidle','vplaying');
   VIEW.root.hidden = false; document.body.classList.add('viewing');
@@ -1972,7 +2002,16 @@ async function openViewer(p, opts){
     if(thumbSrc) v.poster = thumbSrc;
     v.addEventListener('loadedmetadata',()=>{ if(opts.t){ try{ v.currentTime = opts.t; }catch(e){} } });
     let vi = 0;
-    v.addEventListener('error',()=>{ if(tok===VIEW.token && ++vi < vlist.length){ v.src = vlist[vi]; v.play().catch(()=>{}); return; } if(tok===VIEW.token && isRg){ rgEmbed(); return; } if(tok===VIEW.token && !thumbSrc){ toast('Could not load this video.'); closeViewer(); } });   // a source that fails hands over to the next one
+    let allGone = true;   // every file answered "not found / not a video" (code 4), not a network hiccup (code 2)
+    v.addEventListener('error',()=>{ if(!v.error || v.error.code!==4) allGone = false; if(tok===VIEW.token && ++vi < vlist.length){ v.src = vlist[vi]; v.play().catch(()=>{}); return; }
+      if(tok===VIEW.token && isRg){
+        (allGone ? rgFilesGone(p, vlist[vlist.length-1]) : Promise.resolve(false)).then(gone=>{
+          if(tok!==VIEW.token) return;
+          if(gone){ VIEW.stage.replaceChildren(goneNote('This clip has been removed from RedGifs.')); VIEW.root.querySelectorAll('.vctl').forEach(n=>n.remove()); }
+          else rgEmbed();
+        });
+        return;
+      } if(tok===VIEW.token && !thumbSrc){ toast('Could not load this video.'); closeViewer(); } });   // a source that fails hands over to the next one
     VIEW.stage.replaceChildren(v);
     VIEW.root.querySelector('.vsound').hidden = true; VIEW.root.querySelector('.vvol').hidden = true;
     const vc = viewerControls(v);
@@ -2796,7 +2835,7 @@ function startPlay(t){
     // try the next quality / file before giving up
     const rest = (t.dataset.vc||'').split('|').filter(Boolean);
     if(rest.length && !isGif){ t.dataset.v = rest.shift(); t.dataset.vc = rest.join('|'); el.src = t.dataset.v; el.play().catch(()=>{}); }
-    else clearPlayUI(t);
+    else { clearPlayUI(t); const card = t.closest('.card'); if(card && card._p && el.error && el.error.code===4 && !t.dataset.vc) rgFilesGone(card._p, el.currentSrc || el.src); }   // a RedGifs clip whose every file is gone is broken media, like any other dead post
   });
   t.insertBefore(el, t.querySelector('.badges'));
   buildControls(t, el, isGif);
