@@ -35,6 +35,22 @@ with sync_playwright() as p:
     check('and it stays up (no flash and gone)', not idle())
     pg.tap('#viewer video'); pg.wait_for_timeout(400)
     check('a second tap hides it again', idle())
+    cdp = ctx.new_cdp_session(pg)
+    def swipe(x, y0, y1):
+        pts = lambda y: [{'x': x, 'y': y}]
+        cdp.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': pts(y0)})
+        for k in range(1, 6): cdp.send('Input.dispatchTouchEvent', {'type': 'touchMove', 'touchPoints': pts(y0 + (y1 - y0) * k / 5)})
+        cdp.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []}); pg.wait_for_timeout(500)
+    cur = lambda: pg.evaluate("list.indexOf(VIEW.cur)")
+    start = cur(); swipe(195, 600, 250)
+    check('a swipe up on a clip goes to the next post', cur() == start + 1)
+    swipe(195, 250, 600)
+    check('a swipe down goes back to the previous post', cur() == start)
+    pg.evaluate("openViewer(list[2])"); pg.wait_for_timeout(600)
+    if pg.evaluate("!!document.querySelector('#viewer .vstage img')"):
+        swipe(195, 600, 250); check('a swipe up on a picture goes to the next post', cur() == 3)
+        swipe(195, 250, 600); check('a swipe down on a picture goes back', cur() == 2)
+    check('swiping does not close full screen', not pg.evaluate("VIEW.root.hidden"))
     check('no page errors', not errs)
     b.close()
 srv.shutdown()

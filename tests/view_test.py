@@ -32,7 +32,8 @@ with sync_playwright() as p:
       const fire=(type,y)=>im.dispatchEvent(new TouchEvent(type,{touches:type==='touchend'?[]:[mk(type,y)],changedTouches:[mk(type,y)],bubbles:true,cancelable:true}));
       fire('touchstart',200); fire('touchmove',260); fire('touchmove',360); fire('touchend',360); }""")
     pg.wait_for_timeout(500)
-    check('swiping down closes the viewer', ev("document.getElementById('viewer').hidden") is True)
+    check('swiping down no longer closes the viewer (it goes to the previous post; the first post has none)', ev("document.getElementById('viewer').hidden") is False)
     check('no page errors', not errs)
+    if errs: print(errs)
     b.close()
 raise SystemExit(1 if bad else 0)

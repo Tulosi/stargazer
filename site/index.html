@@ -883,7 +883,7 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
             <dd>Tap a picture to show or hide its controls</dd>
             <dd>Swipe the small handle up to open them, down to put them away</dd>
             <dd>Double tap (or double click) a clip to play, pause or resume it</dd>
-            <dd>Full screen: pinch to zoom, swipe for the next post; tap a clip to show or hide its player bar (a click plays or pauses it)</dd>
+            <dd>Full screen: swipe up for the next post, down for the previous one (sideways moves through a gallery's pictures); pinch to zoom; tap a clip to show or hide its player bar (a click plays or pauses it)</dd>
           </dl>
         </div>
       </details>
@@ -1884,6 +1884,13 @@ function neighbour(d){
   return null;
 }
 function updatePostNav(){ const a = VIEW.root.querySelector('.vpp'), b = VIEW.root.querySelector('.vpn'); a.disabled = !neighbour(-1); b.disabled = !neighbour(1); }
+/* A swipe that means "next / previous post": mostly vertical (up = next, as in a feed) or mostly sideways (left = next). */
+function swipeStep(dx, dy){
+  const ax = Math.abs(dx), ay = Math.abs(dy);
+  if(ay > 70 && ay > ax*1.5) return {axis:'y', d: dy < 0 ? 1 : -1};
+  if(ax > 70 && ax > ay*1.5) return {axis:'x', d: dx < 0 ? 1 : -1};
+  return null;
+}
 function viewerPost(d){
   if(VIEW.root.hidden || !VIEW.cur) return;
   const n = neighbour(d); if(!n) return;
@@ -2139,11 +2146,13 @@ new MutationObserver(()=>{ zReset(); }).observe(VIEW.stage,{childList:true});
     const was = ZOOM.pts.size; ZOOM.pts.delete(id);
     if(was===2){ const left = [...ZOOM.pts.values()][0]; if(left){ t0 = {x:ZOOM.x, y:ZOOM.y, cx:left.x, cy:left.y}; } return; }
     if(ZOOM.multi){ if(!ZOOM.pts.size) setTimeout(()=>{ ZOOM.multi = false; },0); return; }
-    const dx = x - sx;
-    if(ZOOM.s===1 && !ZOOM.moved && VIEW.gal && Math.abs(dx) > 50){ viewerStep(dx<0 ? 1 : -1); return; }   // swipe to the next image
-    const dy = y - sy;
-    if(ZOOM.s===1 && !ZOOM.moved && !VIEW.gal && Math.abs(dx) > 70 && Math.abs(dy) < 60){ viewerPost(dx<0 ? 1 : -1); return; }   // swipe to the next post
-    if(ZOOM.s===1 && !ZOOM.moved && dy > 90 && dy > Math.abs(dx)*1.6){ closeViewer(); return; }   // swipe down to close
+    const dx = x - sx, dy = y - sy;
+    if(ZOOM.s===1 && !ZOOM.moved){
+      const sw = swipeStep(dx, dy);
+      if(sw && sw.axis==='y'){ viewerPost(sw.d); return; }   // swipe up for the next post, down for the previous one
+      if(VIEW.gal && Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)){ viewerStep(dx<0 ? 1 : -1); return; }   // sideways in a gallery: the next picture
+      if(sw){ viewerPost(sw.d); return; }   // sideways elsewhere: the next post too
+    }
     if(!ZOOM.moved){   // a tap; two quick taps toggle zoom
       const now = Date.now();
       if(now - ZOOM.lastT < 320){ ZOOM.lastT = 0; ZOOM.s>1 ? (ZOOM.s = 1, zApply()) : zAt(x, y, 2.5); }
@@ -2156,6 +2165,15 @@ new MutationObserver(()=>{ zReset(); }).observe(VIEW.stage,{childList:true});
   const tend = e=>{ if(!ZOOM.pts.size) return; e.preventDefault(); for(const t of e.changedTouches) up('t'+t.identifier, t.clientX, t.clientY); };
   st.addEventListener('touchend',tend,{passive:false});
   st.addEventListener('touchcancel',e=>{ for(const t of e.changedTouches) up('t'+t.identifier, t.clientX, t.clientY); },{passive:false});
+  /* Clips: a swipe on the video moves between posts the same way. Its touches are only watched (not taken over), so a plain tap still reaches the
+     video and shows or hides the player bar; a swipe cancels that tap. Embedded players (YouTube, RedGifs) keep their own touches, so the buttons stay. */
+  let vsw = null;
+  st.addEventListener('touchstart',e=>{ const v = e.target.closest && e.target.closest('video'); vsw = (v && e.touches.length===1) ? {x:e.touches[0].clientX, y:e.touches[0].clientY} : null; },{passive:true});
+  st.addEventListener('touchmove',e=>{ if(vsw && e.touches.length > 1) vsw = null; },{passive:true});
+  st.addEventListener('touchend',e=>{
+    if(!vsw) return; const t = e.changedTouches[0], sw = swipeStep(t.clientX - vsw.x, t.clientY - vsw.y); vsw = null;
+    if(sw){ e.preventDefault(); viewerPost(sw.d); }
+  },{passive:false});
   // iOS Safari reports pinches as gestures; keep the page itself from zooming
   ['gesturestart','gesturechange','gestureend'].forEach(ev=>VIEW.root.addEventListener(ev,e=>e.preventDefault()));
   // mouse and pen
