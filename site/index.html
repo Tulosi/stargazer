@@ -1891,6 +1891,14 @@ function swipeStep(dx, dy){
   if(ax > 70 && ax > ay*1.5) return {axis:'x', d: dx < 0 ? 1 : -1};
   return null;
 }
+/* A post with nothing that loads never throws the person out of full screen: while moving through posts it is skipped in the same direction
+   (with a short note), and a post opened directly says so in place, with the previous / next buttons and swipes still working. */
+function viewerFail(){
+  const d = VIEW.dir;
+  if(d && neighbour(d)){ toast('Skipped a post with nothing to show.'); viewerPost(d); return; }
+  VIEW.root.querySelectorAll('.vctl').forEach(n=>n.remove());
+  VIEW.stage.replaceChildren(goneNote('Nothing to show for this post.'));
+}
 function viewerPost(d){
   if(VIEW.root.hidden || !VIEW.cur) return;
   const n = neighbour(d); if(!n) return;
@@ -1903,6 +1911,7 @@ function viewerPost(d){
   VIEW.stage.querySelectorAll('video').forEach(v=>{ v.pause(); v.removeAttribute('src'); try{ v.load(); }catch(e){} });
   VIEW.stage.replaceChildren();
   zReset(); zApply();
+  VIEW.dir = d;
   openViewer(n, {keep:true});
 }
 const viewerStep = d => { if(VIEW.gal && !VIEW.root.hidden) viewerGallery(VIEW.gal.i + d); };
@@ -1953,7 +1962,7 @@ async function openViewer(p, opts){
   const thumbImg = card && card.querySelector('.thumb img');
   const thumbSrc = thumbImg ? (thumbImg.currentSrc || thumbImg.src) : '';
   const mkImg = url => { const im = new Image(); im.referrerPolicy = 'no-referrer'; im.alt = titleOf(p); im.src = url; return im; };
-  if(!opts.keep){ VIEW.opener = document.activeElement; VIEW.first = p; }
+  if(!opts.keep){ VIEW.opener = document.activeElement; VIEW.first = p; VIEW.dir = 0; }
   VIEW.cur = p; updatePostNav();
   VIEW.stage.replaceChildren(); VIEW.root.querySelectorAll('.vctl').forEach(n=>n.remove()); VIEW.root.classList.remove('vidle','vplaying');
   VIEW.root.hidden = false; document.body.classList.add('viewing');
@@ -2018,7 +2027,7 @@ async function openViewer(p, opts){
           else rgEmbed();
         });
         return;
-      } if(tok===VIEW.token && !thumbSrc){ toast('Could not load this video.'); closeViewer(); } });   // a source that fails hands over to the next one
+      } if(tok===VIEW.token && !thumbSrc) viewerFail(); });   // a source that fails hands over to the next one
     VIEW.stage.replaceChildren(v);
     VIEW.root.querySelector('.vsound').hidden = true; VIEW.root.querySelector('.vvol').hidden = true;
     const vc = viewerControls(v);
@@ -2056,14 +2065,14 @@ async function openViewer(p, opts){
     if(r && !r.dead && !r.unknown && r.type==='img' && r.href) resolved = r.href;
   }
   const urls = fullResCandidates(p, resolved);
-  if(!urls.length){ if(!thumbSrc){ toast('No media available to show.'); closeViewer(); } return; }
+  if(!urls.length){ if(!thumbSrc) viewerFail(); return; }
   /* Try sources in order; start the next one when one errors, loads as a known "removed" placeholder, or is just slow. The first good one wins. */
   let k = 0, won = false; const probes = [], timers = [];
   const settle = im => { won = true; timers.forEach(clearTimeout); probes.forEach(x=>{ if(x!==im){ x.onload = x.onerror = null; x.removeAttribute('src'); } }); VIEW.stage.replaceChildren(im); };
   const fail = () => {
     if(won || tok!==VIEW.token) return;
     if(k < urls.length){ next(); return; }
-    if(probes.every(x=>x._done) && !thumbSrc && !VIEW.stage.querySelector('img')){ toast('No media available to show.'); closeViewer(); }
+    if(probes.every(x=>x._done) && !thumbSrc && !VIEW.stage.querySelector('img') && tok===VIEW.token) viewerFail();
   };
   const next = () => {
     if(won || tok!==VIEW.token || k >= urls.length) return;
