@@ -1141,6 +1141,7 @@ function sorted(arr){
 function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 const WB_TS = '20230601';
 const wbImg = u => 'https://web.archive.org/web/'+WB_TS+'im_/'+u;
+const wbVid = u => 'https://web.archive.org/web/'+WB_TS+'id_/'+u;
 const NSFW_ICON = '<svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><g text-anchor="middle" font-family="Geist,Inter,system-ui,sans-serif" font-weight="700" font-size="6.8" fill="currentColor"><text x="8" y="7.2">NS</text><text x="8" y="13.2">FW</text></g></svg>';
 const FS_EXIT_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2v4H2M10 2v4h4M14 10h-4v4M2 10h4v4"/></svg>';
 const FS_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>';
@@ -1334,7 +1335,10 @@ function startImg(img, attempt){
         done(); anyImgOK = true; noteImgOK(); clearImgFail(p); seenAdd(url);
         node.alt = ''; node.referrerPolicy = 'no-referrer';
         const holder = img.parentNode;
-        img.replaceWith((mayMove(url,p) && freezeFrame(node)) || node);   // reuse the element that already loaded, so the image isn't fetched twice (a file that may move is frozen on its first frame)
+        img.replaceWith((mayMove(url,p) && freezeFrame(node)) || node);
+        /* The picture that loaded is an animated GIF and the post has no clip of its own (often a recovered post whose files are gone except in an archive):
+           that GIF is the clip, so it plays on hover / in view like any other card. */
+        if(isGifFile(url)){ const th = el.querySelector('a.thumb'); if(th && !th.dataset.v){ th.dataset.v = url; const bm = th.querySelector('.badge.media'); if(bm) bm.classList.add('playable'); wirePlayable(th); } }   // reuse the element that already loaded, so the image isn't fetched twice (a file that may move is frozen on its first frame)
         const ph = holder && holder.querySelector('.ph'); if(ph) ph.remove();
         const m = metaOf(p); if(m && !m.w && node.naturalWidth > 50){ m.w = node.naturalWidth; m.h = node.naturalHeight; layoutCard(el,p); }
         return;
@@ -1444,7 +1448,7 @@ function fillCard(el,p){
   const ph = '<div class="ph'+(!m && !dead ? ' pending' : '')+'" style="--h:'+hue(p.sub)+'"><span>r/'+esc(p.sub)+(dead?'<br><small>media unavailable</small>':'')+'</span></div>';
   el._p = p; el._gi = 0; el.classList.toggle('is-dead', dead); el.classList.toggle('is-text', media==='text');
   el.innerHTML =
-    '<a class="thumb'+(nsfw?' nsfw':'')+'" data-open'+(v0 ? ' data-v="'+esc(v0)+'"'+(vs.length>1 ? ' data-vc="'+esc(vs.slice(1,7).join('|'))+'"' : '') : '')+(m && m.ab ? ' data-ab="'+esc(m.ab)+'"' : '')+(m && m.ha!==undefined ? ' data-ha="'+(m.ha?1:0)+'"' : '')+' href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" aria-label="Open: '+esc(titleOf(p))+'">'
+    '<a class="thumb'+(nsfw?' nsfw':'')+'" data-open'+(v0 ? ' data-v="'+esc(v0)+'"'+(vs.length>1 ? ' data-vc="'+esc(vs.slice(1,12).join('|'))+'"' : '') : '')+(m && m.ab ? ' data-ab="'+esc(m.ab)+'"' : '')+(m && m.ha!==undefined ? ' data-ha="'+(m.ha?1:0)+'"' : '')+' href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" aria-label="Open: '+esc(titleOf(p))+'">'
     + (thumb ? ph + '<img referrerpolicy="no-referrer" alt="">' : (v0 && !/^(yt|rg):/.test(v0) ? ph + '<video class="still" muted playsinline preload="none"></video>' : ph))
     + '<span class="badges"><span class="badge media'+(v0 ? ' playable' : '')+'">'+esc(MEDIA_LABEL[media]||media)+(gl ? ' 1/'+gl.length : '')+'</span>'
     + (nsfw ? '<span class="badge tag">NSFW</span>' : '') + '</span>'
@@ -1510,7 +1514,13 @@ function playSources(m){
   const direct = playableFromUrl(m.u||'');
   if(direct && !isGifFile(direct)) out.push(direct.replace(/^http:\/\/(?=i\.imgur\.com\/)/i,'https://'));
   if(m.v && !out.includes(m.v)) out.push(m.v);
+  /* An imgur GIF / video post linked as a page (imgur.com/ID) still has its clip at i.imgur.com/ID.mp4. */
+  const imx = /^https?:\/\/(?:i\.)?imgur\.com\/([A-Za-z0-9]{5,8})(?:[.?#]|$)/i.exec(m.u||'');
+  if(imx && /^(gif|video)$/.test(m.m)){ const u = 'https://i.imgur.com/'+imx[1]+'.mp4'; if(!out.includes(u)) out.push(u); }
   if(m.rb) for(const q of ['720','480','360','240','1080']){ const u = m.rb+'/DASH_'+q+'.mp4'; if(!out.includes(u)) out.push(u); }
+  /* Files that hosts take down (imgur purges, deleted Reddit uploads) are often still in the Wayback Machine: its copy of the clip is the last
+     thing tried, so a recovered post plays like any other when the original is gone. Raw (id_) copies, so the file comes back as it was. */
+  for(const u of out.slice()){ if(/^https:\/\/(?:i\.imgur\.com|i\.redd\.it|media\.redgifs\.com)\//i.test(u)){ const w = wbVid(u); if(!out.includes(w)) out.push(w); } }
   return out;
 }
 const HKEY = 'saved-posts-health-v1', H_TTL = 3*864e5;
@@ -1781,7 +1791,9 @@ async function rgFilesGone(p, url){
   const m = metaOf(p); if(!m || !rgSlug(p) || m.rgDone || m.rgGone) return !!(m && m.rgGone);
   /* A <video> reports a missing file and a dropped connection the same way, so ask the server once: an answer of any kind (an opaque reply,
      which is what a 404 gives here) means the file is not there; a request that never gets an answer is a network problem, not a deletion. */
-  try{ await fetch(url || m.v, {method:'HEAD', mode:'no-cors', cache:'no-store'}); }catch(e){ return false; }
+  if(!url || isArchiveUrl(url)) url = playSources(m).find(u=>!isArchiveUrl(u) && /^https?:/.test(u)) || m.v;   // ask the host itself, not an archive copy
+  if(!url) return false;
+  try{ await fetch(url, {method:'HEAD', mode:'no-cors', cache:'no-store'}); }catch(e){ return false; }
   rgApply(p, {gone:1}); return true;
 }
 const goneNote = msg => { const d = document.createElement('p'); d.className = 'vgone'; d.textContent = msg; return d; };
@@ -2912,7 +2924,9 @@ function startPlay(t){
   el.addEventListener('error',()=>{
     // try the next quality / file before giving up
     const rest = (t.dataset.vc||'').split('|').filter(Boolean);
-    if(rest.length && !isGif){ t.dataset.v = rest.shift(); t.dataset.vc = rest.join('|'); el.src = t.dataset.v; el.play().catch(()=>{}); }
+    if(rest.length && !isGif){ t.dataset.v = rest.shift(); t.dataset.vc = rest.join('|');
+      if(isGifFile(t.dataset.v)){ stopPlay(t); startPlay(t); return; }   // the next source is a GIF: it plays as a picture, not in a <video>
+      el.src = t.dataset.v; el.play().catch(()=>{}); }
     else { clearPlayUI(t); const card = t.closest('.card'); if(card && card._p && el.error && el.error.code===4 && !t.dataset.vc) rgFilesGone(card._p, el.currentSrc || el.src); }   // a RedGifs clip whose every file is gone is broken media, like any other dead post
   });
   t.insertBefore(el, t.querySelector('.badges'));
