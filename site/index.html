@@ -2283,7 +2283,7 @@ function layoutCard(el,p){
     return;
   }
   if(LAYOUT==='grid'){            // a perfect grid: every tile the same square size
-    el.style.gridRow = 'span '+Math.max(10, Math.round((colW + GAP)/(ROW+GAP)));
+    el.style.gridRow = 'span '+capRows(Math.max(10, Math.round((colW + GAP)/(ROW+GAP))));
     el.style.gridColumn = '';
     return;
   }
@@ -2294,12 +2294,20 @@ function layoutCard(el,p){
   let hw = ar ? 1/ar : 0.75;
   hw = wide ? Math.min(Math.max(hw,0.42),1) : Math.min(Math.max(hw,0.66),1.7);
   const w = cs*colW + (cs-1)*GAP;
-  const rows = Math.max(10, Math.round((w*hw + GAP)/(ROW+GAP)));
+  const rows = capRows(Math.max(10, Math.round((w*hw + GAP)/(ROW+GAP))));
   el.style.gridRow = 'span '+rows;
   el.style.gridColumn = cs>1 ? 'span '+cs : '';
 }
+/* In Full width no tile is taller than the window below the top bar. MAXROWS is worked out once per relayout (one read), never per card. */
+let MAXROWS = 0;
+function capRows(r){ return MAXROWS ? Math.min(r, MAXROWS) : r; }
 function relayoutAll(){
   measureGrid();
+  MAXROWS = 0;
+  if(typeof FULLW !== 'undefined' && FULLW && LAYOUT !== 'list'){
+    const deck = document.querySelector('.deck'), h = innerHeight - (deck ? deck.offsetHeight : 0) - 24;
+    MAXROWS = Math.max(10, Math.floor((h + GAP)/(ROW+GAP)));
+  }
   for(const el of $('grid').children) if(el._p) layoutCard(el, el._p);
 }
 new ResizeObserver(()=>relayoutAll()).observe($('grid'));
@@ -3221,9 +3229,11 @@ paintCols();
 /* Tile size. On desktop it is a free slider. On phones only a few column counts fit, so the slider snaps to those (1, 2, 3 across) with a notch and number for each. */
 const phoneMQ = matchMedia('(max-width:720px)');
 let SIZE_STEPS = null;   // card widths for 1, 2, 3 columns on phones; null on desktop
-/* Full width (#fullw, remembered in saved-posts-fullwidth): lifts the 1760px page cap and switches Tile size to a big range (150px up to one
-   tile across the window, default 3 across, remembered apart in saved-posts-tile-fullw), so the tiles get bigger and the slider scrubs them down.
-   Pure CSS plus one --card change: the grid's ResizeObserver relayouts once; nothing is measured per card. */
+let FW_COLS = null;      // Full width: {W, nMax}; the slider's value is nMax - columns
+function fwCard(n){ return Math.floor((FW_COLS.W - 6*(n-1))/n) - 1; }
+/* Full width (#fullw, remembered in saved-posts-fullwidth): lifts the 1760px page cap and makes the tiles bigger. Tile size then counts
+   columns (buildSizeControl, FW_COLS: as many 150px tiles as fit, down to 2 across; default 3; saved-posts-tile-fullw), and no tile is taller
+   than the window (capRows / MAXROWS, worked out once per relayout). Nothing is measured per card. */
 var FULLW = false; try{ FULLW = localStorage.getItem('saved-posts-fullwidth')==='1'; }catch(e){}
 var cardPx = 230;
 function setCard(px){ cardPx = +px || cardPx; document.documentElement.style.setProperty('--card', cardPx+'px'); relayoutAll(); }
@@ -3238,12 +3248,16 @@ function buildSizeControl(){
   if(!phoneMQ.matches){
     SIZE_STEPS = null; wrap.classList.remove('stepped'); nt.replaceChildren();
     if(FULLW){
-      /* Full width: the range runs from small tiles up to one tile across the whole window; its value is kept apart from the normal one */
-      const W = Math.max(400, $('grid').clientWidth || innerWidth - 28), max = Math.floor(W/10)*10;
-      let d = Math.floor((W - 2*6)/3);   /* default: 3 across the window */
-      try{ const v = +localStorage.getItem('saved-posts-tile-fullw'); if(v>=150) d = v; }catch(e){}
-      sl.min = 150; sl.max = max; sl.step = 10; sl.value = Math.min(max, d); setCard(Math.min(W, d));
+      /* Full width: the slider counts columns, from as many 150px tiles as fit (left) down to 2 across (right), so every step changes
+         something; a pixel range up to one tile across spent two thirds of the bar on 1 or 2 enormous columns. Kept apart from the normal size. */
+      const W = Math.max(400, $('grid').clientWidth || innerWidth - 28), nMax = Math.max(3, Math.floor((W + 6)/(150 + 6)));
+      let n = 3; try{ const v = +localStorage.getItem('saved-posts-tile-fullw'); if(v>=2 && v<=40) n = v; }catch(e){}
+      n = Math.min(nMax, Math.max(2, n));
+      FW_COLS = {W, nMax};
+      sl.min = 0; sl.max = nMax - 2; sl.step = 1; sl.value = nMax - n; sl.title = n+' across';
+      setCard(fwCard(n));
     } else {
+      FW_COLS = null; sl.title = '';
       let d = 230; try{ const v = +localStorage.getItem('saved-posts-tile'); if(v>=150&&v<=360) d = v; }catch(e){}
       sl.min = 150; sl.max = 360; sl.step = 10; sl.value = d; setCard(d);
     }
@@ -3261,10 +3275,12 @@ function buildSizeControl(){
   nt.querySelectorAll('i').forEach((t,i)=>{ const f = steps.length>1 ? i/(steps.length-1) : .5; t.style.left = 'calc('+(f*100)+'% + '+((.5-f)*16)+'px)'; });
   paintNotches(); setCard(steps[cur]);
 }
+function cardSoon(px){ cardSoon.px = px; if(!cardSoon.f) cardSoon.f = requestAnimationFrame(()=>{ cardSoon.f = 0; setCard(cardSoon.px); }); }
 function paintNotches(){ const i = +$('size').value; document.querySelectorAll('#sizerow .notches i').forEach((t,k)=>t.classList.toggle('on', k===i)); }
 $('size').addEventListener('input',e=>{
   if(SIZE_STEPS){ const i = +e.target.value; e.target.dataset.idx = i; paintNotches(); setCard(SIZE_STEPS[i]); try{ localStorage.setItem('saved-posts-tile-phone', String(i)); }catch(x){} }
-  else { setCard(e.target.value); try{ localStorage.setItem(FULLW ? 'saved-posts-tile-fullw' : 'saved-posts-tile', String(e.target.value)); }catch(x){} }
+  else if(FW_COLS){ const n = FW_COLS.nMax - (+e.target.value); e.target.title = n+' across'; cardSoon(fwCard(n)); try{ localStorage.setItem('saved-posts-tile-fullw', String(n)); }catch(x){} }
+  else { cardSoon(e.target.value); try{ localStorage.setItem('saved-posts-tile', String(e.target.value)); }catch(x){} }
 });
 /* Tile size is remembered (desktop pixels and phone column step separately). */
 try{

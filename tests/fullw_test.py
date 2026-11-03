@@ -23,16 +23,26 @@ with sync_playwright() as p:
     on = pg.evaluate(INFO)
     check('on: tiles span the browser width (%s)' % on, on['grid'] >= 2560 - 40 and on['deck'] >= 2560 - 2)
     check('on: tiles get bigger, 3 across by default', on['cols'] == 3 and on['tile'] > 2 * off['tile'])
+    SET = "v=>{ $('size').value=v; $('size').dispatchEvent(new Event('input',{bubbles:true})); }"
     mx = pg.evaluate("+$('size').max")
-    check('on: slider still works and now runs up to one tile across (max %s)' % mx, not on['dis'] and on['pressed'] == 'true' and mx >= on['grid'] - 10)
-    pg.evaluate("$('size').value=$('size').max; $('size').dispatchEvent(new Event('input',{bubbles:true}))"); pg.wait_for_timeout(500)
-    check('on: slider at the top gives one tile across', pg.evaluate("cols") == 1)
-    pg.evaluate("$('size').value=300; $('size').dispatchEvent(new Event('input',{bubbles:true}))"); pg.wait_for_timeout(500)
-    check('on: scrubbing down gives smaller tiles (%s cols)' % pg.evaluate("cols"), pg.evaluate("cols") > 6)
+    check('on: slider counts columns, from as many 150px tiles as fit down to 2 across (%s steps)' % mx, not on['dis'] and on['pressed'] == 'true' and mx == (2532 + 6)//156 - 2)
+    seen = []
+    for v in range(0, mx + 1):
+        pg.evaluate("(%s)(%d)" % (SET, v)); pg.wait_for_timeout(120); seen.append(pg.evaluate("cols"))
+    check('on: every step of the bar changes the column count, left to right (%s)' % seen, seen == list(range(mx + 2, 1, -1)))
+    tall = pg.evaluate("""(()=>{ const room = innerHeight - document.querySelector('.deck').offsetHeight;
+      return {room, tallest: Math.max(...[...document.querySelectorAll('#grid .card')].map(c=>c.getBoundingClientRect().height))}; })()""")
+    check('on: at 2 across no tile is taller than the window (%s)' % tall, tall['tallest'] <= tall['room'])
+    pg.evaluate("(%s)(%d)" % (SET, mx - 1)); pg.wait_for_timeout(300)
+    n = pg.evaluate("""(()=>{ let n=0; const o=relayoutAll; window.relayoutAll=()=>{ n++; o(); };
+      for(let i=0;i<20;i++){ $('size').value=i%4; $('size').dispatchEvent(new Event('input',{bubbles:true})); }
+      return new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(()=>r(n)))); })()""")
+    check('dragging the slider relayouts at most once a frame (20 moves -> %s)' % n, n <= 2)
+    pg.evaluate("(%s)(%d)" % (SET, mx - 1)); pg.wait_for_timeout(300)
     src = pg.evaluate("layoutCard.toString()")
     check('layout reads no per-card layout values (no forced reflow per card)', 'offsetHeight' not in src and 'getBoundingClientRect' not in src and 'fullwRows' not in src)
     pg.reload(); pg.wait_for_timeout(1500)
-    check('remembered on the next visit, with its own tile size', pg.evaluate("FULLW && document.body.classList.contains('fullw')") and pg.evaluate(INFO)['grid'] >= 2520 and pg.evaluate("$('size').value") == '300')
+    check('remembered on the next visit, with its own column count', pg.evaluate("FULLW && document.body.classList.contains('fullw')") and pg.evaluate(INFO)['grid'] >= 2520 and pg.evaluate("cols") == 3)
     pg.evaluate("$('fullw').click()"); pg.wait_for_timeout(500)
     back = pg.evaluate(INFO)
     check('off again: back under the cap with the earlier tile size (%s)' % back, back['grid'] <= 1760 and back['cols'] == off['cols'] and pg.evaluate("$('size').max") == '360')
