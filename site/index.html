@@ -224,7 +224,16 @@ body.deck-collapsed #panel,body.src-collapsed #srcpanel{display:none}
 .field{appearance:none;-webkit-appearance:none;border:0;background:var(--surface-2);border-radius:10px;height:34px;padding:0 12px;min-width:0;max-width:100%;font-size:13px}
 select.field{background:var(--surface-2) var(--chev) no-repeat right 11px center;padding-right:30px;cursor:pointer;text-overflow:ellipsis}
 input[type=range]{width:100%;accent-color:var(--sel);margin:0}
-.sizewrap{position:relative;display:block;min-width:0}
+.sizewrap{position:relative;display:block;min-width:0;flex:1}
+.sizectl{display:flex;align-items:center;gap:10px;min-width:0}
+.fwbtn{flex:none;width:34px;height:30px;border:0;border-radius:9px;padding:0;display:grid;place-items:center;background:var(--surface-2);color:var(--ink);cursor:pointer;transition:background .15s,color .15s}
+.fwbtn[aria-pressed=true]{background:var(--sel);color:var(--sel-ink)}
+@media (hover:hover) and (pointer:fine){.fwbtn[aria-pressed=false]:hover{background:var(--line)}}
+#size:disabled{opacity:.4}
+/* Full width: one post at a time across the whole feed, each tile no taller than the window, the media shown whole on a dark ground */
+body.fullw:not(.layout-list) .grid{grid-template-columns:minmax(0,1fr)}
+body.fullw:not(.layout-list) .thumb{background:#0b0a10}
+body.fullw:not(.layout-list) .thumb img,body.fullw:not(.layout-list) .thumb .still,body.fullw:not(.layout-list) .thumb .clip{object-fit:contain}
 .sizewrap .notches{display:none}
 .sizewrap.stepped{padding-bottom:16px}
 .sizewrap.stepped .notches{display:block;position:absolute;left:0;right:0;bottom:0;height:16px;pointer-events:none}
@@ -807,7 +816,7 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
         <h2>View</h2>
         <div class="ctlrow"><span>Layout</span><div class="srcseg" id="layoutseg" role="group" aria-label="Layout"><button class="pill" type="button" data-l="masonry" aria-pressed="true" title="Best for media">Masonry</button><button class="pill" type="button" data-l="grid" aria-pressed="false" title="Equal square tiles in strict rows">Grid</button><button class="pill" type="button" data-l="list" aria-pressed="false" title="Best for text posts">List</button></div></div>
         <p class="hint layouthint" id="layouthint" role="status"></p>
-        <label class="ctlrow" id="sizerow"><span>Tile size</span><span class="sizewrap"><input id="size" type="range" min="150" max="360" step="10" value="230"><span class="notches" aria-hidden="true"></span></span></label>
+        <div class="ctlrow" id="sizerow"><label for="size">Tile size</label><span class="sizectl"><span class="sizewrap"><input id="size" type="range" min="150" max="360" step="10" value="230"><span class="notches" aria-hidden="true"></span></span><button class="fwbtn" id="fullw" type="button" aria-pressed="false" aria-label="Full width" title="Full width: one post at a time across the page, as tall as the window allows"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 8h13M4.5 5 1.5 8l3 3M11.5 5l3 3-3 3"/></svg></button></span></div>
         <div class="ctlrow" id="colsrow"><span>Columns</span><div class="srcseg" id="colsseg" role="group" aria-label="List columns"><button class="pill" type="button" data-c="1" aria-pressed="false" title="Easiest to scan">1</button><button class="pill" type="button" data-c="2" aria-pressed="false">2</button><button class="pill" type="button" data-c="3" aria-pressed="false">3</button><button class="pill" type="button" data-c="auto" aria-pressed="true" title="As many as fit">Auto</button></div></div>
         <label class="ctlrow" id="cardrow"><span>Card info &amp; controls</span>
           <select id="cardmode" class="field" aria-label="Card info and controls">
@@ -2276,7 +2285,7 @@ function layoutCard(el,p){
     return;
   }
   if(LAYOUT==='grid'){            // a perfect grid: every tile the same square size
-    el.style.gridRow = 'span '+Math.max(10, Math.round((colW + GAP)/(ROW+GAP)));
+    el.style.gridRow = 'span '+fullwRows(Math.max(10, Math.round((colW + GAP)/(ROW+GAP))));
     el.style.gridColumn = '';
     return;
   }
@@ -2287,7 +2296,7 @@ function layoutCard(el,p){
   let hw = ar ? 1/ar : 0.75;
   hw = wide ? Math.min(Math.max(hw,0.42),1) : Math.min(Math.max(hw,0.66),1.7);
   const w = cs*colW + (cs-1)*GAP;
-  const rows = Math.max(10, Math.round((w*hw + GAP)/(ROW+GAP)));
+  const rows = fullwRows(Math.max(10, Math.round((w*hw + GAP)/(ROW+GAP))));
   el.style.gridRow = 'span '+rows;
   el.style.gridColumn = cs>1 ? 'span '+cs : '';
 }
@@ -3214,7 +3223,24 @@ paintCols();
 /* Tile size. On desktop it is a free slider. On phones only a few column counts fit, so the slider snaps to those (1, 2, 3 across) with a notch and number for each. */
 const phoneMQ = matchMedia('(max-width:720px)');
 let SIZE_STEPS = null;   // card widths for 1, 2, 3 columns on phones; null on desktop
-function setCard(px){ document.documentElement.style.setProperty('--card', px+'px'); relayoutAll(); }
+/* Full width (#fullw, remembered in saved-posts-fullwidth): the feed shows one post at a time across its whole width, the tile size slider is set aside
+   (its own value is kept for when this is turned off), and every tile is capped to the height of the window so a tall picture never runs off screen. */
+var FULLW = false; try{ FULLW = localStorage.getItem('saved-posts-fullwidth')==='1'; }catch(e){}
+var cardPx = 230;
+function setCard(px){ cardPx = +px || cardPx; document.documentElement.style.setProperty('--card', cardPx+'px'); relayoutAll(); }
+function fullwRows(rows){
+  if(!FULLW) return rows;
+  const deck = document.querySelector('.deck'), nav = phoneMQ.matches ? (($('navbtns')||{}).offsetHeight || 0) : 0;
+  const h = (window.visualViewport ? visualViewport.height : innerHeight) - (deck ? deck.offsetHeight : 0) - nav - 20;
+  return Math.max(10, Math.min(rows, Math.round((h + GAP)/(ROW+GAP))));
+}
+function setFullw(on, save){
+  FULLW = !!on; document.body.classList.toggle('fullw', FULLW);
+  const b = $('fullw'); if(b) b.setAttribute('aria-pressed', FULLW ? 'true' : 'false');
+  $('size').disabled = FULLW;
+  if(save) try{ localStorage.setItem('saved-posts-fullwidth', FULLW ? '1' : '0'); }catch(e){}
+  setCard(cardPx);
+}
 function buildSizeControl(){
   const sl = $('size'), wrap = sl.closest('.sizewrap'), nt = wrap.querySelector('.notches');
   if(!phoneMQ.matches){
@@ -3245,6 +3271,9 @@ try{
   else if(dt>=150 && dt<=360){ sl.value = dt; setCard(dt); }
 }catch(e){}
 buildSizeControl();
+$('fullw').addEventListener('click',e=>{ e.preventDefault(); setFullw(!FULLW, true); });
+setFullw(FULLW, false);
+addEventListener('resize', ()=>{ if(FULLW){ clearTimeout(setFullw._t); setFullw._t = setTimeout(relayoutAll, 150); } });
 (phoneMQ.addEventListener ? phoneMQ.addEventListener('change', buildSizeControl) : phoneMQ.addListener(buildSizeControl));
 addEventListener('resize', ()=>{ if(SIZE_STEPS){ clearTimeout(buildSizeControl._t); buildSizeControl._t = setTimeout(buildSizeControl, 200); } });
 
