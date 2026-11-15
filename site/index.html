@@ -509,6 +509,11 @@ body.layout-list #cardrow{display:none}   /* List keeps its own arrangement (inl
 #viewer .vstage{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
 #viewer .vghost{position:absolute;inset:0;pointer-events:none;z-index:1}   /* the post sliding away while the next one slides in */
 #viewer img,#viewer video{width:100%;height:100%;object-fit:contain;background:#000}   /* fill the screen like the browser's own full screen: a 480p clip scales up instead of sitting at its own small size */
+#viewer.vcover img,#viewer.vcover video{object-fit:cover}   /* Fill screen: crop in instead of leaving bars */
+#viewer .vfill{position:absolute;top:max(12px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));z-index:2;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;cursor:pointer;display:grid;place-items:center;padding:0}
+#viewer .vfill[aria-pressed="true"]{background:rgba(255,255,255,.3)}
+#viewer:not(:has(>.vstage:not(.vghost) :is(img,video))) .vfill{display:none}   /* only pictures and clips can be cropped; not YouTube, RedGifs' player or a message */
+@media (hover:hover){#viewer .vfill:hover{background:rgba(255,255,255,.34)}}
 #viewer iframe.vyt.vrg{width:100%;height:100%;aspect-ratio:auto;max-height:none}
 #viewer .vstage:has(iframe.vrg){height:calc(100% - 64px - env(safe-area-inset-bottom,0px));align-self:flex-start}   /* RedGifs' own player has its controls along the bottom, so leave a band for the previous/next post buttons instead of covering them */
 #viewer iframe.vyt{border:0;background:#000;width:min(100%,calc(100vh*16/9));aspect-ratio:16/9;max-height:100%}
@@ -751,7 +756,7 @@ body:not(.layout-list) .layer .btn{-webkit-backdrop-filter:none;backdrop-filter:
 #pausebar button{border:1px solid var(--line,rgba(128,128,128,.4));background:transparent;color:inherit;border-radius:999px;padding:4px 10px;font:inherit;cursor:pointer}
 #pausebar b{font-variant-numeric:tabular-nums}
 /* press feedback: a pressed control dips a little so it feels heard (not for people who ask for less motion) */
-@media (prefers-reduced-motion:no-preference){:is(.pill,.btn,.chip,.star,.fs,.save,.vol,.pp,.vfs,.morebtn,.vclose,.vsound,.vpost,.vnav):active{scale:.97}}
+@media (prefers-reduced-motion:no-preference){:is(.pill,.btn,.chip,.star,.fs,.save,.vol,.pp,.vfs,.vfill,.morebtn,.vclose,.vsound,.vpost,.vnav):active{scale:.97}}
 .expnow{margin-left:2px;font-weight:600}
 /* phones: no 300ms tap wait, and inputs at 16px so iOS does not zoom the page when one is focused */
 a,button,summary,label,select,[role=button]{touch-action:manipulation}
@@ -847,6 +852,8 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
             <option value="comments">Most comments</option>
             <option value="score">Highest score</option>
             <option value="sub">Subreddit A to Z</option>
+            <option value="long">Longest clips</option>
+            <option value="short">Shortest clips</option>
           </select>
         </label>
         <label class="ctlrow"><span>Time range</span>
@@ -885,7 +892,7 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
             <dd><kbd>Tab</kbd> moves from card to card</dd>
             <dd><kbd>Enter</kbd> on a card steps into its controls; <kbd>Esc</kbd> steps back out</dd>
             <dd><kbd>I</kbd> shows or hides the controls of the card under the pointer or in focus</dd>
-            <dd>Full screen: <kbd>&larr;</kbd> <kbd>&rarr;</kbd> pictures in a gallery, <kbd>&uarr;</kbd> <kbd>&darr;</kbd> previous / next post, <kbd>Space</kbd> or <kbd>K</kbd> plays / pauses a clip, <kbd>M</kbd> mutes, <kbd>Esc</kbd> closes</dd>
+            <dd>Full screen: <kbd>&larr;</kbd> <kbd>&rarr;</kbd> pictures in a gallery, <kbd>&uarr;</kbd> <kbd>&darr;</kbd> previous / next post, <kbd>Space</kbd> or <kbd>K</kbd> plays / pauses a clip, <kbd>M</kbd> mutes, <kbd>F</kbd> fills the screen (crops) or fits the whole picture, <kbd>Esc</kbd> closes</dd>
           </dl>
           <dl><dt>Touch and mouse</dt>
             <dd>Tap a picture to show or hide its controls</dd>
@@ -996,7 +1003,7 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
   <div id="sentinel"></div>
 </div>
 
-<div id="viewer" role="dialog" aria-modal="true" aria-label="Media viewer" hidden><button class="vnav vprev" type="button" aria-label="Previous image" hidden>&#8249;</button><button class="vnav vnext" type="button" aria-label="Next image" hidden>&#8250;</button><span class="vcount" hidden></span><div class="vposts"><button class="vpost vpp" type="button" aria-label="Previous post" title="Previous post (Up arrow)">&#8249; Previous post</button><button class="vpost vpn" type="button" aria-label="Next post" title="Next post (Down arrow)">Next post &#8250;</button></div><input class="vvol" type="range" min="0" max="100" step="1" value="0" aria-label="Volume" hidden><button class="vsound" type="button" aria-label="Unmute" hidden></button><button class="vclose" type="button" aria-label="Close">&#10005;</button><div class="vstage"></div></div>
+<div id="viewer" role="dialog" aria-modal="true" aria-label="Media viewer" hidden><button class="vnav vprev" type="button" aria-label="Previous image" hidden>&#8249;</button><button class="vnav vnext" type="button" aria-label="Next image" hidden>&#8250;</button><span class="vcount" hidden></span><div class="vposts"><button class="vpost vpp" type="button" aria-label="Previous post" title="Previous post (Up arrow)">&#8249; Previous post</button><button class="vpost vpn" type="button" aria-label="Next post" title="Next post (Down arrow)">Next post &#8250;</button></div><input class="vvol" type="range" min="0" max="100" step="1" value="0" aria-label="Volume" hidden><button class="vsound" type="button" aria-label="Unmute" hidden></button><button class="vclose" type="button" aria-label="Close">&#10005;</button><button class="vfill" type="button" aria-pressed="false"></button><div class="vstage"></div></div>
 <dialog id="reader" aria-labelledby="rdTitle"><div class="rdhead"><p id="rdMeta"></p><button type="button" id="rdClose" aria-label="Close">&times;</button></div><h3 id="rdTitle"></h3><p class="hint" id="rdSrc"></p><div id="rdBody"></div><div id="rdLinks"></div><section id="rdCm"></section></dialog>
 <dialog id="confirm"><form method="dialog"><h3 id="cTitle"></h3><div id="cBody"></div><label id="cOptWrap" class="toggle" hidden><span id="cOptLbl"></span><input type="checkbox" id="cOpt"></label><div class="btnrow" style="justify-content:flex-end;margin-top:18px"><button class="pill" id="cExtra" value="extra" hidden></button><button class="pill" value="cancel" autofocus>Cancel</button><button class="pill danger" id="cOk" value="ok"></button></div></form></dialog>
 <div id="pausebar" role="status" aria-live="polite" hidden><span class="pdot"></span><span id="pauseTxt"></span><button type="button" id="pauseSkip" title="Retry now">Retry now</button></div>
@@ -1125,8 +1132,11 @@ function sorted(arr){
     old:(a,b)=>((m(a).c||1e12)-(m(b).c||1e12))||a.i-b.i,
     comments:(a,b)=>(m(b).n||0)-(m(a).n||0)||a.i-b.i,
     score:(a,b)=>(m(b).s||0)-(m(a).s||0)||a.i-b.i,
-    sub:(a,b)=>a.sub.toLowerCase().localeCompare(b.sub.toLowerCase())||a.i-b.i
+    sub:(a,b)=>a.sub.toLowerCase().localeCompare(b.sub.toLowerCase())||a.i-b.i,
+    long:(a,b)=>byLen(a,b,-1), short:(a,b)=>byLen(a,b,1)
   };
+  /* Clip length (m.d, seconds). Posts whose length is not known yet (pictures, text, links, clips not looked at yet) go after every clip, either way. */
+  const byLen = (a,b,dir) => { const x = m(a).d||0, y = m(b).d||0; if(!x!==!y) return x ? -1 : 1; return dir*(x-y) || a.i-b.i; };
   if(state.sort==='hot' && FEED.live){ return arr.sort((a,b)=>(a.rank??1e9)-(b.rank??1e9)); }   // exactly Reddit's order
   if(state.sort==='hot'){
     // Reddit's published "hot" formula: log of the score plus an age term (one order of magnitude per 12.5 hours)
@@ -1740,6 +1750,14 @@ $('grid').addEventListener('mouseleave',()=>{ hoverCard = null; clearTimeout(hov
 $('grid').addEventListener('touchstart',e=>{ const c = e.target.closest('.card'); if(c && c._p) resolveTarget(c._p); },{passive:true});
 $('grid').addEventListener('focusin',e=>{ const c = e.target.closest('.card'); if(c && c._p) resolveTarget(c._p); });
 $('grid').addEventListener('load',()=>{ lastOk = Date.now(); },true);
+/* Any clip that loads (a tile, a still, full screen) tells us its length, for clips whose post data did not say (imgur, archived copies). Not re-sorted on the spot, so the feed does not jump; the next refresh uses it. */
+document.addEventListener('loadedmetadata',e=>{
+  const v = e.target; if(!(v instanceof HTMLVideoElement)) return;
+  const d = v.duration; if(!(d > 0) || !isFinite(d)) return;
+  const c = v.closest('.card'), p = c ? c._p : (v.closest('#viewer') && !v.closest('.vghost') ? VIEW.cur : null), m = p && metaOf(p);
+  if(m && !m.d){ m.d = Math.round(d*10)/10; clearTimeout(durSave); durSave = setTimeout(saveCache,2000); }
+},true);
+let durSave;
 
 /* ---------- RedGifs: turn watch-page links into playable files ---------- */
 const RG_RE = /(?:redgifs\.com\/(?:watch|ifr|i|gifs\/detail)\/|gifdeliverynetwork\.com\/(?:watch\/)?)([a-z0-9]+)/i;
@@ -1760,7 +1778,7 @@ async function rgFetch(slug){ const o = await rgFetchMany([slug]); return o[slug
 function rgShape(g){
   g = g || {}; const u = g.urls || {};
   const ha = !!g.hasAudio, v = ha ? (u.hd || u.sd) : (u.sd || u.hd); if(!v) return {gone:1};
-  return {v, vh:u.hd||v, ha, th:u.poster||u.thumbnail||'', w:g.width||0, h:g.height||0};
+  return {v, vh:u.hd||v, ha, th:u.poster||u.thumbnail||'', w:g.width||0, h:g.height||0, d:g.duration>0 ? Math.round(g.duration*10)/10 : 0};
 }
 /* Many clips are looked up in one request (the API takes a list of ids), which keeps the number of calls low enough that RedGifs doesn't start refusing them. */
 async function rgDirectMany(slugs, retry){
@@ -1790,6 +1808,9 @@ async function rgFetchMany(slugs){
   return out;
 }
 /* If the API can't be reached from the browser, fall back to the file names Reddit's own embed data reveals. */
+/* RedGifs names a clip's files NAME.mp4 (HD, the one with sound) and NAME-mobile.mp4 (SD). Full screen asks for the HD file first. */
+const rgHd = u => /^https?:\/\/(?:media|thumbs\d*)\.redgifs\.com\/[A-Za-z0-9]+-mobile\.mp4/i.test(u||'') ? u.replace(/-mobile\.mp4/i,'.mp4') : '';
+const rgHdList = m => m ? [m.vh, rgHd(m.v), m.g ? 'https://media.redgifs.com/'+m.g+'.mp4' : ''] : [];
 const rgGuess = m => m.g ? {v:'https://media.redgifs.com/'+m.g+'.mp4', th:'', w:0, h:0} : null;   // the full file is the one that carries sound; the -mobile one is silent
 /* Reddit's own copy of a RedGifs clip is a silent preview, so a RedGifs post is always looked up on RedGifs (once) to get the real file with its sound. */
 /* Every file for a RedGifs post failed as "not there" (not a network hiccup), and RedGifs itself has not vouched for the clip: it has been deleted.
@@ -1808,7 +1829,7 @@ const rgNeeds = p => { const m = metaOf(p); return !!(m && !m.rgDone && !m.rgGon
 function rgApply(p,res){
   const m = metaOf(p); if(!m) return;
   if(res.gone) m.rgGone = 1;
-  else { m.v = res.v; if(res.ha!==undefined){ m.rgDone = 1; } if(res.ha!==undefined) m.ha = res.ha ? 1 : 0; if(res.vh && res.vh!==res.v) m.vh = res.vh; if(!m.th && res.th) m.th = res.th; if(res.w && res.h){ m.w = res.w; m.h = res.h; } }
+  else { m.v = res.v; if(res.ha!==undefined){ m.rgDone = 1; } if(res.ha!==undefined) m.ha = res.ha ? 1 : 0; if(res.vh && res.vh!==res.v) m.vh = res.vh; if(!m.th && res.th) m.th = res.th; if(res.w && res.h){ m.w = res.w; m.h = res.h; } if(res.d) m.d = res.d; }
   clearTimeout(rgSave); rgSave = setTimeout(saveCache,1500);
   const el = cardEls.get(p.id); if(el) fillCard(el,p);
   if(res.gone) updateDeadCount();
@@ -2061,7 +2082,7 @@ async function openViewer(p, opts){
     return;
   }
   if(rgNeeds(p) && !rgBusy.has(p.id)){ rgBusy.add(p.id); try{ await rgRun(p); }catch(e){} if(tok!==VIEW.token) return; m = metaOf(p); }
-  const vlist = m ? [m.vh, ...playSources(m).filter(u=>!/^(yt|rg):/.test(u)), m.v].filter((u,i,a)=>u && a.indexOf(u)===i && !isGifFile(u)) : [];
+  const vlist = m ? [...(m.rgGone || !rgSlug(p) ? [m.vh] : rgHdList(m)), ...playSources(m).filter(u=>!/^(yt|rg):/.test(u)), m.v].filter((u,i,a)=>u && a.indexOf(u)===i && !isGifFile(u)) : [];
   const rgEmbed = () => {
     /* No clip file to play at all (or every file failed): fall back to RedGifs' own player, which has sound and its own controls. */
     const f = document.createElement('iframe');
@@ -2156,6 +2177,20 @@ async function openViewer(p, opts){
   next();
 }
 VIEW.root.querySelector('.vclose').addEventListener('click',closeViewer);
+/* Fit / Fill: full screen shows the whole picture (contain) or fills the screen and crops what does not fit (cover). Remembered for this browser. */
+const FILLKEY = 'saved-posts-viewfill';
+const FIT_ICON = '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.5" y="3" width="13" height="10" rx="1.5"/><path d="M3.5 8h3M5 6.5 6.5 8 5 9.5M12.5 8h-3M11 6.5 9.5 8 11 9.5"/></svg>';   // arrows pointing in: shrink back to the whole picture
+const FILL_ICON = '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.5" y="3" width="13" height="10" rx="1.5"/><path d="M6 8H3.5M5 6.5 3.5 8 5 9.5M10 8h2.5M11 6.5 12.5 8 11 9.5"/></svg>';   // arrows pointing out: spread to the edges (not the corner arrows, which mean leave full screen)
+let VFILL = false; try{ VFILL = localStorage.getItem(FILLKEY)==='1'; }catch(e){}
+function setViewFill(on){
+  VFILL = !!on; try{ localStorage.setItem(FILLKEY, VFILL ? '1' : '0'); }catch(e){}
+  VIEW.root.classList.toggle('vcover', VFILL);
+  const b = VIEW.root.querySelector('.vfill'), lbl = VFILL ? 'Fit to screen (F)' : 'Fill screen (F)';
+  b.setAttribute('aria-pressed', String(VFILL)); b.setAttribute('aria-label', VFILL ? 'Fit to screen' : 'Fill screen'); b.title = lbl;
+  b.innerHTML = VFILL ? FIT_ICON : FILL_ICON;   // the icon shows what a press will do
+}
+setViewFill(VFILL);
+VIEW.root.querySelector('.vfill').addEventListener('click',e=>{ e.stopPropagation(); setViewFill(!VFILL); });
 VIEW.root.addEventListener('click',e=>{ if(e.target===VIEW.root || e.target===VIEW.stage) closeViewer(); });
 ['pointermove','pointerdown'].forEach(ev=>VIEW.root.addEventListener(ev,e=>{ if(ev==='pointermove' && e.pointerType!=='mouse') return; viewerWake(); }));
 document.addEventListener('keydown',e=>{
@@ -2164,6 +2199,7 @@ document.addEventListener('keydown',e=>{
   const vv = VIEW.stage.querySelector('video');
   if(e.key==='Escape'){ e.preventDefault(); closeViewer(); }
   else if(vv && (e.key===' ' || e.key==='k' || e.key==='K') && !(e.target.closest && e.target.closest('.vctl button,.vctl input,.vposts button'))){ e.preventDefault(); if(vv.paused) vv.play().catch(()=>{}); else vv.pause(); }
+  else if((e.key==='f' || e.key==='F') && !e.ctrlKey && !e.metaKey && !e.altKey && VIEW.stage.querySelector('img,video')){ e.preventDefault(); setViewFill(!VFILL); }
   else if(vv && (e.key==='m' || e.key==='M')){ e.preventDefault(); vv.muted = !vv.muted; if(!vv.muted && vv.volume < 0.05) vv.volume = 0.6; }
   else if(e.key==='ArrowLeft' && VIEW.gal){ e.preventDefault(); viewerStep(-1); }
   else if(e.key==='ArrowRight' && VIEW.gal){ e.preventDefault(); viewerStep(1); }
@@ -3359,6 +3395,7 @@ function slim(d,rec){
   const vm = /v\.redd\.it\/([A-Za-z0-9]+)/i.exec(u);
   const rb = rv && rv.fallback_url ? rv.fallback_url.replace(/&amp;/g,'&').replace(/\/[^\/?]+(\?.*)?$/,'') : (vm ? 'https://v.redd.it/'+vm[1] : '');
   const ab = rb && !(rv && rv.is_gif) && !(rv && rv.has_audio===false) ? rb : '';
+  const rvp = rv || (s.preview && s.preview.reddit_video_preview), dur = rvp && rvp.duration > 0 ? +rvp.duration : 0;   // clip length in seconds, for the length sorts
   const ym = YT_RE.exec(u) || (oe && /youtube/i.test(oe.provider_name||'') ? /embed\/([A-Za-z0-9_-]{11})/.exec(oe.html||'') : null);
   let gl;
   if(s.gallery_data && s.gallery_data.items && s.media_metadata){
@@ -3370,7 +3407,7 @@ function slim(d,rec){
   const pvu = ((s.preview && s.preview.images && s.preview.images[0] && s.preview.images[0].source && s.preview.images[0].source.url) || '').replace(/&amp;/g,'&');
   let [w,h] = pickDims(s); if(!w && ym){ w = 1280; h = 720; }
   return {t:d.title||'', o:d.over_18?1:0, th:pickThumb(s).replace(/&amp;/g,'&') || oth, g:gm?gm[1]:undefined, rs:(!gm && rs) ? rs.toLowerCase() : undefined, pv:/^https?:/.test(pvu) ? pvu : undefined, ab:ab||undefined, rb:rb||undefined, yt:ym?ym[1]:undefined, gl, rd:rd?rd[1]:undefined,
-    m:type, u:(useLink || rd)?'':u, n:d.num_comments||0, s:d.score||0, a:d.author||'', c:d.created_utc||0, rec:rec||undefined, v:pickVideo(s), w, h};
+    m:type, u:(useLink || rd)?'':u, n:d.num_comments||0, s:d.score||0, a:d.author||'', c:d.created_utc||0, rec:rec||undefined, v:pickVideo(s), d:dur||undefined, w, h};
 }
 /* One archive request for a batch of ids. A 400 (the archive refused the request) is retried in smaller pieces, so one odd id or an archive-side limit
    does not cost the whole batch; pieces that are still refused are left for the next source. */
