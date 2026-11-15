@@ -1790,11 +1790,10 @@ async function rgDirectMany(slugs, retry){
   if(!r.ok) throw new Error('HTTP '+r.status);
   return r.json();
 }
-async function rgFetchMany(slugs){
-  let j;
+async function rgLookup(slugs){
   try{
     if(Date.now() < rgDirectOff) throw new TypeError('direct lookups are blocked here');
-    j = await rgDirectMany(slugs);
+    return await rgDirectMany(slugs);
   }catch(e){
     if(!(e instanceof TypeError)) throw e;
     rgDirectOff = Date.now() + 5*60000;   // the browser would not talk to RedGifs ("Failed to fetch"): don't keep knocking
@@ -1802,11 +1801,30 @@ async function rgFetchMany(slugs){
     // ask the Supabase helper function (supabase/functions/redgifs) to do the lookup instead
     const r = await fetch(CFG.supabaseUrl.replace(/\/$/,'')+'/functions/v1/redgifs?ids='+encodeURIComponent(slugs.join(',')));
     if(!r.ok){ let d = ''; try{ d = (await r.json()).error || ''; }catch(e){} throw new Error('helper '+r.status+(d ? ': '+d : '')); }   // the helper says which RedGifs step failed
-    j = await r.json();
+    return r.json();
   }
-  const out = {}, list = j.gifs || [];
-  for(const g of list) if(g && g.id) out[String(g.id).toLowerCase()] = rgShape(g);
-  for(const sl of slugs) if(!out[sl]) out[sl] = {gone:1};
+}
+/* RedGifs answers a list lookup with 404 ("gifs 404" through the helper) when a clip in the list no longer exists, and then says nothing about the
+   others. So a refused list is split in halves until the missing clips are found on their own; every other clip still gets its real files.
+   A clip that is refused on its own counts as deleted only if some other lookup in the same run worked (so a RedGifs outage never marks everything gone). */
+const rgIs404 = e => /^HTTP 404\b|\bgifs 404\b/.test((e && e.message) || '');
+async function rgFetchMany(slugs){
+  const out = {}, dead = []; let okAny = false, first = null;
+  const run = async list => {
+    let j;
+    try{ j = await rgLookup(list); }
+    catch(e){
+      if(!rgIs404(e)) throw e;
+      first = first || e;
+      if(list.length===1){ dead.push(list[0]); return; }
+      const h = Math.ceil(list.length/2); await run(list.slice(0,h)); await run(list.slice(h)); return;
+    }
+    okAny = true;
+    for(const g of (j && j.gifs) || []) if(g && g.id) out[String(g.id).toLowerCase()] = rgShape(g);
+    for(const sl of list) if(!out[sl]) out[sl] = {gone:1};
+  };
+  await run(slugs);
+  if(dead.length){ if(!okAny) throw first; for(const sl of dead) out[sl] = {gone:1}; }
   return out;
 }
 /* If the API can't be reached from the browser, fall back to the file names Reddit's own embed data reveals. */

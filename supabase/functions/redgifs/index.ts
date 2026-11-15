@@ -29,7 +29,7 @@ Deno.serve(async (req: Request) => {
     const r = await fetch(`https://api.redgifs.com/v2/gifs?${q}`, { headers: { ...base, authorization: 'Bearer ' + token } });
     if (!r.ok) return json({ error: 'gifs ' + r.status + ' ' + (await r.text()).slice(0, 120) }, 502);
     const gifs = ((await r.json()).gifs || []).map((g: any) => ({
-      id: g.id, hasAudio: !!g.hasAudio, width: g.width || 0, height: g.height || 0,
+      id: g.id, hasAudio: !!g.hasAudio, width: g.width || 0, height: g.height || 0, duration: g.duration || 0,
       urls: { hd: g.urls?.hd, sd: g.urls?.sd, poster: g.urls?.poster, thumbnail: g.urls?.thumbnail },
     }));
     return json({ gifs });
