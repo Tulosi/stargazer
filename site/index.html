@@ -1763,7 +1763,9 @@ let durSave;
 const RG_RE = /(?:redgifs\.com\/(?:watch|ifr|i|gifs\/detail)\/|gifdeliverynetwork\.com\/(?:watch\/)?)([a-z0-9]+)/i;
 const RGKEY = 'saved-posts-rg-v2', RG_TTL = 7*864e5;
 const RGC = {};
-try{ const o = JSON.parse(localStorage.getItem(RGKEY)||'{}'), now = Date.now(); for(const k in o) if(o[k] && now-o[k].t < RG_TTL) RGC[k] = o[k]; }catch(e){}
+/* RedGifs file addresses are signed for one visitor and run out (expires=, in seconds). A run-out address fails as "not there", so it is never reused: the clip is looked up again. */
+const rgStale = u => { const x = /[?&]expires=(\d{9,13})(?:&|#|$)/i.exec(u||''); if(!x) return false; let t = +x[1]; if(t < 1e12) t *= 1000; return t < Date.now() + 120000; };
+try{ const o = JSON.parse(localStorage.getItem(RGKEY)||'{}'), now = Date.now(); for(const k in o) if(o[k] && now-o[k].t < RG_TTL && !rgStale(o[k].v) && !rgStale(o[k].vh)) RGC[k] = o[k]; }catch(e){}
 let rgT, rgSave; const saveRG = () => { clearTimeout(rgT); rgT = setTimeout(()=>{ try{ localStorage.setItem(RGKEY, JSON.stringify(RGC)); }catch(e){} },800); };
 const rgSlug = p => { const m = metaOf(p), x = RG_RE.exec((m && m.u) || ''); return x ? x[1].toLowerCase() : (m && m.g ? m.g.toLowerCase() : (m && m.rs) || ''); };   // posts that only carry RedGifs embed data have no redgifs link, so use the name from the embed
 let rgTok = null, rgBlockedUntil = 0, RG_ERR = '', rgDirectOff = 0;
@@ -1809,7 +1811,7 @@ async function rgFetchMany(slugs){
 }
 /* If the API can't be reached from the browser, fall back to the file names Reddit's own embed data reveals. */
 /* RedGifs names a clip's files NAME.mp4 (HD, the one with sound) and NAME-mobile.mp4 (SD). Full screen asks for the HD file first. */
-const rgHd = u => /^https?:\/\/(?:media|thumbs\d*)\.redgifs\.com\/[A-Za-z0-9]+-mobile\.mp4/i.test(u||'') ? u.replace(/-mobile\.mp4/i,'.mp4') : '';
+const rgHd = u => /^https?:\/\/(?:media|thumbs\d*)\.redgifs\.com\/[A-Za-z0-9]+-mobile\.mp4(?:#|$)/i.test(u||'') ? u.replace(/-mobile\.mp4/i,'.mp4') : '';
 const rgHdList = m => m ? [m.vh, rgHd(m.v), m.g ? 'https://media.redgifs.com/'+m.g+'.mp4' : ''] : [];
 const rgGuess = m => m.g ? {v:'https://media.redgifs.com/'+m.g+'.mp4', th:'', w:0, h:0} : null;   // the full file is the one that carries sound; the -mobile one is silent
 /* Reddit's own copy of a RedGifs clip is a silent preview, so a RedGifs post is always looked up on RedGifs (once) to get the real file with its sound. */
@@ -1825,7 +1827,7 @@ async function rgFilesGone(p, url){
   rgApply(p, {gone:1}); return true;
 }
 const goneNote = msg => { const d = document.createElement('p'); d.className = 'vgone'; d.textContent = msg; return d; };
-const rgNeeds = p => { const m = metaOf(p); return !!(m && !m.rgDone && !m.rgGone && m.m!=='removed' && rgSlug(p)); };
+const rgNeeds = p => { const m = metaOf(p); return !!(m && (!m.rgDone || rgStale(m.vh) || rgStale(m.v)) && !m.rgGone && m.m!=='removed' && rgSlug(p)); };
 function rgApply(p,res){
   const m = metaOf(p); if(!m) return;
   if(res.gone) m.rgGone = 1;
@@ -1849,6 +1851,7 @@ $('advRgRetry').addEventListener('click',()=>{
 async function rgRun(p){
   const slug = rgSlug(p), m = metaOf(p);
   let res = RGC[slug];
+  if(res && (rgStale(res.v) || rgStale(res.vh))){ delete RGC[slug]; res = null; }
   if(!res){
     if(Date.now() >= rgBlockedUntil){
       try{ res = await rgFetch(slug); RGC[slug] = Object.assign({t:Date.now()}, res); saveRG(); }
@@ -2081,7 +2084,7 @@ async function openViewer(p, opts){
     }
     return;
   }
-  if(rgNeeds(p) && !rgBusy.has(p.id)){ rgBusy.add(p.id); try{ await rgRun(p); }catch(e){} if(tok!==VIEW.token) return; m = metaOf(p); }
+  if(rgNeeds(p) && (!rgBusy.has(p.id) || (m && m.rgDone))){ rgBusy.add(p.id); try{ await rgRun(p); }catch(e){} if(tok!==VIEW.token) return; m = metaOf(p); }
   const vlist = m ? [...(m.rgGone || !rgSlug(p) ? [m.vh] : rgHdList(m)), ...playSources(m).filter(u=>!/^(yt|rg):/.test(u)), m.v].filter((u,i,a)=>u && a.indexOf(u)===i && !isGifFile(u)) : [];
   const rgEmbed = () => {
     /* No clip file to play at all (or every file failed): fall back to RedGifs' own player, which has sound and its own controls. */
@@ -2106,14 +2109,29 @@ async function openViewer(p, opts){
     let vi = 0;
     let allGone = true;   // every file answered "not found / not a video" (code 4), not a network hiccup (code 2)
     v.addEventListener('error',()=>{ if(!v.error || v.error.code!==4) allGone = false; if(tok===VIEW.token && ++vi < vlist.length){ v.src = vlist[vi]; v.play().catch(()=>{}); return; }
-      if(tok===VIEW.token && isRg){
-        (allGone ? rgFilesGone(p, vlist[vlist.length-1]) : Promise.resolve(false)).then(gone=>{
+      if(tok===VIEW.token && isRg && !opts.rgFresh){
+        /* Every file failed. RedGifs' addresses are signed and run out, so the ones we kept may simply be old: look the clip up again once and
+           replay it in our own player (HD first) before giving up on it. */
+        const mm = metaOf(p), was = mm && mm.rgDone; delete RGC[rgSlug(p)];
+        if(mm){ mm.rgDone = 0; delete mm.vh; }
+        rgRun(p).catch(()=>{}).then(()=>{
           if(tok!==VIEW.token) return;
-          if(gone){ VIEW.stage.replaceChildren(goneNote('This clip has been removed from RedGifs.')); VIEW.root.querySelectorAll('.vctl').forEach(n=>n.remove()); }
-          else rgEmbed();
+          const n = metaOf(p);
+          if(n && n.rgDone && !n.rgGone){ openViewer(p, Object.assign({}, opts, {keep:true, rgFresh:true})); return; }
+          if(n && was) n.rgDone = was;   // the lookup failed: keep what RedGifs said before, so a network problem is not taken for a deleted clip
+          rgLast();
         });
         return;
-      } if(tok===VIEW.token && !thumbSrc) viewerFail(); });   // a source that fails hands over to the next one
+      }
+      if(tok===VIEW.token && isRg) rgLast();
+      else if(tok===VIEW.token && !thumbSrc) viewerFail(); });   // a source that fails hands over to the next one
+    function rgLast(){
+      (allGone ? rgFilesGone(p, vlist[vlist.length-1]) : Promise.resolve(false)).then(gone=>{
+        if(tok!==VIEW.token) return;
+        if(gone){ VIEW.stage.replaceChildren(goneNote('This clip has been removed from RedGifs.')); VIEW.root.querySelectorAll('.vctl').forEach(n=>n.remove()); }
+        else rgEmbed();
+      });
+    }
     VIEW.stage.replaceChildren(v);
     VIEW.root.querySelector('.vsound').hidden = true; VIEW.root.querySelector('.vvol').hidden = true;
     const vc = viewerControls(v);
