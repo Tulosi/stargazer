@@ -1769,6 +1769,7 @@ try{ const o = JSON.parse(localStorage.getItem(RGKEY)||'{}'), now = Date.now(); 
 let rgT, rgSave; const saveRG = () => { clearTimeout(rgT); rgT = setTimeout(()=>{ try{ localStorage.setItem(RGKEY, JSON.stringify(RGC)); }catch(e){} },800); };
 const rgSlug = p => { const m = metaOf(p), x = RG_RE.exec((m && m.u) || ''); return x ? x[1].toLowerCase() : (m && m.g ? m.g.toLowerCase() : (m && m.rs) || ''); };   // posts that only carry RedGifs embed data have no redgifs link, so use the name from the embed
 let rgTok = null, rgBlockedUntil = 0, RG_ERR = '', rgDirectOff = 0;
+const RG_N = {ok:0, gone:0};   // this visit: clips RedGifs gave files for, and clips it said no longer exist (shown under Advanced)
 async function rgToken(force){
   if(!force && rgTok && Date.now() < rgTok.exp) return rgTok.v;
   const r = await fetch('https://api.redgifs.com/v2/auth/temporary');
@@ -1825,6 +1826,8 @@ async function rgFetchMany(slugs){
   };
   await run(slugs);
   if(dead.length){ if(!okAny) throw first; for(const sl of dead) out[sl] = {gone:1}; }
+  for(const sl of slugs){ if(out[sl] && out[sl].gone) RG_N.gone++; else if(out[sl]) RG_N.ok++; }
+  updateAdvRg();
   return out;
 }
 /* If the API can't be reached from the browser, fall back to the file names Reddit's own embed data reveals. */
@@ -1856,7 +1859,8 @@ function rgApply(p,res){
 }
 function updateAdvRg(){
   const el = $('advRg'); if(!el) return;
-  el.textContent = RG_ERR ? 'RedGifs sound: last problem was "'+RG_ERR+'". Some clips may play without sound.' : 'RedGifs sound: no problems so far.';
+  const n = RG_N.ok || RG_N.gone ? 'RedGifs this visit: '+RG_N.ok+' clip'+(RG_N.ok===1?'':'s')+' found'+(RG_N.gone ? ', '+RG_N.gone+' deleted' : '')+'. ' : '';
+  el.textContent = n + (RG_ERR ? 'Last problem: "'+RG_ERR+'"'+(RG_N.ok ? '.' : '. Some clips may play without sound or in SD.') : (n ? 'No problems.' : 'RedGifs sound: no problems so far.'));
 }
 function rgWarn(){
   updateAdvRg();

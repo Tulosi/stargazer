@@ -24,15 +24,34 @@ Deno.serve(async (req: Request) => {
     if (!a.ok) return json({ error: 'auth ' + a.status + ' ' + (await a.text()).slice(0, 120) }, 502);
     const token = (await a.json()).token;
     if (!token) return json({ error: 'no token' }, 502);
-    const q = new URLSearchParams({ ids: ids.join(','), 'user-agent': ua });
+    const q = new URLSearchParams({ 'user-agent': ua });
     if (ip) q.set('user-addr', ip);
-    const r = await fetch(`https://api.redgifs.com/v2/gifs?${q}`, { headers: { ...base, authorization: 'Bearer ' + token } });
-    if (!r.ok) return json({ error: 'gifs ' + r.status + ' ' + (await r.text()).slice(0, 120) }, 502);
-    const gifs = ((await r.json()).gifs || []).map((g: any) => ({
+    const auth = { ...base, authorization: 'Bearer ' + token };
+    const shape = (g: any) => ({
       id: g.id, hasAudio: !!g.hasAudio, width: g.width || 0, height: g.height || 0, duration: g.duration || 0,
       urls: { hd: g.urls?.hd, sd: g.urls?.sd, poster: g.urls?.poster, thumbnail: g.urls?.thumbnail },
-    }));
-    return json({ gifs });
+    });
+    const list = async (qs: string) => fetch(`https://api.redgifs.com/v2/gifs?ids=${ids.join(',')}${qs}`, { headers: auth });
+    let r = await list('&' + q);
+    // If the list is refused with the visitor's address and browser attached, try once without them (RedGifs has changed what it accepts before).
+    let qs = '?' + q;
+    if (r.status === 404) { const r2 = await list(''); if (r2.ok) { r = r2; qs = ''; } }
+    if (r.ok) return json({ v: 2, gifs: ((await r.json()).gifs || []).map(shape) });
+    if (r.status !== 404) return json({ error: 'gifs ' + r.status + ' ' + (await r.text()).slice(0, 120) }, 502);
+    // RedGifs refuses the whole list (404) when one clip in it no longer exists: ask for each clip on its own instead, a few at a time.
+    const gifs: any[] = [], missing: string[] = []; let other = '';
+    const one = async (id: string, qq: string) => fetch(`https://api.redgifs.com/v2/gifs/${id}${qq}`, { headers: auth });
+    for (let i = 0; i < ids.length; i += 5) {
+      await Promise.all(ids.slice(i, i + 5).map(async (id) => {
+        let o = await one(id, qs);
+        if (o.status === 404 && qs) o = await one(id, '');
+        if (o.ok) { const g = (await o.json()).gif; if (g) gifs.push(shape(g)); else missing.push(id); }
+        else if (o.status === 404 || o.status === 410) missing.push(id);
+        else other = other || ('gif ' + o.status + ' ' + (await o.text()).slice(0, 80));
+      }));
+    }
+    if (!gifs.length) return json({ error: other || ('gifs 404 (all ' + ids.length + ' refused, one by one too)') }, 502);
+    return json({ v: 2, gifs, missing });
   } catch (e) {
     return json({ error: String(e) }, 502);
   }
