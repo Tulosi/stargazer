@@ -233,8 +233,8 @@ input[type=range]{width:100%;accent-color:var(--sel);margin:0}
 body.fullw .wrap,body.fullw .deck-in{max-width:none}
 @media (max-width:720px){#fullw{display:none}} /* phones already have 1 / 2 / 3 across */
 .sizewrap .notches{display:none}
-.sizewrap.stepped{padding-bottom:16px}
-.sizewrap.stepped .notches{display:block;position:absolute;left:0;right:0;bottom:0;height:16px;pointer-events:none}
+.sizewrap.stepped,.sizewrap.onestop{padding-bottom:16px}
+.sizewrap.stepped .notches,.sizewrap.onestop .notches{display:block;position:absolute;left:0;right:0;bottom:0;height:16px;pointer-events:none}
 .notches i{position:absolute;bottom:0;transform:translateX(-50%);font:500 11px/1 var(--font);font-style:normal;color:var(--muted);text-align:center}
 .notches i::before{content:"";display:block;width:2px;height:5px;margin:0 auto 3px;border-radius:1px;background:var(--line);box-shadow:0 0 0 .5px var(--muted)}
 .notches i.on{color:var(--ink);font-weight:650}
@@ -2370,13 +2370,13 @@ function layoutCard(el,p){
   el.style.gridRow = 'span '+rows;
   el.style.gridColumn = cs>1 ? 'span '+cs : '';
 }
-/* In Full width no tile is taller than the window below the top bar. MAXROWS is worked out once per relayout (one read), never per card. */
+/* In Full width (and at one tile across on a tablet, ONE_UP) no tile is taller than the window below the top bar. MAXROWS is worked out once per relayout (one read), never per card. */
 let MAXROWS = 0;
 function capRows(r){ return MAXROWS ? Math.min(r, MAXROWS) : r; }
 function relayoutAll(){
   measureGrid();
   MAXROWS = 0;
-  if(typeof FULLW !== 'undefined' && FULLW && LAYOUT !== 'list'){
+  if(typeof FULLW !== 'undefined' && (FULLW || ONE_UP) && LAYOUT !== 'list'){
     const deck = document.querySelector('.deck'), h = innerHeight - (deck ? deck.offsetHeight : 0) - 24;
     MAXROWS = Math.max(10, Math.floor((h + GAP)/(ROW+GAP)));
   }
@@ -3308,6 +3308,11 @@ function fwCard(n){ return Math.floor((FW_COLS.W - 6*(n-1))/n) - 1; }
    than the window (capRows / MAXROWS, worked out once per relayout). Nothing is measured per card. */
 var FULLW = false; try{ FULLW = localStorage.getItem('saved-posts-fullwidth')==='1'; }catch(e){}
 var cardPx = 230;
+/* Tablets (iPad portrait and other windows under ONE_W wide that are not phones): 360px tiles still fit two across, so the slider gets one
+   more stop at its right end, ONE_STOP, that means one tile across the window. Stored as that value in saved-posts-tile; a wider window
+   shows it as 360 without forgetting it, so turning the iPad back to portrait gives one across again. */
+const ONE_W = 1100, ONE_STOP = 370;
+var ONE_UP = false;      // one tile across on a tablet: tiles are then capped to the window height like Full width
 function setCard(px){ cardPx = +px || cardPx; document.documentElement.style.setProperty('--card', cardPx+'px'); relayoutAll(); }
 function setFullw(on, save){
   FULLW = !!on; document.body.classList.toggle('fullw', FULLW);
@@ -3318,23 +3323,29 @@ function setFullw(on, save){
 function buildSizeControl(){
   const sl = $('size'), wrap = sl.closest('.sizewrap'), nt = wrap.querySelector('.notches');
   if(!phoneMQ.matches){
-    SIZE_STEPS = null; wrap.classList.remove('stepped'); nt.replaceChildren();
+    SIZE_STEPS = null; wrap.classList.remove('stepped', 'onestop'); nt.replaceChildren();
     if(FULLW){
       /* Full width: the slider counts columns, from as many 150px tiles as fit (left) down to 2 across (right), so every step changes
          something; a pixel range up to one tile across spent two thirds of the bar on 1 or 2 enormous columns. Kept apart from the normal size. */
-      const W = Math.max(400, $('grid').clientWidth || innerWidth - 28), nMax = Math.max(3, Math.floor((W + 6)/(150 + 6)));
-      let n = 3; try{ const v = +localStorage.getItem('saved-posts-tile-fullw'); if(v>=2 && v<=40) n = v; }catch(e){}
-      n = Math.min(nMax, Math.max(2, n));
+      const W = Math.max(400, $('grid').clientWidth || innerWidth - 28), nMax = Math.max(3, Math.floor((W + 6)/(150 + 6))), nMin = W < ONE_W ? 1 : 2;
+      let n = 3; try{ const v = +localStorage.getItem('saved-posts-tile-fullw'); if(v>=1 && v<=40) n = v; }catch(e){}
+      n = Math.min(nMax, Math.max(nMin, n));
       FW_COLS = {W, nMax};
-      sl.min = 0; sl.max = nMax - 2; sl.step = 1; sl.value = nMax - n; sl.title = n+' across';
-      setCard(fwCard(n));
+      sl.min = 0; sl.max = nMax - nMin; sl.step = 1; sl.value = nMax - n; sl.title = n+' across';
+      ONE_UP = false; setCard(fwCard(n));
     } else {
       FW_COLS = null; sl.title = '';
-      let d = 230; try{ const v = +localStorage.getItem('saved-posts-tile'); if(v>=150&&v<=360) d = v; }catch(e){}
-      sl.min = 150; sl.max = 360; sl.step = 10; sl.value = d; setCard(d);
+      const W = Math.max(240, $('grid').clientWidth || innerWidth - 28), one = W < ONE_W;
+      let d = 230; try{ const v = +localStorage.getItem('saved-posts-tile'); if(v>=150 && v<=ONE_STOP) d = v; }catch(e){}
+      if(d > 360 && !one) d = 360;
+      sl.min = 150; sl.max = one ? ONE_STOP : 360; sl.step = 10; sl.value = d;
+      wrap.classList.toggle('onestop', one);
+      if(one){ const t = document.createElement('i'); t.textContent = '1'; t.title = '1 across'; t.style.left = 'calc(100% - 8px)'; nt.replaceChildren(t); }
+      paintOne(); setCard(d > 360 ? W : d);
     }
     return;
   }
+  ONE_UP = false; wrap.classList.remove('onestop');
   const W = Math.max(240, $('grid').clientWidth || innerWidth - 28), gap = 6;
   const steps = [];
   for(let n=1;n<=3;n++){ const w = Math.floor((W - gap*(n-1))/n) - 1; if(w >= 100) steps.push(w); }
@@ -3348,23 +3359,26 @@ function buildSizeControl(){
   paintNotches(); setCard(steps[cur]);
 }
 function cardSoon(px){ cardSoon.px = px; if(!cardSoon.f) cardSoon.f = requestAnimationFrame(()=>{ cardSoon.f = 0; setCard(cardSoon.px); }); }
+/* the one-across stop: its notch lights up, the slider says so, and tiles are capped to the window (ONE_UP) */
+function paintOne(){ const sl = $('size'), on = !FULLW && !SIZE_STEPS && +sl.value > 360; ONE_UP = on; sl.title = on ? '1 across' : '';
+  const t = document.querySelector('#sizerow .notches i'); if(t && sl.closest('.sizewrap').classList.contains('onestop')) t.classList.toggle('on', on); }
 function paintNotches(){ const i = +$('size').value; document.querySelectorAll('#sizerow .notches i').forEach((t,k)=>t.classList.toggle('on', k===i)); }
 $('size').addEventListener('input',e=>{
   if(SIZE_STEPS){ const i = +e.target.value; e.target.dataset.idx = i; paintNotches(); setCard(SIZE_STEPS[i]); try{ localStorage.setItem('saved-posts-tile-phone', String(i)); }catch(x){} }
   else if(FW_COLS){ const n = FW_COLS.nMax - (+e.target.value); e.target.title = n+' across'; cardSoon(fwCard(n)); try{ localStorage.setItem('saved-posts-tile-fullw', String(n)); }catch(x){} }
-  else { cardSoon(e.target.value); try{ localStorage.setItem('saved-posts-tile', String(e.target.value)); }catch(x){} }
+  else { const v = +e.target.value; paintOne(); cardSoon(v > 360 ? Math.max(240, $('grid').clientWidth || innerWidth - 28) : v); try{ localStorage.setItem('saved-posts-tile', String(e.target.value)); }catch(x){} }
 });
 /* Tile size is remembered (desktop pixels and phone column step separately). */
 try{
   const sl = $('size'), dt = +localStorage.getItem('saved-posts-tile'), pt = parseInt(localStorage.getItem('saved-posts-tile-phone'),10);
   if(phoneMQ.matches){ if(pt>=0) sl.dataset.idx = pt; }
-  else if(dt>=150 && dt<=360){ sl.value = dt; setCard(dt); }
+  else if(dt>=150 && dt<=360){ sl.value = dt; setCard(dt); }   /* the one-across stop (ONE_STOP) is set up by buildSizeControl */
 }catch(e){}
 buildSizeControl();
 $('fullw').addEventListener('click',e=>{ e.preventDefault(); setFullw(!FULLW, true); });
 setFullw(FULLW, false);
 (phoneMQ.addEventListener ? phoneMQ.addEventListener('change', buildSizeControl) : phoneMQ.addListener(buildSizeControl));
-addEventListener('resize', ()=>{ if(SIZE_STEPS || FULLW){ clearTimeout(buildSizeControl._t); buildSizeControl._t = setTimeout(buildSizeControl, 200); } });
+addEventListener('resize', ()=>{ clearTimeout(buildSizeControl._t); buildSizeControl._t = setTimeout(buildSizeControl, 200); });   // rotating a tablet can add or drop the one-across stop
 
 /* ---------- live metadata from Reddit ---------- */
 function pickThumb(s){
