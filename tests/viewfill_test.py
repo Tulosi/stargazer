@@ -4,7 +4,9 @@ from playwright.sync_api import sync_playwright
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.abspath(os.path.join(HERE, '..', 'site'))
 SIL = open(os.path.join(HERE, 'fixtures', 'clip_silent.webm'), 'rb').read()
 PNG = bytes.fromhex('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360f8cfc0f01f0005000201a5c3d8a20000000049454e44ae426082')
-bad = []; HITS = []
+bad = []; HITS = []; LOOKUPS = []
+import time
+FUTURE = int(time.time()) + 86400; PAST = int(time.time()) - 3600
 def check(n, ok):
     print(('PASS ' if ok else 'FAIL ') + n)
     if not ok: bad.append(n)
@@ -19,12 +21,14 @@ def handle(r):
     if 'api.redgifs.com/v2/auth/temporary' in u: return r.fulfill(status=200, content_type='application/json', headers=ACAO, body='{"token":"t"}')
     if 'api.redgifs.com/v2/gifs?ids=' in u:
         ids = u.split('ids=')[1].split(',')
+        LOOKUPS.extend(ids)
         gifs = [{'id': i, 'hasAudio': False, 'width': 160, 'height': 90, 'urls': {'sd': 'https://media.redgifs.com/%s-mobile.mp4' % i, 'hd': 'https://media.redgifs.com/%s.mp4' % i}} for i in ids if i == 'quietone']
+        gifs += [{'id': i, 'hasAudio': False, 'width': 160, 'height': 90, 'urls': {'sd': 'https://media.redgifs.com/%s-mobile.mp4?expires=%d&signature=new' % (i.capitalize(), FUTURE), 'hd': 'https://media.redgifs.com/%s.mp4?expires=%d&signature=new' % (i.capitalize(), FUTURE)}} for i in ids if i in ('staleone', 'badsig')]
         return r.fulfill(status=200, content_type='application/json', headers=ACAO, body=json.dumps({'gifs': gifs}))
     if 'api.redgifs.com' in u: return r.abort()
     if u.startswith('https://media.redgifs.com/'):
         HITS.append(u)
-        if 'Nohd.mp4' in u: return r.fulfill(status=404, body='')
+        if 'Nohd.mp4' in u or 'signature=old' in u: return r.fulfill(status=403 if 'signature=old' in u else 404, body='')
         return r.fulfill(status=200, content_type='video/webm', headers=ACAO, body=SIL)
     if u.startswith('https://i.example.com/'): return r.fulfill(status=200, content_type='image/png', body=PNG)
     return r.abort()
@@ -59,6 +63,15 @@ with sync_playwright() as p:
     check('a known SD RedGifs file is swapped for its HD name in full screen', vsrc()=='https://media.redgifs.com/MobileOne.mp4')
     open_('nohd11')
     check('when the HD file is missing, full screen falls back to the SD file', vsrc()=='https://media.redgifs.com/Nohd-mobile.mp4' and any('Nohd.mp4' in h for h in HITS))
+    # RedGifs signs its file addresses for one visitor and they run out: an old address must not leave full screen on RedGifs' own (SD) player
+    ev(seed('stale1', {'u': 'https://www.redgifs.com/watch/staleone', 'v': 'https://media.redgifs.com/Staleone-mobile.mp4?expires=%d&signature=old' % PAST, 'vh': 'https://media.redgifs.com/Staleone.mp4?expires=%d&signature=old' % PAST, 'rgDone': 1, 'ha': 0}))
+    ev(seed('badsg1', {'u': 'https://www.redgifs.com/watch/badsig', 'v': 'https://media.redgifs.com/Badsig-mobile.mp4?expires=%d&signature=old' % FUTURE, 'vh': 'https://media.redgifs.com/Badsig.mp4?expires=%d&signature=old' % FUTURE, 'rgDone': 1, 'ha': 0}))
+    ev('startCsvMode()'); pg.wait_for_timeout(1500)
+    open_('stale1')
+    check('a run-out RedGifs address is looked up again and full screen plays the fresh HD file', 'staleone' in LOOKUPS and vsrc().startswith('https://media.redgifs.com/Staleone.mp4?') and 'signature=new' in vsrc() and not ev("!!document.querySelector('#viewer iframe')"))
+    open_('badsg1'); pg.wait_for_timeout(1500)
+    check('when every kept address is refused, full screen looks the clip up once more and plays it in HD in our own player', 'badsig' in LOOKUPS and vsrc().startswith('https://media.redgifs.com/Badsig.mp4?') and 'signature=new' in vsrc() and not ev("!!document.querySelector('#viewer iframe')") and not ev("!!META.badsg1.rgGone"))
+    check('a signed SD address is not turned into a made-up HD one', ev("rgHd('https://media.redgifs.com/A-mobile.mp4?expires=1&signature=x')") == '' and ev("rgHd('https://media.redgifs.com/A-mobile.mp4')") == 'https://media.redgifs.com/A.mp4')
     open_('pic111')
     check('pictures fill the screen too', ev("(()=>{ const i=document.querySelector('#viewer .vstage img'); return !!i && getComputedStyle(i).objectFit==='cover'; })()"))
     ev("closeViewer()"); pg.wait_for_timeout(300)
