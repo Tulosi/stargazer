@@ -13,7 +13,7 @@ with sync_playwright() as p:
     pg.goto(PAGE); pg.wait_for_timeout(900); ev = pg.evaluate
     check('first run offers sample posts next to Open CSV', ev("!!document.getElementById('introSample')") and 'Nothing loaded yet' in ev("document.querySelector('.nodata').textContent"))
     pg.click('#introSample'); pg.wait_for_timeout(1200)
-    check('sample opens 12 invented posts', ev("POSTS.length")==12 and ev("document.querySelectorAll('.card').length")==12)
+    check('sample opens 15 invented posts, 13 shown (the text post and the NSFW one are hidden by default)', ev("POSTS.length")==15 and ev("document.querySelectorAll('.card').length")==13)
     check('sample pictures draw (data art)', ev("[...document.querySelectorAll('.card img')].filter(i=>i.naturalWidth>0).length")>=6)
     check('Filters switches keep the filled accent; only the Source switch is a quiet tab', ev("(()=>{ const bg=s=>getComputedStyle(document.querySelector(s+' .pill[aria-pressed=true]')).backgroundColor; return bg('#layoutseg')===bg('#nsfwseg') && bg('#layoutseg')!==bg('#srcpanel .srcseg') && bg('#layoutseg')!=='rgba(0, 0, 0, 0)'; })()"))
     check('every sample picture draws at once (built-in art skips the image queue)', ev("[...document.querySelectorAll('.card')].every(c=>{ const i=c.querySelector('.thumb img'); return i && i.naturalWidth>0; })"))
@@ -43,7 +43,7 @@ with sync_playwright() as p:
     ev("document.getElementById('q').value='zzzzqq'; document.getElementById('q').dispatchEvent(new Event('input'))"); pg.wait_for_timeout(600)
     check('empty results offer Clear filters in place', ev("!!document.getElementById('emptyClear')"))
     ev("document.getElementById('emptyClear').click()"); pg.wait_for_timeout(500)
-    check('Clear filters brings the posts back', ev("document.querySelectorAll('.card').length")==12)
+    check('Clear filters brings the posts back', ev("document.querySelectorAll('.card').length")==13)
     ev("document.getElementById('decktoggle').click()"); pg.wait_for_timeout(300)
     check('shortcut list is in Filters and collapsed', ev("document.getElementById('kbhelp').open")==False and ev("!!document.querySelector('#panel #kbhelp')"))
     ev("document.querySelector('#kbhelp summary').click()"); pg.wait_for_timeout(200)
@@ -57,7 +57,9 @@ with sync_playwright() as p:
     pg.click('#introSample'); pg.wait_for_timeout(2500)
     ev("toast('Hello')"); pg.wait_for_timeout(300)
     check('phone toast sits above the bottom bar, not on it', ev("document.getElementById('toast').getBoundingClientRect().bottom <= document.getElementById('navbtns').getBoundingClientRect().top + 1"))
+    ev("state.showText=true; state.nsfw='show'; refresh(); updateStats()"); pg.wait_for_timeout(400)   # the samples include a text post and an NSFW one, hidden by default
     check('phone shows one stat when nothing is filtered', ev("[...document.querySelectorAll('#stats .st')].filter(e=>e.offsetParent!==null).length")==1 and ev("document.querySelector('#stats .st .lb').textContent")=='Posts')
+    ev("state.showText=false; state.nsfw='hide'; refresh()"); pg.wait_for_timeout(200)
     ev("document.getElementById('decktoggle').click()"); pg.wait_for_timeout(500)
     check('phone Filters opens on View, then Filter and sort, then Browse', ev("(()=>{ const t=id=>document.getElementById(id).getBoundingClientRect().top; return t('layoutseg') < t('sort') && t('sort') < t('browseCol'); })()"))
     pg.evaluate("document.getElementById('panel').scrollTo(0, 99999)"); pg.wait_for_timeout(200)

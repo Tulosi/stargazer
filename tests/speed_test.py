@@ -76,7 +76,7 @@ with sync_playwright() as p:
     # 4. Static checks
     src = open(PAGE[7:]).read()
     check('preview cache lasts 30 days', 'CACHE_TTL = 30*24*3600*1000' in src)
-    check('web font stylesheet does not block the first paint', 'rel="stylesheet" media="print" onload=' in src)
+    check('Geist is embedded: no font service request', "font-family:'Geist'" in src and 'src:url(data:font/woff2;base64,' in src and 'fonts.googleapis.com' not in src and 'fonts.gstatic.com' not in src)
     check('no page errors', not errs)
     if errs: print(errs[:3])
     b.close()

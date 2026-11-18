@@ -59,8 +59,8 @@ with sync_playwright() as p:
     box = pg.locator('.card').nth(6).bounding_box()
     pg.mouse.move(box['x'] + 8, box['y'] + 8); pg.wait_for_timeout(400)
     check('hover mode: up while hovered', ev(LAY, 6) == 1)
-    pg.mouse.click(box['x'] + 8, box['y'] + 8); pg.wait_for_timeout(500)
-    check('hover mode: a tap on the tile puts the raised layer away', ev(LAY, 6) == 0 and ev("document.querySelectorAll('.card')[6].classList.contains('lay-shut')"))
+    pg.mouse.down(); pg.wait_for_timeout(600); pg.mouse.up(); pg.wait_for_timeout(300)
+    check('hover mode: pressing and holding the tile puts the raised layer away', ev(LAY, 6) == 0 and ev("document.querySelectorAll('.card')[6].classList.contains('lay-shut')"))
     check('hover mode: and its handle comes back', ev("getComputedStyle(document.querySelectorAll('.card')[6].querySelector('.lhandle')).display") == 'block')
     pg.mouse.move(2, 2); pg.wait_for_timeout(300); pg.mouse.move(box['x'] + 8, box['y'] + 8); pg.wait_for_timeout(500)
     check('hover mode: it rises again once the pointer has left and come back', ev(LAY, 6) == 1)
@@ -68,8 +68,8 @@ with sync_playwright() as p:
     # Show always: collapse by hand with a tap or by swiping the grabber down; it stays down; the handle raises it again
     ev(SETM, 'always'); pg.wait_for_timeout(300)
     check('always: layer up', ev(LAY, 7) == 1)
-    ev("document.querySelectorAll('.card')[7].querySelector('a.thumb').click()"); pg.wait_for_timeout(500)
-    check('always: a tap on the tile collapses that card', ev(LAY, 7) == 0 and ev(LAY, 8) == 1)
+    ev("toggleLayer(document.querySelectorAll('.card')[7])"); pg.wait_for_timeout(500)
+    check('always: press and hold (toggleLayer) collapses that card', ev(LAY, 7) == 0 and ev(LAY, 8) == 1)
     pg.mouse.move(box['x'] + 8, box['y'] + 8); pg.mouse.move(2, 2); pg.wait_for_timeout(400)
     check('always: it stays collapsed after the pointer comes and goes', ev(LAY, 7) == 0)
     ev("document.querySelectorAll('.card')[7].querySelector('.lhandle').click()"); pg.wait_for_timeout(500)
@@ -90,29 +90,20 @@ with sync_playwright() as p:
     check('the mode is remembered across a reload', ev("document.getElementById('cardmode').value") == 'always' and ev("document.body.classList.contains('cm-always')"))
     ev("localStorage.removeItem('saved-posts-cardmode'); localStorage.setItem('saved-posts-ctlmode','collapsed')"); pg.reload(); pg.wait_for_timeout(800)
     check('an earlier Card controls choice carries over', ev("document.getElementById('cardmode').value") == 'collapsed')
-    # double tap pauses; a single tap still opens the post
     ev(SEED, H); pg.wait_for_timeout(1000)
-    ev("""(()=>{ const t=document.querySelector('.card .thumb'); const im=document.createElement('img'); im.src='%s'; t.appendChild(im); buildControls(t, im, true); window.__pp=0; t.closest('.card').querySelector('.ctl .pp').addEventListener('click',()=>window.__pp++); })()""" % GIF)
-    pg.wait_for_timeout(200)
-    ENS = "(()=>{ const t=document.querySelector('.card .thumb'); if(!document.querySelector('.card .lay-play .ctl')){ const im=document.createElement('img'); im.src='%s'; t.appendChild(im); buildControls(t, im, true); } })()" % GIF
-    tap = "(()=>{ const t=document.querySelector('.card .thumb'); if(!document.querySelector('.card .lay-play .ctl')){ const im=document.createElement('img'); im.src='" + GIF + "'; t.appendChild(im); buildControls(t, im, true); } const a=document.querySelector('.card a.thumb'); a.click(); %s })()"
-    ev(tap % "setTimeout(()=>a.click(), 80);"); pg.wait_for_timeout(600)
-    check('double tap on a clip toggles pause once', ev("window.__pp") == 1)
-    slow = ev("""()=>new Promise(res=>{ const card=document.querySelector('.card'); const t=card.querySelector('.thumb'); const im=document.createElement('img'); im.src='%s'; t.appendChild(im); buildControls(t, im, true); let n=0; card.querySelector('.ctl .pp').addEventListener('click',()=>n++);
-      const a=card.querySelector('a.thumb'); a.click(); setTimeout(()=>{ a.click(); setTimeout(()=>res(n),50); }, 300); })""" % GIF.replace('%', '%%'))
-    check('a slow double tap (300ms apart) still pauses', slow == 1)
     check('a scrub bar lets a vertical swipe scroll the page; the handle is a small centred target', ev("""(()=>{ const c=document.querySelector('.card .ctl') || (()=>{ const d=document.createElement('div'); d.className='ctl'; document.querySelector('.card .layer').appendChild(d); return d; })(); const i=document.createElement('input'); i.type='range'; i.className='seek'; c.appendChild(i); const ta=getComputedStyle(i).touchAction; i.remove(); const h=document.querySelector('.card .lhandle').getBoundingClientRect(), cr=document.querySelector('.card').getBoundingClientRect(); return ta==='pan-y' && h.width<=80 && h.width<cr.width/2; })()"""))
     ev(SETM, 'collapsed'); pg.mouse.move(2, 2); pg.wait_for_timeout(300)
-    ev(tap % ""); pg.wait_for_timeout(600)
-    check('a single tap on a clip opens its layer, a moment later (not the post)', ev(LAY, 0) == 1 and ev("window.__pp") == 1)
-    ev(tap % ""); pg.wait_for_timeout(600)
-    check('and another tap closes it', ev(LAY, 0) == 0)
-    ev("document.querySelectorAll('.card')[3].querySelector('a.thumb').click()"); pg.wait_for_timeout(400)
-    check('a tap on a tile without player controls opens its layer at once', ev(LAY, 3) == 1)
+    ev("document.querySelectorAll('.card')[2].querySelector('a.thumb').click()"); pg.wait_for_timeout(500)
+    check('a tap on a tile opens the post full screen (not its layer)', ev("!document.getElementById('viewer').hidden") and ev(LAY, 2) == 0)
+    pg.keyboard.press('Escape'); pg.wait_for_timeout(500)
+    b3 = pg.locator('.card').nth(3).bounding_box()
+    pg.mouse.move(b3['x'] + 20, b3['y'] + 20); pg.mouse.down(); pg.wait_for_timeout(600); pg.mouse.up(); pg.wait_for_timeout(400)
+    check('pressing and holding a tile opens its layer, and does not open full screen', ev(LAY, 3) == 1 and ev("document.getElementById('viewer').hidden"))
     check('the layer order is Source, Comments, then NSFW, Favourite, Saved, Fullscreen on the right', ev("(()=>{ const l=document.querySelectorAll('.card')[3].querySelector('.layer'); const a=[...l.querySelectorAll('.actions .btn')].map(x=>x.textContent.trim()); const c=[...l.querySelectorAll('.lay-cap > *')].map(x=>x.classList.contains('nsfwb')?'nsfw':x.classList.contains('star')?'star':x.classList.contains('fs')?'fs':'save'); const ar=l.querySelector('.actions .btn:last-child').getBoundingClientRect(), cr=l.querySelector('.lay-cap button:not([hidden])').getBoundingClientRect(); return a[0]==='Open post' && a[1]==='Comments' && c.join()==='nsfw,star,save,fs' && ar.left<cr.left; })()"))
+    pg.mouse.move(2, 2); ev("for(const k in HEALTH) delete HEALTH[k]"); ev(SEED, H); pg.wait_for_timeout(800); ev("toggleLayer(document.querySelectorAll('.card')[5])"); pg.wait_for_timeout(300)   # fresh cards: once a mocked clip has failed, the link falls back to the data: picture, which cannot open a tab
     try:
         with pg.context.expect_page(timeout=2000):
-            ev("document.querySelectorAll('.card')[3].querySelector('.actions a.btn.primary').click()")
+            ev("document.querySelectorAll('.card')[5].querySelector('.actions a.btn.primary').click()")
         opened = True
     except Exception:
         opened = False

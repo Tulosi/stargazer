@@ -1,4 +1,4 @@
-"""Tile size snaps to numbered steps, each a count of tiles across (Masonry and Grid), most tiles on the left and 1 across on the right everywhere: phones get 3 / 2 / 1, tablets and desktops get
+"""Tile size snaps to numbered steps, each a count of tiles across (Masonry and Grid), 1 across on the left and most tiles on the right everywhere (Nov 2026: it is labelled Columns): phones get 1 / 2 / 3, tablets and desktops get
 from as many 150px tiles as fit down to 1 across, with more steps on wider windows (at most 5, 10 in Full width). The slider
 cannot rest between steps, every step gives the column count on its label, one across is no taller than the window, the choice is
 remembered, an old pixel setting carries over, and a different window width snaps to the nearest step. Run: python tests/tilesize_test.py"""
@@ -32,12 +32,12 @@ with sync_playwright() as p:
             sl = pg.evaluate("({min:$('size').min, max:$('size').max, step:$('size').step})")
             check('%dpx %s: one numbered notch per slider position, whole steps only (%s)' % (w, lay, labels), sl['min'] == '0' and sl['step'] == '1' and int(sl['max']) == len(labels) - 1)
             fit = pg.evaluate("Math.floor(($('grid').clientWidth + 6)/156)")
-            check('%dpx %s: every count from min(fit, 5) down to 1 (%s)' % (w, lay, labels), labels == list(range(min(fit, 5), 0, -1)))
+            check('%dpx %s: every count from 1 up to min(fit, 5), left to right (%s)' % (w, lay, labels), labels == list(range(1, min(fit, 5)+1)))
             seen = []
             for i in range(len(labels)):
                 pg.evaluate("(%s)(%d)" % (SET, i)); pg.wait_for_timeout(120); seen.append(pg.evaluate(COLS))
             check('%dpx %s: each step gives the column count on its label (%s)' % (w, lay, seen), seen == labels)
-            check('%dpx %s: the chosen notch is lit and the slider says it' % (w, lay), pg.evaluate("document.querySelector('#sizerow .notches i.on').textContent") == '1' and pg.evaluate("$('size').getAttribute('aria-valuetext')") == '1 across')
+            check('%dpx %s: the chosen notch is lit and the slider says it' % (w, lay), pg.evaluate("document.querySelector('#sizerow .notches i.on').textContent") == str(labels[-1]) and pg.evaluate("$('size').getAttribute('aria-valuetext')") == '%d across' % labels[-1])
             t = pg.evaluate(TALL)
             check('%dpx %s: at 1 across no tile is taller than the window (%s)' % (w, lay, t), t['tallest'] <= t['room'])
         pg.evaluate("(%s)(1)" % SET); pg.wait_for_timeout(150)
@@ -62,15 +62,15 @@ with sync_playwright() as p:
     ctx.close()
     # phones: 3 / 2 / 1 across
     ctx, pg, errs = page(b, 390, 844, True)
-    check('phone: three notches 3, 2, 1, in the same order as desktop', pg.evaluate(LABELS) == [3, 2, 1])
-    check('phone: starts with one column, at the right end', pg.evaluate(COLS) == 1 and pg.evaluate("$('size').value") == '2')
-    for i, want in ((1, 2), (0, 3), (2, 1)):
+    check('phone: three notches 1, 2, 3, in the same order as desktop', pg.evaluate(LABELS) == [1, 2, 3])
+    check('phone: starts with one column, at the left end', pg.evaluate(COLS) == 1 and pg.evaluate("$('size').value") == '0')
+    for i, want in ((1, 2), (2, 3), (0, 1)):
         pg.evaluate("(%s)(%d)" % (SET, i)); pg.wait_for_timeout(150)
         check('phone: step %d gives %d column(s)' % (i, want), pg.evaluate(COLS) == want)
     pg.evaluate("(%s)(1)" % SET); pg.wait_for_timeout(150); pg.reload(); pg.wait_for_timeout(1000)
     check('phone: remembered (2 across)', pg.evaluate(COLS) == 2)
-    check('phone: one across is not height-capped', pg.evaluate("((%s)(2), MAXROWS)" % SET) == 0)
-    check('phone: tile size row is visible', pg.evaluate("(()=>{ $('decktoggle').click(); return !!$('sizerow').offsetParent; })()"))
+    check('phone: one across is not height-capped', pg.evaluate("((%s)(0), MAXROWS)" % SET) == 0)
+    check('phone: tile size row is visible', pg.evaluate("(()=>{ $('viewtoggle').click(); return !!$('sizerow').offsetParent; })()"))
     check('phone: no page errors', not errs); ctx.close()
     b.close()
 print('FAILED: ' + ', '.join(bad) if bad else 'ALL PASS')

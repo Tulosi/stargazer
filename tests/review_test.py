@@ -38,7 +38,7 @@ with sync_playwright() as p:
     check('tile size hidden in List', not ev("document.getElementById('sizerow').offsetParent"))
     check('layout hint is short', len(ev("document.getElementById('layouthint').textContent")) < 30)
     # theme lives in Filters > View
-    check('Theme sits in Filters, not Source', ev("!!document.querySelector('#panel #theme') && !document.querySelector('#srcpanel #theme')"))
+    check('Theme sits in Display, not Filters or Source', ev("!!document.querySelector('#viewpanel #theme') && !document.querySelector('#panel #theme') && !document.querySelector('#srcpanel #theme')"))
     check('no developer-facing Supabase notice in Advanced', ev("!/supabase/i.test(document.getElementById('advBox').textContent)"))
     check('Advanced keeps the status and retry button', ev("!!document.getElementById('advRg') && !!document.getElementById('advRgRetry')"))
     # stats note opens on tap
