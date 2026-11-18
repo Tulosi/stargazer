@@ -77,7 +77,7 @@ Newer export later? Use **Merge CSV** to fold it into your existing list without
 
 Yes, no account and no server of mine are involved:
 
-- Your list is stored **in your browser** (and, in Chrome, Edge and other Chromium browsers, can be linked to a CSV file on your disk so every change is written straight back to it).
+- Your list is stored **in your browser**. Optionally, in Chrome, Edge and other Chromium browsers, it can also be linked to the CSV file on your disk so every change is written straight back to that file. Firefox and Safari do not offer that file link to web pages, so there the list stays in the browser and you export a CSV when you want a copy on disk; everything else works the same.
 - The page is a single file with no build step, and it has no analytics or tracking. It runs fine opened straight from disk (`file://`).
 - Accounts are **optional**. Without one, nothing about your list is ever uploaded to anything I run.
 
@@ -109,7 +109,7 @@ Want to run your own copy with your own account system? See the [self-hosting gu
 
 **Why is Reddit's own "hot" feed not available?** Browsers are not allowed to read it from a web page, so Subreddit mode uses an archive-based approximation. If you want the real thing, [`tools/hot_relay.py`](tools/hot_relay.py) is a small relay you can run on your own computer.
 
-**Which browsers work?** Any current desktop or phone browser should. Linking a CSV file on disk needs a Chromium browser such as Chrome or Edge; elsewhere the list is kept in the browser's own storage and you export a CSV for backups.
+**Which browsers work?** Any current desktop or phone browser, including Firefox and Safari. Opening, merging and exporting CSVs, the gallery, full screen and account sync work in all of them. The one extra in Chromium browsers (Chrome, Edge, Brave and the like) is the optional link to a CSV file on disk that writes every change straight back to it, because only they let a web page write to a file you picked (the File System Access API). In other browsers the list is kept in the browser's own storage and you export a CSV for backups.
 
 **Where is my data?** In your browser's storage on your device (plus your CSV, if you linked one). Clearing site data removes it, so export a CSV now and then.
 
