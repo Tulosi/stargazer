@@ -364,8 +364,12 @@ body:not(.layout-list) .badge.media{background:none;-webkit-backdrop-filter:none
 .info{position:absolute;left:0;right:0;bottom:0;z-index:1;padding:30px 11px 10px;color:#fff;pointer-events:none;transition:opacity .15s;
   background:linear-gradient(to top,rgba(0,0,0,.74) 0,rgba(0,0,0,.4) 58%,rgba(0,0,0,0) 100%)}
 .info a,.info button{pointer-events:auto}
-.title{margin:0;font:500 13px/1.32 var(--font);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;text-shadow:0 1px 10px rgba(0,0,0,.35)}
+.title{margin:0;text-wrap:pretty;font:500 13px/1.32 var(--font);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;text-shadow:0 1px 10px rgba(0,0,0,.35)}
 .title a{text-decoration:none;color:#fff}
+.intro :is(h1,h2,.introh),.empty,.panel h2{text-wrap:balance}
+/* small touches (Nov 2026 audit, item 31): a star pops when it is turned on (pop), List's first rows arrive one after another (listIn) */
+@keyframes starpop{0%{scale:1}40%{scale:1.32}100%{scale:1}}
+@media (prefers-reduced-motion:no-preference){.pop{animation:starpop .32s var(--ease-out)}}
 @media (hover:hover) and (pointer:fine){.title a:hover{text-decoration:underline;text-underline-offset:2px}}
 .meta a.cm{color:inherit;text-decoration:none}
 .meta a.cm:focus-visible{text-decoration:underline;text-underline-offset:2px;color:#fff}@media (hover:hover) and (pointer:fine){.meta a.cm:hover{text-decoration:underline;text-underline-offset:2px;color:#fff}}
@@ -529,7 +533,35 @@ body.layout-list #cardrow{display:none}   /* List keeps its own arrangement (inl
 #viewer .vsound[hidden],#viewer .vvol[hidden]{display:none}
 #viewer .vvol{position:absolute;top:calc(max(12px,env(safe-area-inset-top)) + 11px);right:calc(max(12px,env(safe-area-inset-right)) + 98px);z-index:2;width:96px;height:18px;margin:0;accent-color:#fff;cursor:pointer}
 #viewer :focus-visible{outline-color:#fff}
-body.viewing{overflow:hidden}
+body.viewing,body.triaging{overflow:hidden}
+/* Triage (Nov 2026 audit, item 32): a stack of random posts from the list on screen; swipe right to keep, left to remove, up to star */
+#triage{position:fixed;inset:0;z-index:205;background:#0b0b0d;color:#fff;display:flex;flex-direction:column;padding:max(12px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+#triage[hidden]{display:none}
+#triage .tg-top{display:flex;align-items:center;gap:10px;min-height:44px}
+#triage .tg-count{flex:1;font:500 13px var(--font);color:rgba(255,255,255,.75);font-variant-numeric:tabular-nums}
+#triage .tg-close,#triage .tg-undo{border:0;border-radius:999px;background:rgba(255,255,255,.14);color:#fff;font:500 13px var(--font);height:40px;padding:0 14px;cursor:pointer}
+#triage .tg-close{width:40px;padding:0;font-size:16px}
+#triage .tg-stack{position:relative;flex:1;margin:10px 0 14px;min-height:0}
+#triage .tg-card{position:absolute;inset:0;margin:auto;max-width:520px;border-radius:18px;overflow:hidden;background:#1c1c20;touch-action:none;user-select:none;-webkit-user-select:none;box-shadow:0 10px 30px rgba(0,0,0,.45);cursor:grab}
+#triage .tg-card.next{transform:scale(.94) translateY(10px);opacity:.6;pointer-events:none;box-shadow:none}
+#triage .tg-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;-webkit-user-drag:none}
+#triage .tg-card.is-text{background:var(--lav)}
+#triage .tg-cap{position:absolute;left:0;right:0;bottom:0;padding:60px 18px 18px;background:linear-gradient(to top,rgba(0,0,0,.78),rgba(0,0,0,0));display:flex;flex-direction:column;gap:5px}
+#triage .tg-card.is-text .tg-cap{top:0;justify-content:center;background:none;color:#1a1530}
+#triage .tg-cap b{font:600 13px var(--font)}
+#triage .tg-cap span{font:500 17px/1.3 var(--font);text-wrap:pretty;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+#triage .tg-stamp{position:absolute;top:22px;padding:6px 12px;border:3px solid currentColor;border-radius:10px;font:800 22px var(--font);letter-spacing:.06em;opacity:0;pointer-events:none}
+#triage .tg-stamp.keep{left:20px;color:#5ee08a;rotate:-12deg}
+#triage .tg-stamp.rm{right:20px;color:#ff6b6b;rotate:12deg}
+#triage .tg-stamp.star{left:50%;translate:-50% 0;color:#ffd166}
+#triage .tg-acts{display:flex;justify-content:center;gap:22px}
+#triage .tg-acts button{width:76px;height:76px;border-radius:50%;border:0;background:rgba(255,255,255,.12);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font:500 11px var(--font);cursor:pointer}
+#triage .tg-acts .tg-rm{color:#ff8a8a}
+#triage .tg-acts .tg-star{color:#ffd166}
+#triage .tg-acts .tg-keep{color:#7be3a0}
+#triage .tg-acts button:disabled{opacity:.35;cursor:default}
+#triage .tg-done{position:absolute;inset:0;margin:auto;height:fit-content;max-width:36ch;text-align:center;font:500 16px/1.5 var(--font);color:rgba(255,255,255,.85)}
+#triage .tg-done button{margin-top:16px}
 #viewer .vctl{left:50%;right:auto;bottom:calc(64px + env(safe-area-inset-bottom,0px));width:min(720px,calc(100% - 32px));transform:translateX(-50%);height:46px;padding:0 14px 0 10px;gap:12px;border-radius:14px;background:rgba(28,28,30,.72);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);z-index:3;transition:opacity .25s var(--ease-out)}
 #viewer .vctl .pp,#viewer .vctl .vol,#viewer .vctl .vfs{width:32px;height:32px}
 #viewer .vctl .vfs{flex:none;border:0;border-radius:50%;padding:0;display:grid;place-items:center;background:rgba(255,255,255,.2);color:#fff;cursor:pointer}
@@ -966,6 +998,8 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
                 <button class="pill" id="csvMerge" type="button" title="Add posts from another CSV">Merge CSV</button>
                 <button class="pill" id="csvExport" type="button">Export CSV</button>
                 <button class="pill" id="csvUnload" type="button" title="Remove this list from this browser. A linked file and your account copy are left untouched.">Unload CSV</button>
+                <button class="pill" id="triageBtn" type="button" title="Go through random posts one at a time: swipe right to keep, left to remove, up to star">Triage</button>
+                <button class="pill" id="dupBtn" type="button" title="Find pictures and clips saved more than once">Find duplicates</button>
                 <p class="hint wide">Merge adds the posts from another CSV to this list without duplicates, and carries over stars and deletions.</p>
                 <button class="pill warnbtn wide" id="csvPrune" type="button" title="Delete removed, not-found and broken posts from the CSV">Remove dead posts</button>
               </div>
@@ -1039,6 +1073,7 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
   <div id="sentinel"></div>
 </div>
 
+<div id="triage" role="dialog" aria-modal="true" aria-label="Triage" hidden><div class="tg-top"><span class="tg-count" role="status"></span><button class="tg-undo" type="button" hidden>Undo</button><button class="tg-close" type="button" aria-label="Close triage">&#10005;</button></div><div class="tg-stack"></div><div class="tg-acts"><button class="tg-rm" type="button" aria-label="Remove from the list (Left arrow)"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg><span>Remove</span></button><button class="tg-star" type="button" aria-label="Star and keep (Up arrow)"><svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.8 6.6 19.7l1.1-6.1L3.2 9.4l6.1-.8z"/></svg><span>Star</span></button><button class="tg-keep" type="button" aria-label="Keep (Right arrow)"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Keep</span></button></div></div>
 <div id="viewer" role="dialog" aria-modal="true" aria-label="Media viewer" hidden><button class="vnav vprev" type="button" aria-label="Previous image" hidden>&#8249;</button><button class="vnav vnext" type="button" aria-label="Next image" hidden>&#8250;</button><span class="vcount" hidden></span><div class="vposts"><button class="vpost vpp" type="button" aria-label="Previous post" title="Previous post (Up arrow)">&#8249; Previous post</button><button class="vpost vpn" type="button" aria-label="Next post" title="Next post (Down arrow)">Next post &#8250;</button></div><input class="vvol" type="range" min="0" max="100" step="1" value="0" aria-label="Volume" hidden><button class="vsound" type="button" aria-label="Unmute" hidden></button><button class="vclose" type="button" aria-label="Close">&#10005;</button><button class="vfill" type="button" aria-pressed="false"></button><div class="vstage"></div><div class="vscrim" aria-hidden="true"></div><div class="vcap"></div><div class="vrail" role="group" aria-label="Post actions"></div></div>
 <dialog id="reader" aria-labelledby="rdTitle"><div class="rdhead"><p id="rdMeta"></p><button type="button" id="rdClose" aria-label="Close">&times;</button></div><h3 id="rdTitle"></h3><p class="hint" id="rdSrc"></p><div id="rdBody"></div><div id="rdLinks"></div><section id="rdCm"></section></dialog>
 <dialog id="confirm"><form method="dialog"><h3 id="cTitle"></h3><div id="cBody"></div><label id="cOptWrap" class="toggle" hidden><span id="cOptLbl"></span><input type="checkbox" id="cOpt"></label><div class="btnrow" style="justify-content:flex-end;margin-top:18px"><button class="pill" id="cExtra" value="extra" hidden></button><button class="pill" value="cancel" autofocus>Cancel</button><button class="pill danger" id="cOk" value="ok"></button></div></form></dialog>
@@ -2731,6 +2766,7 @@ $('grid').addEventListener('click',e=>{
     const id = st.dataset.id, on = !FAVS.has(id), card = st.closest('.card');
     setStar(card && card._p || POSTS.find(x=>x.id===id), on);
     st.setAttribute('aria-pressed', on?'true':'false'); st.textContent = on ? '\u2605' : '\u2606';
+    if(on){ st.classList.remove('pop'); void st.offsetWidth; st.classList.add('pop'); }
     updateFavCount();
     if(state.fav) refresh(); else updateSummary();
     return;
@@ -2781,10 +2817,14 @@ function refresh(){
   if(keep){ shown = kids.length; if(shown < Math.min(list.length, PAGE)) renderMore(); else updateMore(); updateChips(); updateSummary(); return; }
   const fade = kids.length > 0 && !refresh.quiet && !matchMedia('(prefers-reduced-motion: reduce)').matches;
   $('grid').replaceChildren(); shown = 0;
-  if(fade && $('grid').animate) $('grid').animate([{opacity:.2},{opacity:1}], {duration:220, easing:'cubic-bezier(.23,1,.32,1)'});   // a filter, sort or shuffle change: the new feed fades in instead of popping (opacity only, synchronous, so nothing waits for it)
+  if(fade && $('grid').animate && LAYOUT!=='list') $('grid').animate([{opacity:.2},{opacity:1}], {duration:220, easing:'cubic-bezier(.23,1,.32,1)'});   // a filter, sort or shuffle change: the new feed fades in instead of popping (opacity only, synchronous, so nothing waits for it)
   if(!list.length){ $('grid').innerHTML = '<div class="empty">'+(MODE==='sub' ? (FEED.loading ? 'Loading...' : subEmptyHtml()) : (POSTS.length ? 'No saved posts match these filters.<p class="emptyact"><button class="pill" id="emptyClear" type="button">Clear filters</button></p>' : introHtml()))+'</div>'; updateMore(); }
-  else renderMore();
+  else { renderMore(); if(fade && LAYOUT==='list') listIn(); }
   updateChips(); updateSummary();
+}
+/* List: the first rows arrive one after another (opacity and a 6px rise, 28ms apart, the first ten only), so a new order reads as new. */
+function listIn(){
+  [...$('grid').children].slice(0, 10).forEach((c, i)=>{ if(c.animate) c.animate([{opacity:0, transform:'translateY(6px)'}, {opacity:1, transform:'none'}], {duration:240, delay:i*28, easing:'cubic-bezier(.23,1,.32,1)', fill:'backwards'}); });
 }
 new IntersectionObserver(es=>{ if(es[0].isIntersecting && shown<list.length) renderMore(); },{rootMargin:'900px'}).observe($('sentinel'));
 
@@ -2853,12 +2893,20 @@ function introHtml(){
    + '</div>';
 }
 setInterval(()=>{ if(!!loading !== document.body.classList.contains('previews-loading')) updateStats(); },500);
+/* While previews stream in, the counts run up to their new value (240ms) instead of jumping; otherwise they are set at once. */
+function countTo(el, n, nf){
+  const from = el._n; el._n = n; cancelAnimationFrame(el._f);
+  if(!loading || from === undefined || from === n || matchMedia('(prefers-reduced-motion: reduce)').matches){ el.textContent = nf(n); return; }
+  const t0 = performance.now(), step = now => { const k = Math.min(1, (now - t0)/240), e = 1 - Math.pow(1 - k, 3);
+    el.textContent = nf(Math.round(from + (n - from)*e)); if(k < 1) el._f = requestAnimationFrame(step); };
+  el._f = requestAnimationFrame(step);
+}
 let stT; function updateStats(){
   clearTimeout(stT);
   stT = setTimeout(()=>{
     let got = 0; for(const p of POSTS){ const m = META[p.id]; if(m && (!m.miss || m.rec)) got++; }
     const nf = n => (n >= 10000 && matchMedia('(max-width:720px)').matches) ? (n/1000).toFixed(n >= 100000 ? 0 : 1).replace(/\.0$/,'')+'k' : n.toLocaleString();   // 12.3k on phones, where the strip is narrow
-    $('stActive').textContent = nf(list.length); $('stGot').textContent = nf(got); $('stAll').textContent = nf(POSTS.length);
+    countTo($('stActive'), list.length, nf); countTo($('stGot'), got, nf); countTo($('stAll'), POSTS.length, nf);
     $('stats').hidden = !POSTS.length || MODE!=='csv';
     const empty = !POSTS.length && MODE==='csv'; document.body.classList.toggle('no-data', empty);   // nothing loaded: Shuffle has nothing to act on (Filters stays for Layout and Theme; Search stays so the box is not a dead end)
     for(const id of ['shufflebtn']){ const e = $(id); if(e){ e.disabled = empty; } }
@@ -3219,6 +3267,7 @@ VIEW.root.querySelector('.vrail').addEventListener('click',e=>{
     const on = !FAVS.has(p.id); setStar(p, on); syncStars(); updateFavCount();
     if(state.fav) VIEW.refreshOnClose = true; else updateSummary();
     paintChrome(p);
+    if(on){ const ns = VIEW.root.querySelector('.vr-star svg'); if(ns) ns.classList.add('pop'); }
   } else if(b.classList.contains('vr-save')){
     if(!ROWSET.has(p.id)){ toggleSave(p).then(()=>paintChrome(p)); return; }
     const d = neighbour(1) ? 1 : neighbour(-1) ? -1 : 0;
@@ -4904,6 +4953,155 @@ function brokenReason(p){
   if(m.m==='removed' && !m.rec) return 'removed';
   return 'broken';
 }
+/* ---------- triage (Nov 2026 audit, item 32) ----------
+   A full-screen stack of the posts on screen in random order. Swipe or press right (Keep), left (Remove) or up (Star, which also keeps).
+   Removing deletes the row with a tombstone like any delete (deleteRows, commit); Undo steps back one card and reverses its action. */
+const TG = {on:false, list:[], i:0, hist:[], n:{keep:0, rm:0, star:0}, busy:false};
+function tgPic(p){ const m = metaOf(p), c = imgCandidates(p).filter(u=>!isAnimUrl(u)); return (m && m.m!=='text' && (c[0] || imgCandidates(p)[0])) || ''; }
+function tgCard(p, next){
+  const c = document.createElement('div'), pic = tgPic(p);
+  c.className = 'tg-card'+(next ? ' next' : '')+(pic ? '' : ' is-text'); c._p = p;
+  c.innerHTML = (pic ? '<img alt="" referrerpolicy="no-referrer" src="'+esc(pic)+'">' : '')
+    + '<div class="tg-cap"><b>r/'+esc(p.sub)+(FAVS.has(p.id) ? ' &#9733;' : '')+'</b><span>'+esc(titleOf(p))+'</span></div>'
+    + '<div class="tg-stamp keep">KEEP</div><div class="tg-stamp rm">REMOVE</div><div class="tg-stamp star">STAR</div>';
+  return c;
+}
+function tgPaint(){
+  const R = $('triage'), st = R.querySelector('.tg-stack'), left = TG.list.length - TG.i;
+  R.querySelector('.tg-count').textContent = left > 0 ? (TG.i + 1).toLocaleString()+' of '+TG.list.length.toLocaleString()+(TG.n.rm ? ' · '+TG.n.rm+' removed' : '')+(TG.n.star ? ' · '+TG.n.star+' starred' : '') : 'Done';
+  R.querySelector('.tg-undo').hidden = !TG.hist.length;
+  R.querySelectorAll('.tg-acts button').forEach(b=>b.disabled = left <= 0);
+  if(left <= 0){
+    st.innerHTML = '<div class="tg-done">All done. Kept '+TG.n.keep+', removed '+TG.n.rm+', starred '+TG.n.star+'.<br><button class="pill" type="button" data-tg-close>Back to the feed</button></div>';
+    return;
+  }
+  const a = TG.list[TG.i], b = TG.list[TG.i + 1];
+  st.replaceChildren(...[b ? tgCard(b, true) : null, tgCard(a)].filter(Boolean));
+}
+function openTriage(){
+  if(MODE!=='csv' || !list.length){ toast('Open a list first.'); return; }
+  const a = list.filter(p=>ROWSET.has(p.id));
+  for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i], a[j]] = [a[j], a[i]]; }
+  Object.assign(TG, {on:true, list:a, i:0, hist:[], n:{keep:0, rm:0, star:0}, busy:false});
+  if(typeof openPanel === 'function') openPanel(null);
+  $('triage').hidden = false; document.body.classList.add('triaging');
+  tgPaint(); $('triage').querySelector('.tg-keep').focus({preventScroll:true});
+}
+function closeTriage(){
+  if(!TG.on) return; TG.on = false;
+  $('triage').hidden = true; document.body.classList.remove('triaging');
+  $('triage').querySelector('.tg-stack').replaceChildren();
+  if(TG.n.star && state.fav) refresh();
+  if(TG.n.rm || TG.n.star) toast('Triage: kept '+TG.n.keep+', removed '+TG.n.rm+', starred '+TG.n.star+'.');
+}
+async function tgAct(kind, fly){
+  if(TG.busy || TG.i >= TG.list.length) return;
+  const p = TG.list[TG.i], card = $('triage').querySelector('.tg-card:not(.next)');
+  TG.busy = true;
+  if(card){
+    const W = innerWidth, H = innerHeight, f = fly || {x:kind==='keep' ? W : kind==='rm' ? -W : 0, y:kind==='star' ? -H : 0};
+    const cur = card.style.transform || 'none', to = 'translate('+f.x+'px,'+f.y+'px) rotate('+(f.x/W*24)+'deg)';
+    if(slideOK()){ const an = card.animate([{transform:cur}, {transform:to}], {duration:260, easing:'cubic-bezier(.4,0,.9,.6)', fill:'forwards'}); await an.finished.catch(()=>{}); }
+  }
+  const h = {kind, p};
+  if(kind==='rm'){
+    const old = ROWS.find(x=>x.id===p.id);
+    h.keep = {id:p.id, perma:old ? old.perma : (p.perma || p.link), starred:!!(old && old.starred)};
+    deleteRows([p.id]); removePosts([p.id]); TG.n.rm++;
+    commit();
+  } else if(kind==='star'){ h.was = FAVS.has(p.id); if(!h.was){ setStar(p, true); syncStars(); updateFavCount(); } TG.n.star++; }
+  else TG.n.keep++;
+  TG.hist.push(h); TG.i++; TG.busy = false; tgPaint();
+}
+async function tgUndo(){
+  if(TG.busy || !TG.hist.length) return;
+  const h = TG.hist.pop(); TG.busy = true;
+  if(h.kind==='rm'){ await restoreRows([h.keep]); TG.n.rm--; const np = POSTS.find(x=>x.id===h.keep.id); if(np) h.p = np; }
+  else if(h.kind==='star'){ if(!h.was){ setStar(h.p, false); syncStars(); updateFavCount(); } TG.n.star--; }
+  else TG.n.keep--;
+  TG.i--; TG.list[TG.i] = h.p; TG.busy = false; tgPaint();
+}
+(function(){
+  const R = $('triage'), st = R.querySelector('.tg-stack');
+  R.querySelector('.tg-close').addEventListener('click', closeTriage);
+  R.querySelector('.tg-undo').addEventListener('click', tgUndo);
+  R.querySelector('.tg-keep').addEventListener('click', ()=>tgAct('keep'));
+  R.querySelector('.tg-rm').addEventListener('click', ()=>tgAct('rm'));
+  R.querySelector('.tg-star').addEventListener('click', ()=>tgAct('star'));
+  R.addEventListener('click', e=>{ if(e.target.closest('[data-tg-close]')) closeTriage(); });
+  document.addEventListener('keydown', e=>{
+    if(!TG.on || e.ctrlKey || e.metaKey || e.altKey) return;
+    const k = e.key;
+    if(k==='Escape'){ e.preventDefault(); closeTriage(); }
+    else if(k==='ArrowRight'){ e.preventDefault(); tgAct('keep'); }
+    else if(k==='ArrowLeft'){ e.preventDefault(); tgAct('rm'); }
+    else if(k==='ArrowUp' || k==='s' || k==='S'){ e.preventDefault(); tgAct('star'); }
+    else if(k==='z' || k==='Z' || k==='Backspace'){ e.preventDefault(); tgUndo(); }
+  });
+  /* drag: the card follows the finger (tilting with sideways moves) and a stamp shows what letting go will do */
+  let d = null;
+  const stamps = (c, x, y) => { const k = Math.min(1, Math.abs(x)/110), u = Math.min(1, Math.max(0, -y)/110), up = -y > Math.abs(x);
+    c.querySelector('.tg-stamp.keep').style.opacity = !up && x > 0 ? k : 0; c.querySelector('.tg-stamp.rm').style.opacity = !up && x < 0 ? k : 0; c.querySelector('.tg-stamp.star').style.opacity = up ? u : 0; };
+  st.addEventListener('pointerdown', e=>{
+    const c = e.target.closest('.tg-card:not(.next)'); if(!c || TG.busy || !e.isPrimary) return;
+    d = {c, x:e.clientX, y:e.clientY, t:performance.now(), vx:0, vy:0, lx:e.clientX, ly:e.clientY, lt:performance.now()};
+    try{ c.setPointerCapture(e.pointerId); }catch(_){}
+    c.style.transition = 'none';
+  });
+  st.addEventListener('pointermove', e=>{
+    if(!d) return;
+    const now = performance.now(), dt = now - d.lt; if(dt > 0){ d.vx = 0.7*(e.clientX - d.lx)/dt + 0.3*d.vx; d.vy = 0.7*(e.clientY - d.ly)/dt + 0.3*d.vy; }
+    d.lx = e.clientX; d.ly = e.clientY; d.lt = now;
+    const x = e.clientX - d.x, y = e.clientY - d.y;
+    d.c.style.transform = 'translate('+x+'px,'+y+'px) rotate('+(x/innerWidth*18)+'deg)'; stamps(d.c, x, y);
+  });
+  const up = e=>{
+    if(!d) return; const c = d.c, x = e.clientX - d.x, y = e.clientY - d.y, vx = d.vx, vy = d.vy; d = null;
+    const W = innerWidth, H = innerHeight;
+    if(-y > Math.abs(x) && (-y > 110 || vy < -0.6)){ tgAct('star', {x:x*2, y:-H}); return; }
+    if(x > 110 || (x > 30 && vx > 0.6)){ tgAct('keep', {x:W*1.2, y:y*2}); return; }
+    if(x < -110 || (x < -30 && vx < -0.6)){ tgAct('rm', {x:-W*1.2, y:y*2}); return; }
+    c.style.transition = 'transform 440ms '+SPRING_EASE; c.style.transform = ''; stamps(c, 0, 0);   // not far enough: back into the stack
+  };
+  st.addEventListener('pointerup', up); st.addEventListener('pointercancel', up);
+})();
+$('triageBtn').addEventListener('click', openTriage);
+
+/* ---------- duplicate finder (Nov 2026 audit, item 34) ----------
+   The same picture or clip saved more than once (crossposts, reposts): grouped by the media itself (i.redd.it file, imgur id, v.redd.it id,
+   RedGifs name, gallery pictures). The starred copy, or else the one first in the list, is kept; the rest can go in one step, with Undo. */
+function dupKey(p){
+  const m = metaOf(p); if(!m || m.miss || m.m==='text' || m.m==='removed') return '';
+  const rg = rgSlug(p); if(rg) return 'rg:'+rg;
+  if(m.gl && m.gl.length) return 'gl:'+m.gl.join(',');
+  const u = m.u || '', x = (re => { const r = re.exec(u); return r && r[1]; });
+  const ir = x(/^https?:\/\/i\.redd\.it\/([^?#]+)/i); if(ir) return 'ir:'+ir.replace(/\.[a-z0-9]+$/i, '');
+  const vr = x(/^https?:\/\/v\.redd\.it\/([a-z0-9]+)/i); if(vr) return 'vr:'+vr;
+  const im = x(/^https?:\/\/(?:i\.|m\.)?imgur\.com\/(?!a\/|gallery\/)([a-z0-9]{5,8})(?:[.?#\/]|$)/i); if(im) return 'im:'+im;
+  return '';
+}
+function findDupes(){
+  const g = new Map();
+  for(const p of POSTS){ if(!ROWSET.has(p.id)) continue; const k = dupKey(p); if(!k) continue; if(!g.has(k)) g.set(k, []); g.get(k).push(p); }
+  const groups = [...g.values()].filter(a=>a.length > 1).map(a=>{ const keep = a.find(p=>FAVS.has(p.id)) || a.slice().sort((x,y)=>x.i - y.i)[0]; return {keep, extra:a.filter(p=>p!==keep)}; });
+  return groups;
+}
+async function removeDupes(){
+  if(MODE!=='csv') return;
+  if(loading || recovering){ toast('Wait for previews to finish loading first.'); return; }
+  const groups = findDupes(), extra = groups.flatMap(x=>x.extra);
+  if(!extra.length){ toast('No duplicates found.'); return; }
+  const eg = groups.slice(0, 4).map(x=>'"'+titleOf(x.keep).slice(0, 60)+'" saved '+(x.extra.length + 1)+' times');
+  const r = await confirmDialog({title:'Remove '+extra.length.toLocaleString()+(extra.length===1 ? ' duplicate?' : ' duplicates?'),
+    paras:[groups.length.toLocaleString()+(groups.length===1 ? ' picture or clip is' : ' pictures or clips are')+' saved more than once. One copy of each stays: the starred one, or else the one first in the list.', ...eg, 'You can undo this right after.'],
+    ok:'Remove '+extra.length.toLocaleString()});
+  if(r!=='ok') return;
+  const ids = extra.map(p=>p.id), keeps = ids.map(id=>{ const o = ROWS.find(x=>x.id===id) || {}; return {id, perma:o.perma, starred:!!o.starred}; });
+  deleteRows(ids); await commit(); removePosts(ids);
+  toast('Removed '+ids.length.toLocaleString()+(ids.length===1 ? ' duplicate' : ' duplicates'), {label:'Undo', fn:()=>restoreRows(keeps)});
+}
+$('dupBtn').addEventListener('click', removeDupes);
+
 async function pruneBroken(){
   if(MODE!=='csv') return;
   if(!metaOK || recovering || loading){ toast('Wait for previews and recovery to finish first.'); return; }

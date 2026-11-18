@@ -37,6 +37,14 @@ with sync_playwright() as p:
     check('a refresh while previews stream in does not fade', not ev("document.getElementById('grid').getAnimations().length"))
     ev("document.getElementById('shufflebtn').click()")
     check('shuffling fades the new feed in', ev("document.getElementById('grid').getAnimations().length") >= 1)
+    # (31) small touches
+    check('titles wrap evenly (text-wrap: pretty)', ev("getComputedStyle(document.querySelector('#grid .card .title')).textWrap").startswith('pretty') or ev("getComputedStyle(document.querySelector('#grid .card .title')).textWrapStyle") == 'pretty')
+    ev("(()=>{ const c=[...document.querySelectorAll('#grid .card')].find(c=>!FAVS.has(c._p.id)); toggleLayer(c); window.__sc=c; c.querySelector('button.star').click(); })()"); pg.wait_for_timeout(50)
+    check('a star pops when it is turned on', ev("window.__sc.querySelector('button.star').classList.contains('pop')"))
+    ev("document.querySelector('#layoutseg [data-l=list]').click()"); pg.wait_for_timeout(400)
+    ev("document.getElementById('shufflebtn').click()")
+    check('List: the first rows arrive one after another', ev("[...document.querySelectorAll('#grid .card')].slice(0,10).filter(c=>c.getAnimations().length).length") >= 5)
+    ev("document.querySelector('#layoutseg [data-l=masonry]').click()")
     check('no page errors', not errs)
     ctx.close()
 
