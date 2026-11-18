@@ -555,7 +555,11 @@ body.viewing{overflow:hidden}
 #viewer .vrail [hidden]{display:none}
 @media (hover:hover) and (pointer:fine){#viewer .vrail :is(button,a):hover{color:rgba(255,255,255,.82)}}
 #viewer:has(.vstage:not(.vghost) iframe) :is(.vcap,.vrail,.vscrim){display:none}   /* YouTube and RedGifs' player draw their own controls along the bottom */
-#viewer img,#viewer video{-webkit-touch-callout:none}   /* press and hold peeks at the media; no image menu */
+#viewer img,#viewer video{-webkit-touch-callout:none}
+#viewer img.vmorph,img.vmorph{position:absolute;z-index:1;object-fit:cover;pointer-events:none;background:none;width:auto;height:auto}   /* the picture flying between its tile and full screen */
+img.vmorph.back{position:fixed;z-index:201}
+.vmorphbg{position:fixed;inset:0;z-index:200;background:#000;pointer-events:none}
+#viewer.vmorphing :is(.vcap,.vrail,.vscrim,.vctl,.vposts,.vfill,.vclose){opacity:0}   /* the overlay fades in once the picture has landed */   /* press and hold peeks at the media; no image menu */
 #viewer.vidle{cursor:none}
 /* the mark a double tap leaves on the side of the screen it jumped from (viewerSeek) */
 #viewer .vseek{position:absolute;top:50%;right:9%;z-index:4;width:84px;height:84px;margin-top:-42px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:rgba(20,16,28,.62);color:#fff;font:600 13px/1 var(--font);pointer-events:none;opacity:0;transform:scale(.9);transition:opacity .25s ease,transform .25s var(--ease-out)}
@@ -2042,10 +2046,13 @@ function updatePostNav(){ const a = VIEW.root.querySelector('.vpp'), b = VIEW.ro
    (they are repeated fast), and reduced motion skips the slide. The stage is what moves; the player bar and buttons stay put. */
 const SLIDE = {busy:false};
 const slideOK = () => !matchMedia('(prefers-reduced-motion: reduce)').matches;
-const SLIDE_EASE = 'cubic-bezier(.32,.72,0,1)';
+const SLIDE_EASE = 'cubic-bezier(.32,.72,0,1)', SPRING_EASE = 'cubic-bezier(.34,1.36,.64,1)';
 function stageY(px, anim){ const s = VIEW.stage; s.style.transition = anim || 'none'; s.style.transform = px ? 'translate3d(0,'+px+'px,0)' : ''; }
 function dragFollow(dx, dy){
   if(SLIDE.busy || !slideOK()) return;
+  const now = performance.now();   // the finger's speed (px/ms, smoothed) so the slide can leave at the same speed
+  if(SLIDE.lt && now > SLIDE.lt) SLIDE.v = 0.7*((dy - SLIDE.ly)/(now - SLIDE.lt)) + 0.3*(SLIDE.v || 0);
+  SLIDE.ly = dy; SLIDE.lt = now;
   if(Math.abs(dy) < Math.abs(dx)*1.2){ stageY(0); return; }   // a sideways move belongs to the gallery
   const d = dy < 0 ? 1 : -1;
   stageY(neighbour(d) ? dy : dy*0.25);   // no post that way: it gives a little and comes back
@@ -2053,9 +2060,11 @@ function dragFollow(dx, dy){
 function dragEnd(dx, dy, ms){
   if(SLIDE.busy) return true;
   const ay = Math.abs(dy), vertical = ay > Math.abs(dx)*1.5, d = dy < 0 ? 1 : -1;
-  const go = vertical && (ay > 70 || (ay > 24 && ay/Math.max(ms,1) > 0.35)) && neighbour(d);
+  const fresh = SLIDE.lt && performance.now() - SLIDE.lt < 90, v = fresh ? Math.abs(SLIDE.v || 0) : 0;
+  const go = vertical && (ay > 70 || (ay > 24 && (ay/Math.max(ms,1) > 0.35 || v > 0.5))) && neighbour(d);
+  SLIDE.fv = go ? v : 0; SLIDE.lt = 0; SLIDE.v = 0;
   if(go){ slideTo(d, dy); return true; }
-  if(VIEW.stage.style.transform) stageY(0, 'transform 260ms '+SLIDE_EASE);
+  if(VIEW.stage.style.transform) stageY(0, 'transform 440ms '+SPRING_EASE);   // springs back with a small overshoot
   return false;
 }
 function slideTo(d){
@@ -2073,13 +2082,19 @@ function slideTo(d){
   stageY(d > 0 ? H + from : -H + from);
   viewerPost(d);
   void st.offsetHeight;
-  const t = 'transform 320ms '+SLIDE_EASE;
+  /* A flick leaves at the finger's speed: the curve's first control point is set so the slide starts at the release speed (a cubic-bezier
+     starting (x1, y1) moves at y1/x1 times its average speed), then eases out; a faster flick is also a little shorter (320 down to 240ms).
+     Buttons and slow drags use the plain 320ms SLIDE_EASE. */
+  const left = Math.max(1, H - Math.abs(from)), fv = SLIDE.fv || 0; SLIDE.fv = 0;
+  let dur = 320, ease = SLIDE_EASE;
+  if(fv > 0.5){ dur = Math.round(Math.max(240, Math.min(320, 380 - fv*40))); ease = 'cubic-bezier(.32,'+Math.max(0.2, Math.min(1, fv*dur/left*0.32)).toFixed(2)+',0,1)'; }
+  const t = 'transform '+dur+'ms '+ease;
   ghost.style.transition = t; ghost.style.transform = 'translate3d(0,'+(d > 0 ? -H : H)+'px,0)';
   stageY(0, t);
   setTimeout(()=>{
     ghost.querySelectorAll('video').forEach(v=>{ v.removeAttribute('src'); try{ v.load(); }catch(e){} }); ghost.remove();
     SLIDE.busy = false; st.style.transition = ''; st.style.transform = '';
-  }, 340);
+  }, dur + 20);
 }
 /* A swipe that means "next / previous post": mostly vertical (up = next, as in a feed) or mostly sideways (left = next). */
 function swipeStep(dx, dy){
@@ -2126,6 +2141,7 @@ function closeViewer(){
   if(VIEW.aud){ VIEW.aud.pause(); VIEW.aud.removeAttribute('src'); VIEW.aud = null; }
   VIEW.root.querySelector('.vsound').hidden = true; VIEW.root.querySelector('.vvol').hidden = true;
   VIEW.root.querySelectorAll('.vctl').forEach(n=>n.remove()); VIEW.root.classList.remove('vidle','vplaying'); clearTimeout(vIdleT);
+  VIEW.box = morphBox();   // where the picture sits on screen, for the flight back to its tile
   VIEW.stage.querySelectorAll('video').forEach(v=>{ v.pause(); v.removeAttribute('src'); try{ v.load(); }catch(e){} });
   VIEW.stage.replaceChildren();
   VIEW.root.hidden = true; document.body.classList.remove('viewing');
@@ -2135,8 +2151,59 @@ function closeViewer(){
   VIEW.fs = false;
   if(VIEW.refreshOnClose){ VIEW.refreshOnClose = false; refresh(); }   // a star taken off in full screen while Starred only is on
   const last = VIEW.cur;
+  if(last && last===VIEW.first) morphBack(last, VIEW.box);
   if(last && last!==VIEW.first && list.includes(last)){ landOn(last); return; }   // moved on through posts in full screen: the feed picks up at the last one shown
   if(VIEW.opener && VIEW.opener.isConnected) try{ VIEW.opener.focus({preventScroll:true}); }catch(e){}
+}
+/* Tile <-> full screen (Nov 2026 audit, item 10). Opening from a tile, a copy of the tile's picture flies from the tile to where the picture
+   sits full screen (object-fit cover all the way, so it crops smoothly and never stretches) while the black fades in; the real stage shows
+   once it lands. Closing on the post it opened on, the picture flies back into its tile. One element, 320ms, the sheet curve; skipped
+   under reduced motion, for tiles off screen and for posts with no picture. (A View Transition would have had to wait on the browser's
+   own full-screen switch, so this is done by hand.) */
+const MORPH_MS = 320;
+function morphRect(nw, nh, W, H){ const k = VFILL ? Math.max(W/nw, H/nh) : Math.min(W/nw, H/nh), w = nw*k, h = nh*k; return {x:(W - w)/2, y:(H - h)/2, w, h}; }
+function tileImg(card){ const im = card && card.querySelector('.thumb > img'); return im && im.naturalWidth && (im.currentSrc || im.src) ? im : null; }
+function morphOpen(card){
+  const im = tileImg(card); if(!im || !slideOK()) return;
+  const r = card.querySelector('.thumb').getBoundingClientRect(); if(!r.width || r.bottom < 0 || r.top > innerHeight) return;
+  const W = VIEW.root.clientWidth || innerWidth, H = VIEW.root.clientHeight || innerHeight, to = morphRect(im.naturalWidth, im.naturalHeight, W, H);
+  const g = document.createElement('img'); g.className = 'vmorph'; g.alt = ''; g.referrerPolicy = 'no-referrer'; g.src = im.currentSrc || im.src;
+  VIEW.root.appendChild(g);
+  const rad = getComputedStyle(card).borderRadius || '10px', o = {duration:MORPH_MS, easing:SLIDE_EASE};
+  const a = g.animate([{left:r.left+'px', top:r.top+'px', width:r.width+'px', height:r.height+'px', borderRadius:rad},
+                       {left:to.x+'px', top:to.y+'px', width:to.w+'px', height:to.h+'px', borderRadius:'0px'}], o);
+  VIEW.root.animate([{backgroundColor:'rgba(0,0,0,0)'}, {backgroundColor:'rgba(0,0,0,1)'}], {duration:MORPH_MS*0.8, easing:'linear'});
+  VIEW.stage.animate([{opacity:0}, {opacity:0, offset:0.85}, {opacity:1}], {duration:MORPH_MS});
+  VIEW.root.classList.add('vmorphing');
+  const done = () => { g.remove(); VIEW.root.classList.remove('vmorphing'); };
+  a.onfinish = a.oncancel = done; setTimeout(done, MORPH_MS + 200);
+}
+function morphBox(){
+  const im = VIEW.stage.querySelector('img'), v = VIEW.stage.querySelector('video');
+  const nw = im ? im.naturalWidth : v ? v.videoWidth : 0, nh = im ? im.naturalHeight : v ? v.videoHeight : 0;
+  if(!nw || !nh || VIEW.gal || ZOOM.s > 1) return null;
+  return morphRect(nw, nh, VIEW.root.clientWidth || innerWidth, VIEW.root.clientHeight || innerHeight);
+}
+function morphBack(p, box){
+  const card = cardEls.get(p.id), im = tileImg(card); if(!im || !box || !slideOK() || !card.isConnected) return;
+  const g = document.createElement('img'); g.className = 'vmorph back'; g.alt = ''; g.referrerPolicy = 'no-referrer'; g.src = im.currentSrc || im.src;
+  const bg = document.createElement('div'); bg.className = 'vmorphbg';
+  g.style.cssText = 'left:'+box.x+'px;top:'+box.y+'px;width:'+box.w+'px;height:'+box.h+'px';
+  document.body.append(bg, g);
+  const th = card.querySelector('.thumb'); th.style.visibility = 'hidden';
+  const clean = () => { g.remove(); bg.remove(); th.style.visibility = ''; };
+  /* wait two frames: leaving the browser's full screen resizes the window, and the tile has to be measured after that */
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    const r = th.getBoundingClientRect();
+    if(!r.width || r.bottom < 0 || r.top > innerHeight){ clean(); return; }
+    const sx = innerWidth/(VIEW.root.clientWidth || innerWidth), sy = innerHeight/(VIEW.root.clientHeight || innerHeight);   // the window may have changed size
+    const o = {duration:MORPH_MS, easing:SLIDE_EASE};
+    const a = g.animate([{left:box.x*sx+'px', top:box.y*sy+'px', width:box.w*sx+'px', height:box.h*sy+'px', borderRadius:'0px'},
+                         {left:r.left+'px', top:r.top+'px', width:r.width+'px', height:r.height+'px', borderRadius:getComputedStyle(card).borderRadius || '10px'}], o);
+    bg.animate([{opacity:1}, {opacity:0}], {duration:MORPH_MS*0.8, easing:'linear'});
+    a.onfinish = a.oncancel = clean;
+  }));
+  setTimeout(clean, MORPH_MS + 400);
 }
 /* After full screen, bring the feed to the card of the post that was showing last: render far enough down the list, then centre that card once the
    browser has finished leaving full screen and going back in history (both can move the page), and make it the card in focus on touch screens. */
@@ -2165,6 +2232,7 @@ async function openViewer(p, opts){
   VIEW.cur = p; VIEW.idx = list.indexOf(p); updatePostNav(); paintChrome(p);
   VIEW.stage.replaceChildren(); VIEW.root.querySelectorAll('.vctl').forEach(n=>n.remove()); VIEW.root.classList.remove('vidle','vplaying');
   VIEW.root.hidden = false; document.body.classList.add('viewing');
+  if(opts.from && !opts.keep) morphOpen(opts.from);
   applyAudio();
   if(!VIEW.hist){ try{ history.pushState({sgViewer:1}, ''); VIEW.hist = true; }catch(e){} }   // so the phone's Back gesture closes the viewer instead of leaving the page   // silence the card behind the viewer
   VIEW.root.querySelector('.vclose').focus({preventScroll:true});
@@ -2420,7 +2488,7 @@ new MutationObserver(()=>{ zReset(); }).observe(VIEW.stage,{childList:true});
     if(dragEnd(dx, dy, ms)){ e.preventDefault(); return; }
     const sw = swipeStep(dx, dy); if(sw && sw.axis==='x'){ e.preventDefault(); slideTo(sw.d); }
   },{passive:false});
-  st.addEventListener('touchcancel',()=>{ if(vsw){ vsw = null; stageY(0, 'transform 260ms '+SLIDE_EASE); } },{passive:true});
+  st.addEventListener('touchcancel',()=>{ if(vsw){ vsw = null; stageY(0, 'transform 440ms '+SPRING_EASE); } },{passive:true});
   // iOS Safari reports pinches as gestures; keep the page itself from zooming
   ['gesturestart','gesturechange','gestureend'].forEach(ev=>VIEW.root.addEventListener(ev,e=>e.preventDefault()));
   // mouse and pen
