@@ -4005,6 +4005,22 @@ function noteMerge(id, ts){
   if(ts){ o[id] = {t: old && old.src ? Math.max(old.t, ts) : ts, snooze:0, src:'file'}; }          // a real pull date; never move it backwards
   else if(!old){ o[id] = {t:Date.now(), snooze:0, est:true}; }                          // unknown: the clock starts now
   mrgWrite(o); updateMergeHint();
+  if(LIB.cur && LIB.cur.id===id) acctPull(LIB.cur);
+}
+/* An Account list follows you to other devices, so its pull date must too: it is kept in the account (the user's own sign-in metadata, `sg_pulled`, no table change).
+   Each sync compares the two and the newer real date wins on both sides, so a merge on one device clears the reminder on the others. A guessed date (`est`) is never uploaded. */
+let pullChain = Promise.resolve();
+const acctPull = rec => (pullChain = pullChain.then(()=>acctPullNow(rec)));
+async function acctPullNow(rec){
+  if(!CLOUD_ON || !isCloudList(rec)) return;
+  try{
+    const tok = await sbToken(), h = {apikey:CFG.supabaseAnonKey, Authorization:'Bearer '+tok, 'Content-Type':'application/json'};
+    const u = await fetch(SB+'/auth/v1/user', {headers:h}).then(sbJson);
+    const remote = Number(u && u.user_metadata && u.user_metadata.sg_pulled) || 0;
+    const o = mrgRead(), e = o[rec.id], local = e && !e.est ? e.t : 0;
+    if(remote > local){ o[rec.id] = {t:Math.min(remote, Date.now()), snooze:0, src:'acct'}; mrgWrite(o); updateMergeHint(); }
+    else if(local > remote) await fetch(SB+'/auth/v1/user', {method:'PUT', headers:h, body:JSON.stringify({data:{sg_pulled:local}})}).then(sbJson);
+  }catch(e){}   // best effort: the list itself has synced; the date catches up next time
 }
 let mrgToasted = false;
 /* A dot on the Source button says something there needs attention (a stale pull, or a backup that has gone old), since the panel itself is closed. */
@@ -4213,7 +4229,7 @@ async function syncCloud(rec){
   SYNC.state = 'syncing'; updateSyncUI();
   try{
     const r = await syncCloudInner(rec);
-    if(r){ SYNC.state = 'ok'; SYNC.at = Date.now(); SYNC.err = ''; } else if(SYNC.state==='syncing') SYNC.state = 'idle';
+    if(r){ SYNC.state = 'ok'; SYNC.at = Date.now(); SYNC.err = ''; acctPull(rec); } else if(SYNC.state==='syncing') SYNC.state = 'idle';
     updateSyncUI(); return r;
   }catch(e){
     SYNC.state = navigator.onLine===false ? 'offline' : 'error'; SYNC.err = (e && e.message) || 'offline'; updateSyncUI(); throw e;
