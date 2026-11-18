@@ -1,5 +1,5 @@
 """Tile size snaps to numbered steps, each a count of tiles across (Masonry and Grid), most tiles on the left and 1 across on the right everywhere: phones get 3 / 2 / 1, tablets and desktops get
-from as many 150px tiles as fit down to 1 across, with more steps on wider windows (at most 9). The slider
+from as many 150px tiles as fit down to 1 across, with more steps on wider windows (at most 5, 10 in Full width). The slider
 cannot rest between steps, every step gives the column count on its label, one across is no taller than the window, the choice is
 remembered, an old pixel setting carries over, and a different window width snaps to the nearest step. Run: python tests/tilesize_test.py"""
 import os
@@ -31,7 +31,8 @@ with sync_playwright() as p:
             labels = pg.evaluate(LABELS); counts[w] = len(labels)
             sl = pg.evaluate("({min:$('size').min, max:$('size').max, step:$('size').step})")
             check('%dpx %s: one numbered notch per slider position, whole steps only (%s)' % (w, lay, labels), sl['min'] == '0' and sl['step'] == '1' and int(sl['max']) == len(labels) - 1)
-            check('%dpx %s: from many across down to 1, at most 9 steps' % (w, lay), labels[-1] == 1 and labels == sorted(labels, reverse=True) and len(labels) <= 9 and labels[0] >= 4)
+            fit = pg.evaluate("Math.floor(($('grid').clientWidth + 6)/156)")
+            check('%dpx %s: every count from min(fit, 5) down to 1 (%s)' % (w, lay, labels), labels == list(range(min(fit, 5), 0, -1)))
             seen = []
             for i in range(len(labels)):
                 pg.evaluate("(%s)(%d)" % (SET, i)); pg.wait_for_timeout(120); seen.append(pg.evaluate(COLS))
@@ -42,7 +43,7 @@ with sync_playwright() as p:
         pg.evaluate("(%s)(1)" % SET); pg.wait_for_timeout(150)
         check('%dpx: a value between steps cannot be set' % w, pg.evaluate("($('size').value='1.5', $('size').value)") in ('1', '2'))
         check('%dpx: no page errors' % w, not errs); ctx.close()
-    check('wider windows get more steps (%s)' % counts, counts[820] <= counts[1024] <= counts[1440] <= counts[1920] and counts[820] < counts[1920])
+    check('wider windows never get fewer steps, and never more than 5 (%s)' % counts, counts[820] <= counts[1024] <= counts[1440] <= counts[1920] == 5)
     # remembered, and snaps to the nearest step on another width
     ctx, pg, errs = page(b, 1440, 900)
     labels = pg.evaluate(LABELS); i = labels.index(3)

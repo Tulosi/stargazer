@@ -26,7 +26,7 @@ with sync_playwright() as p:
     SET = "v=>{ $('size').value=v; $('size').dispatchEvent(new Event('input',{bubbles:true})); }"
     mx = pg.evaluate("+$('size').max")
     labels = pg.evaluate("[...document.querySelectorAll('#sizerow .notches i')].map(t=>+t.textContent)")
-    check('on: numbered steps from as many 150px tiles as fit down to 1 across, at most 9 (%s)' % labels, not on['dis'] and on['pressed'] == 'true' and labels[0] == (2532 + 6)//156 and labels[-1] == 1 and len(labels) == mx + 1 <= 9)
+    check('on: numbered steps from 10 across (the cap) down to 1 (%s)' % labels, not on['dis'] and on['pressed'] == 'true' and labels == list(range(10, 0, -1)) and mx == 9)
     seen = []
     for v in range(0, mx + 1):
         pg.evaluate("(%s)(%d)" % (SET, v)); pg.wait_for_timeout(120); seen.append(pg.evaluate("cols"))
