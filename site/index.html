@@ -28,7 +28,7 @@
   --glass:rgba(245,243,249,.8);
   --shadow:0 18px 50px rgba(18,20,28,.16),0 2px 8px rgba(18,20,28,.06);
   --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%236b6780' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
-  --ph-l:88%; --ph-s:20%;
+  --ph:#e7e3ef;   /* loading placeholder tile: one quiet violet-grey for every card, not a colour per subreddit */
   --font:'Geist',ui-sans-serif,system-ui,-apple-system,'Segoe UI Variable Text','Segoe UI',Roboto,'Helvetica Neue',sans-serif;
   --font-display:var(--font); --font-body:var(--font); --font-mono:var(--font);
   --card:230px;
@@ -41,7 +41,7 @@
   --glass:rgba(19,17,24,.78);
   --shadow:0 18px 50px rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.4);
   --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%23a09bb4' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
-  --ph-l:22%; --ph-s:16%;
+  --ph:#211d2b;
   color-scheme:dark;
 }
 @media (prefers-color-scheme:dark){
@@ -52,7 +52,7 @@
     --glass:rgba(19,17,24,.78);
     --shadow:0 18px 50px rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.4);
     --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%23a09bb4' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
-    --ph-l:22%; --ph-s:16%;
+    --ph:#211d2b;
     color-scheme:dark;
   }
 }
@@ -280,9 +280,9 @@ body.fullw .wrap,body.fullw .deck-in{max-width:none}
 .thumb .still.ready{opacity:1}
 .thumb iframe.clip{position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none;background:transparent}
 .thumb .ph{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:12px;
-  background:hsl(var(--h) var(--ph-s) var(--ph-l));color:var(--ink);font:500 13px/1.25 var(--font);overflow-wrap:anywhere;transition:opacity .15s}
+  background:linear-gradient(155deg,color-mix(in srgb,var(--g1) 9%,var(--ph)),var(--ph) 65%);color:var(--ink);font:500 13px/1.25 var(--font);overflow-wrap:anywhere;transition:opacity .15s}
 .thumb .ph span{opacity:.88}
-/* a text-only post has no thumbnail: a lavender tile with a faint picture mark instead of the subreddit-coloured placeholder */
+/* a text-only post has no thumbnail: a lavender tile with a faint picture mark instead of the plain placeholder */
 body:not(.layout-list) .card.is-text .thumb .ph{background:var(--lav)}
 body:not(.layout-list) .card.is-text .thumb .ph span{display:none}
 body:not(.layout-list) .card.is-text .thumb .ph::before{content:"";width:clamp(54px,50%,230px);aspect-ratio:3/2;background:var(--ink);opacity:.12;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 40' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='54' height='34' rx='9'/%3E%3Ccircle cx='41' cy='13.5' r='4.4'/%3E%3Cpath d='M3.5 29.5 L13 20.5 Q17.5 16.5 22 20.5 L31.5 29.3'/%3E%3Cpath d='M20 37 L35.5 27 Q40 24.2 44.5 27 L55 33.5'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 40' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='54' height='34' rx='9'/%3E%3Ccircle cx='41' cy='13.5' r='4.4'/%3E%3Cpath d='M3.5 29.5 L13 20.5 Q17.5 16.5 22 20.5 L31.5 29.3'/%3E%3Cpath d='M20 37 L35.5 27 Q40 24.2 44.5 27 L55 33.5'/%3E%3C/svg%3E") center/contain no-repeat}
@@ -1049,7 +1049,6 @@ let shown = 0, list = [];
 const cardEls = new Map();
 const $ = id => document.getElementById(id);
 const fmt = n => n>=999500 ? (n/1e6).toFixed(n>=9995000?0:1).replace(/\.0$/,'')+'M' : n>=10000 ? (n/1000).toFixed(0)+'k' : n>=1000 ? (n/1000).toFixed(1)+'k' : String(n);
-const hue = s => { let h=0; for(const c of s) h=(h*31+c.charCodeAt(0))%360; return h; };
 
 /* ---------- favourites (kept in this browser's localStorage) ---------- */
 const FKEY = 'saved-posts-favs';
@@ -1470,7 +1469,7 @@ function fillCard(el,p){
   const vs = dead ? [] : playSources(m), v0 = vs[0] || '';
   const gl = m && m.gl && m.gl.length > 1 ? m.gl : null;
   const stats = m && !m.miss ? ((m.s||0) > 1 ? '<span>'+fmt(m.s)+' pts</span>' : '')+((m.n||0) > 0 ? '<a class="cm" href="'+esc(p.link)+'" target="_blank" rel="noopener noreferrer" title="Open the comments on Reddit">'+fmt(m.n)+(m.n===1?' comment':' comments')+'</a>' : '') : '';
-  const ph = '<div class="ph'+(!m && !dead ? ' pending' : '')+'" style="--h:'+hue(p.sub)+'"><span>r/'+esc(p.sub)+(dead?'<br><small>media unavailable</small>':'')+'</span></div>';
+  const ph = '<div class="ph'+(!m && !dead ? ' pending' : '')+'"><span>r/'+esc(p.sub)+(dead?'<br><small>media unavailable</small>':'')+'</span></div>';
   el._p = p; el._gi = 0; el.classList.toggle('is-dead', dead); el.classList.toggle('is-text', media==='text');
   el.innerHTML =
     '<a class="thumb'+(nsfw?' nsfw':'')+'" data-open'+(v0 ? ' data-v="'+esc(v0)+'"'+(vs.length>1 ? ' data-vc="'+esc(vs.slice(1,12).join('|'))+'"' : '') : '')+(m && m.ab ? ' data-ab="'+esc(m.ab)+'"' : '')+(m && m.ha!==undefined ? ' data-ha="'+(m.ha?1:0)+'"' : '')+' href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" aria-label="Open: '+esc(titleOf(p))+'">'
