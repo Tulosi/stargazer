@@ -28,7 +28,7 @@ with sync_playwright() as p:
         ok = rows and all(r['spread'] <= 3 and r['inside'] for r in rows)
         widths = sorted(set(r['w'] for r in rows))
         check('desktop tile ~%dpx (widths %s): one line, inside the tray, icons=%s' % (px, widths[:3], rows[0]['icon'] if rows else '?'), ok)
-    def three(pg): pg.evaluate("()=>{const s=document.getElementById('size'); s.value=2; s.dispatchEvent(new Event('input'))}")
+    def three(pg): pg.evaluate("()=>{const s=document.getElementById('size'); s.value=0; s.dispatchEvent(new Event('input'))}")
     for w in (320, 360, 390):
         rows = run({'width': w, 'height': 780}, True, three, 'p%d' % w)
         ok = rows and all(r['spread'] <= 3 and r['inside'] for r in rows)

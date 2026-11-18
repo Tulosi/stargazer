@@ -1,5 +1,5 @@
-"""Full width button beside Tile size: lifts the 1760px page cap and makes the tiles bigger (Tile size then runs from 150px up to one tile
-across the window, default 3 across, its value kept apart from the normal one), the top bar widens with it, it is remembered, layout
+"""Full width button beside Tile size: lifts the 1760px page cap and makes the tiles bigger (Tile size then snaps to numbered column counts
+from as many 150px tiles as fit down to 1 across, default 3 across, its value kept apart from the normal one), the top bar widens with it, it is remembered, layout
 stays cheap (no per-card layout reads), the normal tile size comes back when it is turned off, and on phones the button is hidden. Run: python tests/fullw_test.py"""
 import os
 from playwright.sync_api import sync_playwright
@@ -25,27 +25,28 @@ with sync_playwright() as p:
     check('on: tiles get bigger, 3 across by default', on['cols'] == 3 and on['tile'] > 2 * off['tile'])
     SET = "v=>{ $('size').value=v; $('size').dispatchEvent(new Event('input',{bubbles:true})); }"
     mx = pg.evaluate("+$('size').max")
-    check('on: slider counts columns, from as many 150px tiles as fit down to 2 across (%s steps)' % mx, not on['dis'] and on['pressed'] == 'true' and mx == (2532 + 6)//156 - 2)
+    labels = pg.evaluate("[...document.querySelectorAll('#sizerow .notches i')].map(t=>+t.textContent)")
+    check('on: numbered steps from as many 150px tiles as fit down to 1 across, at most 9 (%s)' % labels, not on['dis'] and on['pressed'] == 'true' and labels[0] == (2532 + 6)//156 and labels[-1] == 1 and len(labels) == mx + 1 <= 9)
     seen = []
     for v in range(0, mx + 1):
         pg.evaluate("(%s)(%d)" % (SET, v)); pg.wait_for_timeout(120); seen.append(pg.evaluate("cols"))
-    check('on: every step of the bar changes the column count, left to right (%s)' % seen, seen == list(range(mx + 2, 1, -1)))
+    check('on: each step gives the column count it is labelled with (%s)' % seen, seen == labels)
     tall = pg.evaluate("""(()=>{ const room = innerHeight - document.querySelector('.deck').offsetHeight;
       return {room, tallest: Math.max(...[...document.querySelectorAll('#grid .card')].map(c=>c.getBoundingClientRect().height))}; })()""")
-    check('on: at 2 across no tile is taller than the window (%s)' % tall, tall['tallest'] <= tall['room'])
+    check('on: at 1 across no tile is taller than the window (%s)' % tall, tall['tallest'] <= tall['room'])
     pg.evaluate("(%s)(%d)" % (SET, mx - 1)); pg.wait_for_timeout(300)
     n = pg.evaluate("""(()=>{ let n=0; const o=relayoutAll; window.relayoutAll=()=>{ n++; o(); };
       for(let i=0;i<20;i++){ $('size').value=i%4; $('size').dispatchEvent(new Event('input',{bubbles:true})); }
       return new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(()=>r(n)))); })()""")
     check('dragging the slider relayouts at most once a frame (20 moves -> %s)' % n, n <= 2)
-    pg.evaluate("(%s)(%d)" % (SET, mx - 1)); pg.wait_for_timeout(300)
+    pg.evaluate("(%s)(%d)" % (SET, labels.index(3))); pg.wait_for_timeout(300)
     src = pg.evaluate("layoutCard.toString()")
     check('layout reads no per-card layout values (no forced reflow per card)', 'offsetHeight' not in src and 'getBoundingClientRect' not in src and 'fullwRows' not in src)
     pg.reload(); pg.wait_for_timeout(1500)
     check('remembered on the next visit, with its own column count', pg.evaluate("FULLW && document.body.classList.contains('fullw')") and pg.evaluate(INFO)['grid'] >= 2520 and pg.evaluate("cols") == 3)
     pg.evaluate("$('fullw').click()"); pg.wait_for_timeout(500)
     back = pg.evaluate(INFO)
-    check('off again: back under the cap with the earlier tile size (%s)' % back, back['grid'] <= 1760 and back['cols'] == off['cols'] and pg.evaluate("$('size').max") == '360')
+    check('off again: back under the cap with the earlier tile size (%s)' % back, back['grid'] <= 1760 and back['cols'] == off['cols'])
     check('desktop: no page errors', not errs); ctx.close()
     ctx = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True); pg = ctx.new_page()
     pg.route('**/*', lambda r: r.continue_() if r.request.url.startswith(('file:', 'data:')) else r.abort())
