@@ -530,13 +530,32 @@ body.layout-list #cardrow{display:none}   /* List keeps its own arrangement (inl
 #viewer .vvol{position:absolute;top:calc(max(12px,env(safe-area-inset-top)) + 11px);right:calc(max(12px,env(safe-area-inset-right)) + 98px);z-index:2;width:96px;height:18px;margin:0;accent-color:#fff;cursor:pointer}
 #viewer :focus-visible{outline-color:#fff}
 body.viewing{overflow:hidden}
-#viewer .vctl{left:50%;right:auto;bottom:calc(64px + env(safe-area-inset-bottom,0px));width:min(720px,calc(100% - 32px));transform:translateX(-50%);height:46px;padding:0 14px 0 10px;gap:12px;border-radius:14px;background:linear-gradient(100deg,rgba(52,38,71,.72),rgba(67,37,68,.72));-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);z-index:3;transition:opacity .2s ease}
-#viewer .vctl::before{content:"";position:absolute;left:14px;right:14px;top:0;height:1px;background:linear-gradient(90deg,rgba(124,58,237,.42),rgba(192,38,211,.36),rgba(236,72,153,.42));pointer-events:none}
+#viewer .vctl{left:50%;right:auto;bottom:calc(64px + env(safe-area-inset-bottom,0px));width:min(720px,calc(100% - 32px));transform:translateX(-50%);height:46px;padding:0 14px 0 10px;gap:12px;border-radius:14px;background:rgba(28,28,30,.72);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);z-index:3;transition:opacity .25s var(--ease-out)}
 #viewer .vctl .pp,#viewer .vctl .vol,#viewer .vctl .vfs{width:32px;height:32px}
 #viewer .vctl .vfs{flex:none;border:0;border-radius:50%;padding:0;display:grid;place-items:center;background:rgba(255,255,255,.2);color:#fff;cursor:pointer}
 @media (hover:hover) and (pointer:fine){#viewer .vctl .vfs:hover{background:rgba(255,255,255,.34)}}
 #viewer .vctl .time{font-size:12px}
-#viewer.vidle .vctl,#viewer.vidle .vposts{opacity:0;pointer-events:none}
+/* Full-screen overlay (Nov 2026 audit, item 9, option A): caption bottom left, labelled action rail on the right, over a dark scrim (no blur).
+   Everything on top of the media clears together: on its own after 3s (vidle), with a tap on the media, or while the media is pressed and held (vpeek). */
+#viewer :is(.vcap,.vrail,.vscrim,.vposts,.vfill,.vclose,.vsound,.vvol,.vcount,.vnav){transition:opacity .25s var(--ease-out)}
+#viewer:is(.vidle,.vpeek) :is(.vcap,.vrail,.vscrim,.vctl,.vposts,.vfill,.vclose,.vsound,.vvol,.vcount,.vnav,.vseek){opacity:0;pointer-events:none}
+#viewer .vscrim{position:absolute;left:0;right:0;bottom:0;height:min(420px,55%);z-index:1;pointer-events:none;background:linear-gradient(to top,rgba(0,0,0,.74),rgba(0,0,0,.34) 48%,rgba(0,0,0,0))}
+#viewer .vcap{position:absolute;left:max(16px,env(safe-area-inset-left));right:calc(max(8px,env(safe-area-inset-right)) + 76px);bottom:calc(66px + env(safe-area-inset-bottom,0px));z-index:2;max-width:60ch;display:flex;flex-direction:column;gap:5px;color:#fff;pointer-events:none;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+#viewer .vcap .vc-sub{font:600 13px/1.3 var(--font)}
+#viewer .vcap .vc-sub span{font-weight:400;color:rgba(255,255,255,.72)}
+#viewer .vcap .vc-t{font:500 16px/1.3 var(--font);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;text-wrap:pretty}
+#viewer .vcap .vc-by{font:400 12px/1.3 var(--font);color:rgba(255,255,255,.72)}
+#viewer .vrail{position:absolute;right:max(8px,env(safe-area-inset-right));bottom:calc(62px + env(safe-area-inset-bottom,0px));z-index:3;display:flex;flex-direction:column;align-items:center;gap:14px}
+#viewer:has(.vctl) .vcap{bottom:calc(126px + env(safe-area-inset-bottom,0px))}
+#viewer:has(.vctl) .vrail{bottom:calc(122px + env(safe-area-inset-bottom,0px))}
+#viewer .vrail :is(button,a){position:relative;width:56px;min-height:44px;border:0;padding:0;background:none;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font:500 11px/1.2 var(--font);text-decoration:none;cursor:pointer;filter:drop-shadow(0 1px 2px rgba(0,0,0,.45));-webkit-tap-highlight-color:transparent}
+#viewer .vrail svg{width:26px;height:26px;display:block}
+#viewer .vrail .vr-nsfw{font:700 12px/1.05 var(--font);letter-spacing:.02em;color:rgba(255,255,255,.55)}
+#viewer .vrail .vr-nsfw[aria-pressed="true"]{color:#fff}
+#viewer .vrail [hidden]{display:none}
+@media (hover:hover) and (pointer:fine){#viewer .vrail :is(button,a):hover{color:rgba(255,255,255,.82)}}
+#viewer:has(.vstage:not(.vghost) iframe) :is(.vcap,.vrail,.vscrim){display:none}   /* YouTube and RedGifs' player draw their own controls along the bottom */
+#viewer img,#viewer video{-webkit-touch-callout:none}   /* press and hold peeks at the media; no image menu */
 #viewer.vidle{cursor:none}
 /* the mark a double tap leaves on the side of the screen it jumped from (viewerSeek) */
 #viewer .vseek{position:absolute;top:50%;right:9%;z-index:4;width:84px;height:84px;margin-top:-42px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:rgba(20,16,28,.62);color:#fff;font:600 13px/1 var(--font);pointer-events:none;opacity:0;transform:scale(.9);transition:opacity .25s ease,transform .25s var(--ease-out)}
@@ -553,7 +572,7 @@ body.viewing{overflow:hidden}
 @media (hover:hover){#viewer .vnav:hover{background:rgba(255,255,255,.3)}}
 #viewer .vprev{left:max(12px,env(safe-area-inset-left))}
 #viewer .vnext{right:max(12px,env(safe-area-inset-right))}
-#viewer .vcount{position:absolute;bottom:calc(62px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:2;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.16);color:#fff;font-size:12.5px;font-variant-numeric:tabular-nums}
+#viewer .vcount{position:absolute;top:calc(max(12px,env(safe-area-inset-top)) + 9px);left:50%;transform:translateX(-50%);z-index:2;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.16);color:#fff;font-size:12.5px;font-variant-numeric:tabular-nums}
 dialog#reader{border:0;border-radius:18px;padding:20px 22px 22px;max-width:680px;width:calc(100% - 24px);max-height:86vh;overflow:auto;background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
 dialog#reader::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 #reader .rdhead{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--muted);font-size:12.5px}
@@ -878,13 +897,13 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
             <dd><kbd>Tab</kbd> moves from card to card</dd>
             <dd><kbd>Enter</kbd> on a card steps into its controls; <kbd>Esc</kbd> steps back out</dd>
             <dd><kbd>I</kbd> shows or hides the controls of the card under the pointer or in focus</dd>
-            <dd>Full screen: <kbd>&larr;</kbd> <kbd>&rarr;</kbd> pictures in a gallery, <kbd>&uarr;</kbd> <kbd>&darr;</kbd> previous / next post, <kbd>Space</kbd> or <kbd>K</kbd> plays / pauses a clip, <kbd>M</kbd> mutes, <kbd>F</kbd> fills the screen (crops) or fits the whole picture, <kbd>Esc</kbd> closes</dd>
+            <dd>Full screen: <kbd>&larr;</kbd> <kbd>&rarr;</kbd> pictures in a gallery, <kbd>&uarr;</kbd> <kbd>&darr;</kbd> previous / next post, <kbd>Space</kbd> or <kbd>K</kbd> plays / pauses a clip, <kbd>M</kbd> mutes, <kbd>F</kbd> fills the screen (crops) or fits the whole picture, <kbd>H</kbd> hides or shows the caption and buttons, <kbd>Esc</kbd> closes</dd>
           </dl>
           <dl><dt>Touch and mouse</dt>
             <dd>Tap a picture to open it full screen; press and hold it to show or hide its controls</dd>
             <dd>Swipe the small handle up to open them, down to put them away</dd>
             <dd>On a phone, pinch the feed for more tiles across, spread it for fewer, bigger ones</dd>
-                        <dd>Full screen: swipe up for the next post, down for the previous one (sideways moves through a gallery's pictures); pinch to zoom; tap or click a clip to play or pause it; double tap (or double click) the right half to jump forward 10 seconds, the left half to jump back</dd>
+            <dd>Full screen: swipe up for the next post, down for the previous one (sideways moves through a gallery's pictures); pinch to zoom; tap to show or hide the caption and buttons (a mouse click plays or pauses a clip); press and hold for a clean look (a clip pauses while held); double tap (or double click) a clip's right half to jump forward 10 seconds, the left half to jump back</dd>
           </dl>
         </div>
       </details>
@@ -1016,7 +1035,7 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
   <div id="sentinel"></div>
 </div>
 
-<div id="viewer" role="dialog" aria-modal="true" aria-label="Media viewer" hidden><button class="vnav vprev" type="button" aria-label="Previous image" hidden>&#8249;</button><button class="vnav vnext" type="button" aria-label="Next image" hidden>&#8250;</button><span class="vcount" hidden></span><div class="vposts"><button class="vpost vpp" type="button" aria-label="Previous post" title="Previous post (Up arrow)">&#8249; Previous post</button><button class="vpost vpn" type="button" aria-label="Next post" title="Next post (Down arrow)">Next post &#8250;</button></div><input class="vvol" type="range" min="0" max="100" step="1" value="0" aria-label="Volume" hidden><button class="vsound" type="button" aria-label="Unmute" hidden></button><button class="vclose" type="button" aria-label="Close">&#10005;</button><button class="vfill" type="button" aria-pressed="false"></button><div class="vstage"></div></div>
+<div id="viewer" role="dialog" aria-modal="true" aria-label="Media viewer" hidden><button class="vnav vprev" type="button" aria-label="Previous image" hidden>&#8249;</button><button class="vnav vnext" type="button" aria-label="Next image" hidden>&#8250;</button><span class="vcount" hidden></span><div class="vposts"><button class="vpost vpp" type="button" aria-label="Previous post" title="Previous post (Up arrow)">&#8249; Previous post</button><button class="vpost vpn" type="button" aria-label="Next post" title="Next post (Down arrow)">Next post &#8250;</button></div><input class="vvol" type="range" min="0" max="100" step="1" value="0" aria-label="Volume" hidden><button class="vsound" type="button" aria-label="Unmute" hidden></button><button class="vclose" type="button" aria-label="Close">&#10005;</button><button class="vfill" type="button" aria-pressed="false"></button><div class="vstage"></div><div class="vscrim" aria-hidden="true"></div><div class="vcap"></div><div class="vrail" role="group" aria-label="Post actions"></div></div>
 <dialog id="reader" aria-labelledby="rdTitle"><div class="rdhead"><p id="rdMeta"></p><button type="button" id="rdClose" aria-label="Close">&times;</button></div><h3 id="rdTitle"></h3><p class="hint" id="rdSrc"></p><div id="rdBody"></div><div id="rdLinks"></div><section id="rdCm"></section></dialog>
 <dialog id="confirm"><form method="dialog"><h3 id="cTitle"></h3><div id="cBody"></div><label id="cOptWrap" class="toggle" hidden><span id="cOptLbl"></span><input type="checkbox" id="cOpt"></label><div class="btnrow" style="justify-content:flex-end;margin-top:18px"><button class="pill" id="cExtra" value="extra" hidden></button><button class="pill" value="cancel" autofocus>Cancel</button><button class="pill danger" id="cOk" value="ok"></button></div></form></dialog>
 <div id="pausebar" role="status" aria-live="polite" hidden><span class="pdot"></span><span id="pauseTxt"></span><button type="button" id="pauseSkip" title="Retry now">Retry now</button></div>
@@ -2012,7 +2031,8 @@ function viewerGallery(i){
 /* Previous / next post, in the order of the gallery behind (only posts that have something to show full screen). */
 const viewable = p => MEDIA_KINDS.has(mediaOf(p)) && !!(imgCandidates(p)[0] || playSources(metaOf(p))[0]);
 function neighbour(d){
-  const i = list.indexOf(VIEW.cur); if(i<0) return null;
+  let i = list.indexOf(VIEW.cur);
+  if(i < 0){ if(!(VIEW.idx >= 0)) return null; i = d > 0 ? VIEW.idx - 1 : VIEW.idx; }   // the post on screen just left the list (removed, or hidden by a filter): its old place still says where the others are
   for(let j=i+d; j>=0 && j<list.length; j+=d) if(viewable(list[j])) return list[j];
   return null;
 }
@@ -2113,6 +2133,7 @@ function closeViewer(){
   if(VIEW.hist){ VIEW.hist = false; if(!VIEW.popping){ try{ history.back(); }catch(e){} } }
   if(fsEl()){ try{ (document.exitFullscreen || document.webkitExitFullscreen).call(document); }catch(e){} }
   VIEW.fs = false;
+  if(VIEW.refreshOnClose){ VIEW.refreshOnClose = false; refresh(); }   // a star taken off in full screen while Starred only is on
   const last = VIEW.cur;
   if(last && last!==VIEW.first && list.includes(last)){ landOn(last); return; }   // moved on through posts in full screen: the feed picks up at the last one shown
   if(VIEW.opener && VIEW.opener.isConnected) try{ VIEW.opener.focus({preventScroll:true}); }catch(e){}
@@ -2141,7 +2162,7 @@ async function openViewer(p, opts){
   const thumbSrc = thumbImg ? (thumbImg.currentSrc || thumbImg.src) : '';
   const mkImg = url => { const im = new Image(); im.referrerPolicy = 'no-referrer'; im.alt = titleOf(p); im.src = url; return im; };
   if(!opts.keep){ VIEW.opener = document.activeElement; VIEW.first = p; VIEW.dir = 0; }
-  VIEW.cur = p; updatePostNav();
+  VIEW.cur = p; VIEW.idx = list.indexOf(p); updatePostNav(); paintChrome(p);
   VIEW.stage.replaceChildren(); VIEW.root.querySelectorAll('.vctl').forEach(n=>n.remove()); VIEW.root.classList.remove('vidle','vplaying');
   VIEW.root.hidden = false; document.body.classList.add('viewing');
   applyAudio();
@@ -2225,7 +2246,7 @@ async function openViewer(p, opts){
     VIEW.root.querySelector('.vsound').hidden = true; VIEW.root.querySelector('.vvol').hidden = true;
     const vc = viewerControls(v);
     const showSnd = () => { if(tok!==VIEW.token) return; vc.classList.add('has-sound'); };   // the speaker shows only for clips that really have sound
-    v.addEventListener('click',e=>{ e.stopPropagation(); viewerTap(v, e.clientX); });   // tap / click: play or pause; double tap on the left or right half: back or forward 10s
+    v.addEventListener('click',e=>{ e.stopPropagation(); viewerTap(v, e.clientX); });   // tap: show or hide the overlay (a mouse click plays / pauses); double tap on the left or right half: back or forward 10s
     if(m && m.ab){
       // Reddit video: sound comes from a separate file, kept in step with the picture
       const cands = [m.ab+'/DASH_AUDIO_128.mp4', m.ab+'/DASH_AUDIO_64.mp4', m.ab+'/DASH_audio.mp4'];
@@ -2296,9 +2317,16 @@ function setViewFill(on){
 setViewFill(VFILL);
 VIEW.root.querySelector('.vfill').addEventListener('click',e=>{ e.stopPropagation(); setViewFill(!VFILL); });
 VIEW.root.addEventListener('click',e=>{ if(e.target===VIEW.root || e.target===VIEW.stage) closeViewer(); });
-['pointermove','pointerdown'].forEach(ev=>VIEW.root.addEventListener(ev,e=>{ if(ev==='pointermove' && e.pointerType!=='mouse') return; viewerWake(); }));
+['pointermove','pointerdown'].forEach(ev=>VIEW.root.addEventListener(ev,e=>{
+  if(ev==='pointerdown'){ VIEW.ptype = e.pointerType; if(e.target.closest && e.target.closest('.vstage img,.vstage video')) return; viewerWake(); return; }   // a press on the media is a tap or a hold; those decide
+  if(e.pointerType!=='mouse' || VIEW.root.classList.contains('vpeek')) return;
+  const mx = VIEW.mxy || {x:-99, y:-99}; if(Math.abs(e.clientX - mx.x) + Math.abs(e.clientY - mx.y) < 6) return; VIEW.mxy = {x:e.clientX, y:e.clientY};
+  if(Date.now() - (VIEW.hideAt || 0) < 600) return;   // the mouse that just clicked the overlay away does not bring it straight back
+  viewerWake();
+}));
 document.addEventListener('keydown',e=>{
   if(VIEW.root.hidden) return;
+  if((e.key==='h' || e.key==='H') && !e.ctrlKey && !e.metaKey && !e.altKey){ e.preventDefault(); toggleChrome(); return; }
   viewerWake();
   const vv = VIEW.stage.querySelector('video');
   if(e.key==='Escape'){ e.preventDefault(); closeViewer(); }
@@ -2370,10 +2398,10 @@ new MutationObserver(()=>{ zReset(); }).observe(VIEW.stage,{childList:true});
       if(VIEW.gal && Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)){ viewerStep(dx<0 ? 1 : -1); return; }   // sideways in a gallery: the next picture
       if(sw){ viewerPost(sw.d); return; }   // sideways elsewhere: the next post too
     }
-    if(!ZOOM.moved){   // a tap; two quick taps toggle zoom
+    if(!ZOOM.moved){   // a tap shows or hides the overlay; two quick taps undo that and toggle zoom
       const now = Date.now();
-      if(now - ZOOM.lastT < 320){ ZOOM.lastT = 0; ZOOM.s>1 ? (ZOOM.s = 1, zApply()) : zAt(x, y, 2.5); }
-      else ZOOM.lastT = now;
+      if(now - ZOOM.lastT < 320){ ZOOM.lastT = 0; if(ZOOM.undo){ ZOOM.undo(); ZOOM.undo = null; } ZOOM.s>1 ? (ZOOM.s = 1, zApply()) : zAt(x, y, 2.5); }
+      else { ZOOM.lastT = now; ZOOM.undo = Date.now() - (VIEW.peekEnd || 0) < 450 ? null : toggleChrome(); }
     }
   };
   // touch screens
@@ -3004,22 +3032,27 @@ function viewerControls(v){
   paint(); tick();
   return ctl;
 }
-/* Taps on a full-screen clip (touch and mouse alike): one tap plays or pauses at once, and the bar comes up with it. A second tap within VTAP_MS on the left or
-   right half of the screen undoes that play / pause and jumps back or forward VSEEK seconds instead; each further quick tap adds another VSEEK, like a phone video player.
-   The jump shows a small round mark on that side (.vseek) with the running total. */
+/* Taps on a full-screen clip. A tap (touch or pen) shows or hides the overlay, like a phone video player; a mouse click plays or pauses, as on the
+   desktop. A second tap within VTAP_MS on the left or right half of the screen undoes the first and jumps back or forward VSEEK seconds instead;
+   each further quick tap adds another VSEEK. The jump shows a small round mark on that side (.vseek) with the running total. Play / pause on touch:
+   the bar's button, Space or K, or press and hold (which also clears the screen). */
 const VTAP_MS = 320, VSEEK = 10;
-let VTAP = {t:0, was:null, side:0, sum:0};
+let VTAP = {t:0, undo:null, side:0, sum:0};
 function viewerTap(v, x){
+  if(Date.now() - (VIEW.peekEnd || 0) < 450) return;   // the lift at the end of a press and hold
   const now = Date.now(), side = x < (VIEW.root.clientWidth || innerWidth)/2 ? -1 : 1;
   if(now - VTAP.t < VTAP_MS && VTAP.v===v){
-    if(VTAP.was!==null){ if(VTAP.was) v.pause(); else v.play().catch(()=>{}); VTAP.was = null; }   // the first tap's play / pause was the start of a double tap
+    if(VTAP.undo){ VTAP.undo(); VTAP.undo = null; }   // the first tap was the start of a double tap
     if(side!==VTAP.side) VTAP.sum = 0;
     VTAP.t = now; VTAP.side = side; VTAP.sum += VSEEK;
     viewerSeek(v, side*VSEEK, side, VTAP.sum); return;
   }
-  VTAP = {t:now, was:v.paused, side, sum:0, v};
-  if(v.paused) v.play().catch(()=>{}); else v.pause();
-  viewerWake();
+  let undo;
+  if(VIEW.ptype === 'mouse'){
+    const was = v.paused; if(was) v.play().catch(()=>{}); else v.pause(); viewerWake();
+    undo = () => { if(was) v.pause(); else v.play().catch(()=>{}); };
+  } else undo = toggleChrome();
+  VTAP = {t:now, undo, side, sum:0, v};
 }
 function viewerSeek(v, d, side, total){
   const dur = v.duration;
@@ -3031,16 +3064,101 @@ function viewerSeek(v, d, side, total){
   mk.innerHTML = '<span class="vs-arr">'+(side < 0 ? '&#9664;&#9664;' : '&#9654;&#9654;')+'</span><span class="vs-n">'+total+'s</span>';
   mk.classList.remove('on'); void mk.offsetWidth; mk.classList.add('on');
   clearTimeout(mk._t); mk._t = setTimeout(()=>mk.classList.remove('on'), 650);
-  viewerWake();
 }
+/* The overlay (caption, rail, player bar, buttons) clears by itself after VIDLE_MS: on a picture always, on a clip while it plays. It stays while
+   the pointer is over it (mouse), keyboard focus is in it, or the volume flyout is open. */
+const VIDLE_MS = 3000;
 let vIdleT = 0;
 function viewerWake(){
+  if(Date.now() < (VIEW.quietUntil || 0)) return;   // the pause / play of a press and hold does not bring the overlay back
   VIEW.root.classList.remove('vidle'); clearTimeout(vIdleT);
   vIdleT = setTimeout(()=>{
-    const c = VIEW.root.querySelector('.vctl');
-    if(!VIEW.root.hidden && c && VIEW.root.classList.contains('vplaying') && !c.querySelector('.volwrap.open') && !c.matches(':hover') && !c.querySelector(':focus-visible')) VIEW.root.classList.add('vidle');
-  }, 2600);
+    if(VIEW.root.hidden) return;
+    const v = VIEW.stage.querySelector('video');
+    if(!(v || VIEW.stage.querySelector('img')) || (v && v.paused)) return;
+    if(VIEW.root.querySelector('.volwrap.open, :is(.vctl,.vrail,.vposts) :focus-visible')) return;
+    if(matchMedia('(hover:hover)').matches && VIEW.root.querySelector(':is(.vctl,.vrail,.vposts,.vclose,.vfill):hover')) return;
+    VIEW.root.classList.add('vidle');
+  }, VIDLE_MS);
 }
+function chromeOff(){ clearTimeout(vIdleT); VIEW.root.classList.add('vidle'); VIEW.hideAt = Date.now(); const w = VIEW.root.querySelector('.volwrap.open'); if(w) w.classList.remove('open'); }
+/* Shows the overlay when it is cleared, clears it when it shows; returns a function that undoes this (for a double tap). */
+function toggleChrome(){
+  const hid = VIEW.root.classList.contains('vidle');
+  if(hid) viewerWake(); else chromeOff();
+  return () => { if(hid) chromeOff(); else viewerWake(); };
+}
+/* Press and hold on the picture or clip: everything on top clears and a clip pauses while held; letting go puts both back as they were. */
+(function(){
+  let t = 0, x = 0, y = 0, vid = null, was = false, hid = false;
+  const st = VIEW.stage, R = VIEW.root;
+  const cancel = () => { clearTimeout(t); t = 0; };
+  st.addEventListener('pointerdown',e=>{
+    if(!e.isPrimary){ cancel(); return; }   // a second finger: a pinch, not a hold
+    if(e.button!==0 || !(e.target.closest && e.target.closest('img,video')) || R.classList.contains('vpeek')) return;
+    x = e.clientX; y = e.clientY; cancel();
+    t = setTimeout(()=>{
+      t = 0; if(R.hidden || ZOOM.s > 1 || ZOOM.multi || SLIDE.busy || st.style.transform) return;
+      hid = R.classList.contains('vidle'); R.classList.add('vpeek');
+      vid = st.querySelector('video'); was = !!(vid && !vid.paused);
+      if(was){ VIEW.quietUntil = Date.now() + 400; vid.pause(); }
+      if(navigator.vibrate) try{ navigator.vibrate(8); }catch(_){}
+    }, 380);
+  });
+  st.addEventListener('pointermove',e=>{ if(t && Math.abs(e.clientX - x) + Math.abs(e.clientY - y) > 10) cancel(); });
+  const end = () => {
+    cancel(); if(!R.classList.contains('vpeek')) return;
+    R.classList.remove('vpeek'); VIEW.peekEnd = Date.now();
+    if(was && vid && vid.isConnected){ VIEW.quietUntil = Date.now() + 400; vid.play().catch(()=>{}); }
+    if(hid) chromeOff(); else { VIEW.quietUntil = 0; viewerWake(); }
+    vid = null; was = false;
+  };
+  st.addEventListener('pointerup',end); st.addEventListener('pointercancel',end);
+  st.addEventListener('contextmenu',e=>{ if(e.target.closest && e.target.closest('img,video') && (t || R.classList.contains('vpeek') || Date.now() - (VIEW.peekEnd || 0) < 450)) e.preventDefault(); });
+})();
+/* Caption and action rail for the post on screen (Option A). The rail is the card's own actions, labelled: Star, Saved (removes the post from
+   the list, with Undo), the comment count (Reddit's thread), Open (the post) and the two-line NS/FW mark, lit when the post counts as NSFW. */
+const VR_STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.8 6.6 19.7l1.1-6.1L3.2 9.4l6.1-.8z" fill="FILL" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+const VR_SAVE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z" fill="FILL" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+const VR_CM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>';
+const VR_OPEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
+function ageText(sec){
+  const d = (Date.now()/1000 - sec)/86400;
+  if(d < 1) return 'today';
+  if(d < 31){ const n = Math.round(d); return n+(n===1 ? ' day' : ' days')+' ago'; }
+  if(d < 365){ const n = Math.round(d/30.4); return n+(n===1 ? ' month' : ' months')+' ago'; }
+  const n = Math.floor(d/365.25); return n+(n===1 ? ' year' : ' years')+' ago';
+}
+function paintChrome(p){
+  const m = metaOf(p) || {}, cap = VIEW.root.querySelector('.vcap'), rail = VIEW.root.querySelector('.vrail');
+  VIEW.root.setAttribute('aria-label', titleOf(p));
+  const by = [m.a && m.a!=='[deleted]' ? 'u/'+esc(m.a) : '', (m.s||0) > 1 ? fmt(m.s)+' points' : ''].filter(Boolean).join(' · ');
+  cap.innerHTML = '<div class="vc-sub">r/'+esc(p.sub)+(m.c ? ' <span>· '+ageText(m.c)+'</span>' : '')+'</div>'
+    + '<div class="vc-t">'+esc(titleOf(p))+'</div>' + (by ? '<div class="vc-by">'+by+'</div>' : '');
+  const inList = ROWSET.has(p.id), star = FAVS.has(p.id), ns = isNsfw(p), n = m.n || 0;
+  rail.innerHTML =
+      '<button class="vr-star" type="button" aria-pressed="'+star+'" aria-label="'+(star ? 'Starred: tap to unstar' : 'Star')+'">'+VR_STAR.replace('FILL', star ? 'currentColor' : 'none')+(star ? 'Starred' : 'Star')+'</button>'
+    + '<button class="vr-save" type="button" aria-pressed="'+inList+'" aria-label="'+(inList ? 'In your list: tap to remove' : 'Not in your list: tap to add')+'">'+VR_SAVE.replace('FILL', inList ? 'currentColor' : 'none')+(inList ? 'Saved' : 'Save')+'</button>'
+    + '<a class="vr-cm" href="'+esc(p.link)+'" target="_blank" rel="noopener noreferrer" aria-label="'+(n ? fmt(n)+(n===1 ? ' comment' : ' comments')+' on Reddit' : 'Comments on Reddit')+'">'+VR_CM+(n ? fmt(n) : 'Comments')+'</a>'
+    + '<a class="vr-open" href="'+esc(openHref(p))+'" target="_blank" rel="noopener noreferrer" aria-label="Open post">'+VR_OPEN+'Open</a>'
+    + '<button class="vr-nsfw" type="button" aria-pressed="'+ns+'" aria-label="'+(ns ? 'NSFW: tap to unmark' : 'Mark NSFW')+'"'+(inList ? '' : ' hidden')+'>NS<br>FW</button>';
+  viewerWake();
+}
+VIEW.root.querySelector('.vrail').addEventListener('click',e=>{
+  e.stopPropagation(); viewerWake();
+  const p = VIEW.cur, b = e.target.closest && e.target.closest('button'); if(!p || !b) return;
+  if(b.classList.contains('vr-star')){
+    const on = !FAVS.has(p.id); setStar(p, on); syncStars(); updateFavCount();
+    if(state.fav) VIEW.refreshOnClose = true; else updateSummary();
+    paintChrome(p);
+  } else if(b.classList.contains('vr-save')){
+    if(!ROWSET.has(p.id)){ toggleSave(p).then(()=>paintChrome(p)); return; }
+    const d = neighbour(1) ? 1 : neighbour(-1) ? -1 : 0;
+    toggleSave(p).then(()=>{ if(VIEW.root.hidden || VIEW.cur!==p) return; if(d && neighbour(d)) viewerPost(d); else closeViewer(); });   // the post left the list: show the next one
+  } else if(b.classList.contains('vr-nsfw')){
+    toggleNsfw(p).then(()=>{ if(VIEW.cur===p) paintChrome(p); updatePostNav(); });
+  }
+});
 function buildControls(t, el, isGif){
   const card = t.closest('.card'); if(!card) return;
   card.querySelectorAll('.ctl,.cprog').forEach(n=>n.remove());

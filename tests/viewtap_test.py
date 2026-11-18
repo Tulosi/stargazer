@@ -31,11 +31,13 @@ with sync_playwright() as p:
     check('the bar fades while the clip plays untouched', idle())
     paused = lambda: pg.evaluate("document.querySelector('#viewer video').paused")
     pg.tap('#viewer video'); pg.wait_for_timeout(400)
-    check('a tap pauses the clip and brings the bar back', paused() and not idle())
+    check('a tap brings the overlay back and the clip keeps playing', not paused() and not idle())
     pg.wait_for_timeout(1200)
     check('and it stays up (no flash and gone)', not idle())
     pg.tap('#viewer video'); pg.wait_for_timeout(400)
-    check('a later tap plays it again', not paused())
+    check('the next tap clears it at once, still playing', idle() and not paused())
+    pg.tap('#viewer video'); pg.wait_for_timeout(400)
+    check('and another brings it back', not idle())
     cdp = ctx.new_cdp_session(pg)
     def swipe(x, y0, y1):
         pts = lambda y: [{'x': x, 'y': y}]
