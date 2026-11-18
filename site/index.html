@@ -206,7 +206,7 @@ body.stats-flat .stats .st:not(:first-child){display:none}   /* nothing filtered
 .kindbadge{display:inline-flex;align-items:center;gap:6px;width:fit-content;max-width:100%;font-size:12px;font-weight:600;padding:0;color:var(--muted)}   /* plain text with an icon: it states a fact, it is not a button */
 .kindbadge[data-k=account]{color:var(--ink)}
 .kindbadge svg{flex:none}
-#panel{max-width:640px}
+#panel{max-width:440px;grid-template-columns:1fr;gap:18px}   /* one column since the view settings moved to Display */
 #browseCol{grid-column:1/-1;border-top:1px solid var(--line);padding-top:18px}
 .pcol h2{margin:0 0 2px;font-size:12px;font-weight:600;color:var(--muted)}
 .grp{display:grid;gap:7px}
