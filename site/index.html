@@ -271,6 +271,7 @@ body.fullw .wrap,body.fullw .deck-in{max-width:none}
 /* ---- bento grid ---- */
 .card{container-type:inline-size}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(var(--card),100%),1fr));grid-auto-rows:4px;grid-auto-flow:row dense;gap:6px}
+@media (max-width:720px){body:not(.layout-list) .grid{touch-action:pan-x pan-y}}   /* phones: a pinch on the feed changes the columns instead of zooming the page */
 .card{position:relative;border-radius:10px;overflow:hidden;background:var(--bg);min-width:0;grid-row:span 40}
 .card{content-visibility:auto;contain-intrinsic-size:auto 240px}   /* off-screen cards are skipped entirely (style, layout, paint); the grid area still sets their size, so nothing moves */
 body:not(.layout-list) .thumb{-webkit-touch-callout:none}   /* a long press opens the tray, not the browser's link menu */
@@ -882,6 +883,7 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
           <dl><dt>Touch and mouse</dt>
             <dd>Tap a picture to open it full screen; press and hold it to show or hide its controls</dd>
             <dd>Swipe the small handle up to open them, down to put them away</dd>
+            <dd>On a phone, pinch the feed for more tiles across, spread it for fewer, bigger ones</dd>
                         <dd>Full screen: swipe up for the next post, down for the previous one (sideways moves through a gallery's pictures); pinch to zoom; tap or click a clip to play or pause it; double tap (or double click) the right half to jump forward 10 seconds, the left half to jump back</dd>
           </dl>
         </div>
@@ -2446,7 +2448,34 @@ function relayoutAll(){
     const deck = document.querySelector('.deck'), h = innerHeight - (deck ? deck.offsetHeight : 0) - 24;
     MAXROWS = Math.max(10, Math.floor((h + GAP)/(ROW+GAP)));
   }
-  for(const el of $('grid').children) if(el._p) layoutCard(el, el._p);
+  for(const el of $('grid').children) if(el._p){ layoutCard(el, el._p); el._fill = 0; }
+  fillHoles(true);   // at once, so the reset spans are never painted
+}
+/* Masonry's ragged bottom (Nov 2026 audit, item 18): once every card of the list is on the page, the lowest card of each column grows by
+   up to half its height so the columns end together (its picture is cropped a little more; Grid and List are already even). Runs a frame
+   after a layout and reads only the last few rows of cards, never per card in layoutCard. A card it grew is put back first on every run; after a relayout it runs at once. */
+function fillHoles(now){
+  cancelAnimationFrame(fillHoles.f);
+  const run = ()=>{
+    const g = $('grid'), kids = [...g.children].filter(c=>c._p);
+    for(const c of kids) if(c._fill){ layoutCard(c, c._p); c._fill = 0; }
+    if(LAYOUT !== 'masonry' || cols < 2 || !kids.length || shown < list.length) return;
+    const gl = g.getBoundingClientRect().left, pitch = colW + GAP, low = [], rs = new Map();
+    for(const c of kids.slice(-cols*4)){
+      const r = c.getBoundingClientRect(); if(!r.height) continue; rs.set(c, r);
+      const a = Math.round((r.left - gl)/pitch), w = Math.max(1, Math.round((r.width + GAP)/pitch));
+      for(let k=a; k<a+w && k<cols; k++) if(!low[k] || r.bottom > low[k].b) low[k] = {c, b:r.bottom};
+    }
+    const end = Math.max(...low.filter(Boolean).map(x=>x.b));
+    for(const c of new Set(low.filter(Boolean).map(x=>x.c))){
+      const r = rs.get(c), a = Math.round((r.left - gl)/pitch), w = Math.max(1, Math.round((r.width + GAP)/pitch));
+      let mine = true; for(let k=a; k<a+w && k<cols; k++) if(!low[k] || low[k].c !== c) mine = false;
+      const extra = Math.round((end - r.bottom)/(ROW + GAP)), span = parseInt((c.style.gridRow || '').replace('span', ''), 10);
+      if(!mine || extra < 1 || !span || extra*(ROW + GAP) > r.height*0.5) continue;
+      c.style.gridRow = 'span '+(span + extra); c._fill = extra;
+    }
+  };
+  if(now) run(); else fillHoles.f = requestAnimationFrame(run);
 }
 new ResizeObserver(()=>relayoutAll()).observe($('grid'));
 function showGallery(card,p,m){
@@ -2530,6 +2559,7 @@ document.addEventListener('keydown',e=>{
   let t = 0, x = 0, y = 0, card = null;
   const stop = () => { clearTimeout(t); t = 0; card = null; };
   $('grid').addEventListener('pointerdown',e=>{
+    if(t){ stop(); return; }   // a second finger (a pinch) is not a long press
     const th = e.target.closest && e.target.closest('a.thumb'); if(!th || e.button!==0 || SEL.on || LAYOUT==='list') return;
     card = th.closest('.card'); x = e.clientX; y = e.clientY; clearTimeout(t);
     t = setTimeout(()=>{ if(!card) return; card._lpDone = true; toggleLayer(card); if(navigator.vibrate) try{ navigator.vibrate(8); }catch(x){} const c = card; setTimeout(()=>{ c._lpDone = false; }, 900); stop(); }, 450);
@@ -2632,7 +2662,7 @@ $('grid').addEventListener('click',e=>{
 function renderMore(){
   const grid = $('grid'), end = Math.min(list.length, shown+PAGE), frag = document.createDocumentFragment();
   for(let k=shown;k<end;k++){ const p=list[k]; let el=cardEls.get(p.id); if(!el){ el=buildCard(p); cardEls.set(p.id,el);} frag.appendChild(el); }
-  grid.appendChild(frag); shown = end; updateMore();
+  grid.appendChild(frag); shown = end; updateMore(); fillHoles();
 }
 /* Subreddit dropdown: rebuilt whenever the list changes (it used to be built once, before any posts existed). Subreddits with fewer than 3 posts are left out, except the one currently chosen. */
 let subSig = '';
@@ -2653,7 +2683,9 @@ function refresh(){
   const kids = $('grid').children; let keep = list.length > 0 && kids.length > 0 && kids.length <= list.length;
   for(let i=0; keep && i<kids.length; i++) if(kids[i]._p !== list[i]) keep = false;
   if(keep){ shown = kids.length; if(shown < Math.min(list.length, PAGE)) renderMore(); else updateMore(); updateChips(); updateSummary(); return; }
+  const fade = kids.length > 0 && !refresh.quiet && !matchMedia('(prefers-reduced-motion: reduce)').matches;
   $('grid').replaceChildren(); shown = 0;
+  if(fade && $('grid').animate) $('grid').animate([{opacity:.2},{opacity:1}], {duration:220, easing:'cubic-bezier(.23,1,.32,1)'});   // a filter, sort or shuffle change: the new feed fades in instead of popping (opacity only, synchronous, so nothing waits for it)
   if(!list.length){ $('grid').innerHTML = '<div class="empty">'+(MODE==='sub' ? (FEED.loading ? 'Loading...' : subEmptyHtml()) : (POSTS.length ? 'No saved posts match these filters.<p class="emptyact"><button class="pill" id="emptyClear" type="button">Clear filters</button></p>' : introHtml()))+'</div>'; updateMore(); }
   else renderMore();
   updateChips(); updateSummary();
@@ -3456,7 +3488,7 @@ paintCols();
    (<=720px) get 3, 2, 1 across; desktop and tablets get from as many 150px tiles as fit (left), at most 5 (10 in Full width), down to
    1 across (right, always there) (sizeSteps), so a small window gets fewer steps. The chosen count is kept in saved-posts-tile-cols
    (saved-posts-tile-fullw in Full width, saved-posts-tile-phonecols on phones) and snaps to the nearest step when the window changes.
-   On desktop and tablets one across caps tiles to the window height (ONE_UP, MAXROWS). Dragging relayouts at most once a frame (cardSoon). */
+   On desktop and tablets one across caps tiles to the window height (ONE_UP, MAXROWS). Dragging relayouts at most once a frame (cardSoon), with a FLIP glide (flipCols). */
 const phoneMQ = matchMedia('(max-width:720px)');
 let COL_STEPS = null;    // {W, cols:[many ... 1]}; the slider's value is the index into cols
 function colCard(W, n){ return Math.floor((W - 6*(n-1))/n) - 1; }
@@ -3506,7 +3538,6 @@ function buildSizeControl(){
   wrap.classList.add('stepped'); sl.min = 0; sl.step = 1; sl.max = cols.length - 1; sl.value = i;
   notchesFor(nt, cols); paintNotches(); setCard(colCard(W, cols[i]));
 }
-function cardSoon(px){ cardSoon.px = px; if(!cardSoon.f) cardSoon.f = requestAnimationFrame(()=>{ cardSoon.f = 0; setCard(cardSoon.px); }); }
 /* lights the chosen notch and says it in words; one across turns on the window-height cap */
 function paintNotches(){
   const sl = $('size'), i = +sl.value, n = COL_STEPS.cols[i];
@@ -3516,8 +3547,58 @@ function paintNotches(){
 }
 $('size').addEventListener('input',e=>{
   const n = COL_STEPS.cols[+e.target.value]; paintNotches();
-  cardSoon(colCard(COL_STEPS.W, n)); try{ localStorage.setItem(colKey(), String(n)); }catch(x){}
+  try{ localStorage.setItem(colKey(), String(n)); }catch(x){}
+  cardSoon(colCard(COL_STEPS.W, n));
 });
+/* A fast drag can pass several steps in one frame: relayout (with the glide) at most once a frame. */
+function cardSoon(px){ cardSoon.px = px; if(!cardSoon.f) cardSoon.f = requestAnimationFrame(()=>{ cardSoon.f = 0; if(cardSoon.px !== cardPx) flipCols(()=>setCard(cardSoon.px)); }); }
+/* FLIP on a column change (Nov 2026 audit, item 16): the cards on screen glide from where they were to where they land. One read of the
+   on-screen cards before and one after the change (never per card in layoutCard), transform only, 300ms on the sheet curve. The card
+   nearest the top of the screen stays where it was (the page scrolls under it). Skipped in List, under reduced motion and when more than
+   60 cards are on screen. */
+function flipCols(change){
+  const vis = LAYOUT==='list' || matchMedia('(prefers-reduced-motion: reduce)').matches ? [] : [...cardView].filter(c=>c.isConnected);
+  if(!vis.length || vis.length > 60){ change(); return; }
+  const before = new Map(vis.map(c=>[c, c.getBoundingClientRect()]));
+  let anchor = null, at = Infinity;
+  for(const [c,r] of before) if(r.bottom > 60 && r.top < at){ at = r.top; anchor = c; }
+  change();
+  if(anchor){ const d = anchor.getBoundingClientRect().top - at; if(Math.abs(d) > 1) scrollTo({top: scrollY + d, behavior:'instant'}); }
+  for(const [c,r] of before){
+    if(!c.isConnected) continue;
+    const n = c.getBoundingClientRect(); if(!n.width || !n.height) continue;
+    const dx = r.left - n.left, dy = r.top - n.top, sx = r.width / n.width, sy = r.height / n.height;
+    if(Math.abs(dx) < 1 && Math.abs(dy) < 1 && Math.abs(sx - 1) < .01 && Math.abs(sy - 1) < .01) continue;
+    c.animate([{transformOrigin:'0 0', transform:'translate('+dx+'px,'+dy+'px) scale('+sx+','+sy+')'}, {transformOrigin:'0 0', transform:'none'}],
+      {duration:300, easing:'cubic-bezier(.32,.72,0,1)'});
+  }
+}
+/* Sets the tile count by number (pinch); false when that count is not offered here or is already chosen. */
+function setColsTo(n){
+  const sl = $('size'), k = COL_STEPS ? COL_STEPS.cols.indexOf(n) : -1;
+  if(k < 0 || k === +sl.value) return false;
+  sl.value = k; paintNotches(); try{ localStorage.setItem(colKey(), String(n)); }catch(x){}
+  flipCols(()=>setCard(colCard(COL_STEPS.W, n)));
+  return true;
+}
+/* Pinch the feed on a phone to change the columns (Nov 2026 audit, item 15): spread two fingers for fewer, bigger tiles, pinch for more.
+   Each 30% of spread or pinch is one step, so one gesture can go from 3 across to 1. The page's own pinch zoom is off over the feed on
+   phones (touch-action pan-x pan-y in Masonry / Grid) so the gesture is ours; the listeners stay passive, so scrolling never waits on them. */
+(function(){
+  let d0 = 0;
+  const dist = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+  const g = $('grid');
+  g.addEventListener('touchstart', e=>{ d0 = e.touches.length === 2 && phoneMQ.matches && LAYOUT !== 'list' && COL_STEPS ? dist(e.touches) : 0; }, {passive:true});
+  g.addEventListener('touchmove', e=>{
+    if(!d0 || e.touches.length !== 2) return;
+    const d = dist(e.touches), r = d / d0, cur = COL_STEPS.cols[+$('size').value];
+    const n = r > 1.3 ? cur - 1 : r < 1/1.3 ? cur + 1 : 0;
+    if(n && setColsTo(n)){ d0 = d; if(navigator.vibrate) try{ navigator.vibrate(6); }catch(x){} }
+  }, {passive:true});
+  g.addEventListener('touchend', e=>{ if(e.touches.length < 2) d0 = 0; }, {passive:true});
+  g.addEventListener('touchcancel', ()=>{ d0 = 0; }, {passive:true});
+  document.addEventListener('gesturestart', e=>{ if(phoneMQ.matches && LAYOUT !== 'list' && e.target.closest && e.target.closest('#grid')) e.preventDefault(); });   // iOS Safari's own pinch event
+})();
 buildSizeControl();
 $('fullw').addEventListener('click',e=>{ e.preventDefault(); setFullw(!FULLW, true); });
 setFullw(FULLW, false);
@@ -3912,7 +3993,7 @@ function onMeta(chunk){
 let metaRefT = 0, metaRefAt = 0;
 function metaRefresh(){
   if(metaRefT) return;
-  metaRefT = setTimeout(()=>{ metaRefT = 0; metaRefAt = Date.now(); refresh(); }, Math.max(0, metaRefAt + 1200 - Date.now()));
+  metaRefT = setTimeout(()=>{ metaRefT = 0; metaRefAt = Date.now(); refresh.quiet = true; try{ refresh(); } finally{ refresh.quiet = false; } }, Math.max(0, metaRefAt + 1200 - Date.now()));
 }
 
 /* ================= data source, CSV library, saving ================= */
