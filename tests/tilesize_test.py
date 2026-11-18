@@ -1,4 +1,4 @@
-"""Tile size snaps to numbered steps, each a count of tiles across (Masonry and Grid): phones get 1 / 2 / 3, tablets and desktops get
+"""Tile size snaps to numbered steps, each a count of tiles across (Masonry and Grid), most tiles on the left and 1 across on the right everywhere: phones get 3 / 2 / 1, tablets and desktops get
 from as many 150px tiles as fit down to 1 across, with more steps on wider windows (at most 9). The slider
 cannot rest between steps, every step gives the column count on its label, one across is no taller than the window, the choice is
 remembered, an old pixel setting carries over, and a different window width snaps to the nearest step. Run: python tests/tilesize_test.py"""
@@ -56,13 +56,19 @@ with sync_playwright() as p:
     ctx, pg, errs = page(b, 1440, 900, init="try{ if(!sessionStorage.getItem('x')){ localStorage.setItem('saved-posts-tile','370'); sessionStorage.setItem('x','1'); } }catch(e){}")
     check('an old one-across setting (370) carries over', pg.evaluate(COLS) == 1)
     ctx.close()
-    # phones keep 1 / 2 / 3 across
+    ctx, pg, errs = page(b, 390, 844, True, init="try{ if(!sessionStorage.getItem('x')){ localStorage.setItem('saved-posts-tile-phone','2'); sessionStorage.setItem('x','1'); } }catch(e){}")
+    check('phone: an old step setting (index 2 = 3 across) carries over', pg.evaluate(COLS) == 3)
+    ctx.close()
+    # phones: 3 / 2 / 1 across
     ctx, pg, errs = page(b, 390, 844, True)
-    check('phone: three notches 1, 2, 3', pg.evaluate(LABELS) == [1, 2, 3])
-    check('phone: starts with one column', pg.evaluate(COLS) == 1)
-    for want in (1, 2, 0):
-        pg.evaluate("(%s)(%d)" % (SET, want)); pg.wait_for_timeout(150)
-        check('phone: step %d gives %d column(s)' % (want, want + 1), pg.evaluate(COLS) == want + 1)
+    check('phone: three notches 3, 2, 1, in the same order as desktop', pg.evaluate(LABELS) == [3, 2, 1])
+    check('phone: starts with one column, at the right end', pg.evaluate(COLS) == 1 and pg.evaluate("$('size').value") == '2')
+    for i, want in ((1, 2), (0, 3), (2, 1)):
+        pg.evaluate("(%s)(%d)" % (SET, i)); pg.wait_for_timeout(150)
+        check('phone: step %d gives %d column(s)' % (i, want), pg.evaluate(COLS) == want)
+    pg.evaluate("(%s)(1)" % SET); pg.wait_for_timeout(150); pg.reload(); pg.wait_for_timeout(1000)
+    check('phone: remembered (2 across)', pg.evaluate(COLS) == 2)
+    check('phone: one across is not height-capped', pg.evaluate("((%s)(2), MAXROWS)" % SET) == 0)
     check('phone: tile size row is visible', pg.evaluate("(()=>{ $('decktoggle').click(); return !!$('sizerow').offsetParent; })()"))
     check('phone: no page errors', not errs); ctx.close()
     b.close()

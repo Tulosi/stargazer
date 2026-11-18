@@ -231,7 +231,7 @@ input[type=range]{width:100%;accent-color:var(--sel);margin:0}
 @media (hover:hover) and (pointer:fine){.fwbtn[aria-pressed=false]:hover{background:var(--line)}}
 /* Full width: no 1760px cap, the page and top bar span the whole window (more columns, same tile size) */
 body.fullw .wrap,body.fullw .deck-in{max-width:none}
-@media (max-width:720px){#fullw{display:none}} /* phones already have 1 / 2 / 3 across */
+@media (max-width:720px){#fullw{display:none}} /* phones already have 3 / 2 / 1 across */
 .sizewrap .notches{display:none}
 .sizewrap.stepped{padding-bottom:16px}
 .sizewrap.stepped .notches{display:block;position:absolute;left:0;right:0;bottom:0;height:16px;pointer-events:none}
@@ -3378,14 +3378,13 @@ function paintCols(){ document.querySelectorAll('#colsseg .pill').forEach(b=>b.s
 document.querySelectorAll('#colsseg .pill').forEach(b=>b.addEventListener('click',()=>{ LCOLS = b.dataset.c; try{ localStorage.setItem('saved-posts-listcols', LCOLS); }catch(e){} paintCols(); relayoutAll(); }));
 paintCols();
 /* Tile size (Masonry and Grid). The slider snaps to numbered steps, each one a count of tiles across, so it never rests between two
-   sizes and every step changes the layout. Phones (<=720px) get 1, 2, 3 across (left to right, as before). Desktop and tablets get
-   COL_STEPS: from as many 150px tiles as fit (left) down to 1 across (right, always there), at most as many steps as the labels have
+   sizes and every step changes the layout. Every screen reads the same way: most tiles on the left, 1 across on the right. Phones
+   (<=720px) get 3, 2, 1 across; desktop and tablets get from as many 150px tiles as fit (left) down to 1 across (right, always there), at most as many steps as the labels have
    room for (sizeSteps), so a wide window gets more steps than a small one. The chosen count is kept in saved-posts-tile-cols
-   (saved-posts-tile-fullw in Full width) and snaps to the nearest step when the window changes. One across caps tiles to the window
-   height (ONE_UP, MAXROWS). Dragging relayouts at most once a frame (cardSoon). */
+   (saved-posts-tile-fullw in Full width, saved-posts-tile-phonecols on phones) and snaps to the nearest step when the window changes.
+   On desktop and tablets one across caps tiles to the window height (ONE_UP, MAXROWS). Dragging relayouts at most once a frame (cardSoon). */
 const phoneMQ = matchMedia('(max-width:720px)');
-let SIZE_STEPS = null;   // card widths for 1, 2, 3 columns on phones; null on desktop
-let COL_STEPS = null;    // desktop: {W, cols:[many ... 1]}; the slider's value is the index into cols
+let COL_STEPS = null;    // {W, cols:[many ... 1]}; the slider's value is the index into cols
 function colCard(W, n){ return Math.floor((W - 6*(n-1))/n) - 1; }
 /* Full width (#fullw, remembered in saved-posts-fullwidth): lifts the 1760px page cap and makes the tiles bigger (default 3 across),
    with its own remembered column count. Nothing is measured per card. */
@@ -3409,14 +3408,15 @@ function sizeSteps(W){
   else { c = [1, 2, 3]; const k = MAX_STEPS - 3; for(let i=0;i<k;i++) c.push(Math.round(4 + i*(nMax - 4)/(k - 1))); c = [...new Set(c)]; }
   return c.reverse();    // left = most tiles (smallest), right = 1 across
 }
-function colKey(){ return FULLW ? 'saved-posts-tile-fullw' : 'saved-posts-tile-cols'; }
+function colKey(){ return phoneMQ.matches ? 'saved-posts-tile-phonecols' : FULLW ? 'saved-posts-tile-fullw' : 'saved-posts-tile-cols'; }
 function savedCols(W){
   try{
     const v = parseInt(localStorage.getItem(colKey()), 10); if(v>=1 && v<=60) return v;
-    if(!FULLW){ const px = +localStorage.getItem('saved-posts-tile');   // older pixel setting (370 meant one across)
+    if(phoneMQ.matches){ const i = parseInt(localStorage.getItem('saved-posts-tile-phone'), 10); if(i>=0 && i<=2) return i + 1; }   // older phone step (0 meant 1 across)
+    else if(!FULLW){ const px = +localStorage.getItem('saved-posts-tile');   // older pixel setting (370 meant one across)
       if(px>=150 && px<=370) return px > 360 ? 1 : Math.max(1, Math.floor((W + 6)/(px + 6))); }
   }catch(e){}
-  return FULLW ? 3 : Math.max(1, Math.floor((W + 6)/(230 + 6)));
+  return phoneMQ.matches ? 1 : FULLW ? 3 : Math.max(1, Math.floor((W + 6)/(230 + 6)));
 }
 function notchesFor(nt, labels){
   nt.replaceChildren(...labels.map((n,i)=>{ const t = document.createElement('i'), f = labels.length>1 ? i/(labels.length-1) : .5;
@@ -3426,39 +3426,25 @@ function notchesFor(nt, labels){
 }
 function buildSizeControl(){
   const sl = $('size'), wrap = sl.closest('.sizewrap'), nt = wrap.querySelector('.notches');
-  wrap.classList.add('stepped'); sl.min = 0; sl.step = 1;
-  if(!phoneMQ.matches){
-    SIZE_STEPS = null;
-    const W = Math.max(240, $('grid').clientWidth || innerWidth - 28), cols = sizeSteps(W), want = savedCols(W);
-    let i = 0; cols.forEach((n,k)=>{ if(Math.abs(n - want) < Math.abs(cols[i] - want)) i = k; });
-    COL_STEPS = {W, cols};
-    sl.max = cols.length - 1; sl.value = i;
-    notchesFor(nt, cols); paintNotches(); setCard(colCard(W, cols[i]));
-    return;
-  }
-  COL_STEPS = null;
-  const W = Math.max(240, $('grid').clientWidth || innerWidth - 28), gap = 6;
-  const steps = [];
-  for(let n=1;n<=3;n++){ const w = Math.floor((W - gap*(n-1))/n) - 1; if(w >= 100) steps.push(w); }
-  SIZE_STEPS = steps;
-  let cur = 0; try{ const pt = parseInt(localStorage.getItem('saved-posts-tile-phone'),10); if(pt>=0) cur = pt; }catch(e){}
-  cur = Math.min(steps.length-1, Math.max(0, cur));
-  sl.max = steps.length-1; sl.value = cur;
-  notchesFor(nt, steps.map((_,i)=>i+1));
-  paintNotches(); setCard(steps[cur]);
+  const W = Math.max(240, $('grid').clientWidth || innerWidth - 28);
+  /* phones: 3, 2, 1 across (the counts whose tiles are at least 100px), in the same order as desktop */
+  const cols = phoneMQ.matches ? [3, 2, 1].filter(n => colCard(W, n) >= 100) : sizeSteps(W), want = savedCols(W);
+  let i = 0; cols.forEach((n,k)=>{ if(Math.abs(n - want) < Math.abs(cols[i] - want)) i = k; });
+  COL_STEPS = {W, cols};
+  wrap.classList.add('stepped'); sl.min = 0; sl.step = 1; sl.max = cols.length - 1; sl.value = i;
+  notchesFor(nt, cols); paintNotches(); setCard(colCard(W, cols[i]));
 }
 function cardSoon(px){ cardSoon.px = px; if(!cardSoon.f) cardSoon.f = requestAnimationFrame(()=>{ cardSoon.f = 0; setCard(cardSoon.px); }); }
 /* lights the chosen notch and says it in words; one across turns on the window-height cap */
 function paintNotches(){
-  const sl = $('size'), i = +sl.value, n = COL_STEPS ? COL_STEPS.cols[i] : i + 1;
-  ONE_UP = !!COL_STEPS && n === 1;
+  const sl = $('size'), i = +sl.value, n = COL_STEPS.cols[i];
+  ONE_UP = n === 1 && !phoneMQ.matches;   // phones keep their one-across tiles uncapped, as before
   sl.title = n+' across'; sl.setAttribute('aria-valuetext', n+' across');
   document.querySelectorAll('#sizerow .notches i').forEach((t,k)=>t.classList.toggle('on', k===i));
 }
 $('size').addEventListener('input',e=>{
-  const i = +e.target.value; paintNotches();
-  if(SIZE_STEPS){ cardSoon(SIZE_STEPS[i]); try{ localStorage.setItem('saved-posts-tile-phone', String(i)); }catch(x){} }
-  else if(COL_STEPS){ const n = COL_STEPS.cols[i]; cardSoon(colCard(COL_STEPS.W, n)); try{ localStorage.setItem(colKey(), String(n)); }catch(x){} }
+  const n = COL_STEPS.cols[+e.target.value]; paintNotches();
+  cardSoon(colCard(COL_STEPS.W, n)); try{ localStorage.setItem(colKey(), String(n)); }catch(x){}
 });
 buildSizeControl();
 $('fullw').addEventListener('click',e=>{ e.preventDefault(); setFullw(!FULLW, true); });
