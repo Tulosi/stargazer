@@ -32,8 +32,8 @@ Stargazer turns that export into a visual gallery you can actually comb through.
 
 **Browse**
 - Three layouts: **Masonry** (best for pictures and clips), **Grid** (equal squares) and **List** (compact rows with a small thumbnail, easiest for scanning text posts, which List shows by default; Masonry and Grid keep them hidden unless you switch Show text posts on). Choose a different layout for each list; List view also lets you pick 1, 2, 3 or Auto columns.
-- **Card info & controls**: keep tiles media-only (Collapsed, where a tap on a tile or its small handle opens that card's title, Open post and Comments buttons, NSFW, star, bookmark, full-screen and player controls), let them rise on hover or focus, or show them always. Double tap a clip to play or pause it.
-- A built-in viewer for images, galleries, videos, YouTube and RedGifs, with previous/next post navigation (arrow keys, swipe or buttons), a Fit / Fill button that crops to fill the screen, and RedGifs clips in HD.
+- Tap a tile to open it full screen. **Card info & controls**: keep tiles media-only (Collapsed, where pressing and holding a tile, or its small handle, opens that card's title, Open post and Comments buttons, NSFW, star, bookmark, full-screen and player controls), let them rise on hover or focus, or show them always. On a phone, pinch the feed for more or fewer tiles across.
+- A built-in full-screen viewer for images, galleries, videos, YouTube and RedGifs, with the post's caption and its actions (star, saved, comments, open, NSFW) along the side, previous/next post navigation (arrow keys, swipe or buttons), a Fit / Fill button that crops to fill the screen, and RedGifs clips in HD. The caption and buttons fade after a few seconds; tap to show or hide them, or press and hold for a clean look.
 - Search titles, subreddits and authors (type `r/subreddit1+subreddit2` etc, to see several subreddits combined); sort by hot, newest, oldest, most comments, highest score, subreddit, or clip length (longest or shortest first); limit by time range.
 - Light and dark themes, tile size in numbered steps of tiles across (always down to one tile across, more steps on bigger screens), plus a Full width button for big tiles across the whole window, and a layout that adapts to phones.
 
@@ -45,6 +45,8 @@ Stargazer turns that export into a visual gallery you can actually comb through.
 - Star your favourites.
 - Unsave posts with **Undo**, or use **Bulk Actions** to star, mark NSFW or delete many at once.
 - **Remove dead posts** in one step: clear out removed or deleted posts and media that no longer loads (you are asked first, and can export a backup).
+- **Triage**: go through your posts in random order one at a time, swiping right to keep, left to remove or up to star, with Undo.
+- **Find duplicates**: the same picture or clip saved more than once; keep one (the starred copy) and remove the rest, with Undo.
 
 **Recover**
 - Posts that were removed from Reddit are looked up in public archives (Arctic Shift, PullPush and the Wayback Machine), so titles, images and context can be brought back where an archive has them.
