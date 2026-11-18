@@ -233,8 +233,8 @@ input[type=range]{width:100%;accent-color:var(--sel);margin:0}
 body.fullw .wrap,body.fullw .deck-in{max-width:none}
 @media (max-width:720px){#fullw{display:none}} /* phones already have 1 / 2 / 3 across */
 .sizewrap .notches{display:none}
-.sizewrap.stepped,.sizewrap.onestop{padding-bottom:16px}
-.sizewrap.stepped .notches,.sizewrap.onestop .notches{display:block;position:absolute;left:0;right:0;bottom:0;height:16px;pointer-events:none}
+.sizewrap.stepped{padding-bottom:16px}
+.sizewrap.stepped .notches{display:block;position:absolute;left:0;right:0;bottom:0;height:16px;pointer-events:none}
 .notches i{position:absolute;bottom:0;transform:translateX(-50%);font:500 11px/1 var(--font);font-style:normal;color:var(--muted);text-align:center}
 .notches i::before{content:"";display:block;width:2px;height:5px;margin:0 auto 3px;border-radius:1px;background:var(--line);box-shadow:0 0 0 .5px var(--muted)}
 .notches i.on{color:var(--ink);font-weight:650}
@@ -827,7 +827,7 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
         <h2>View</h2>
         <div class="ctlrow"><span>Layout</span><div class="srcseg" id="layoutseg" role="group" aria-label="Layout"><button class="pill" type="button" data-l="masonry" aria-pressed="true" title="Best for media">Masonry</button><button class="pill" type="button" data-l="grid" aria-pressed="false" title="Equal square tiles in strict rows">Grid</button><button class="pill" type="button" data-l="list" aria-pressed="false" title="Best for text posts">List</button></div></div>
         <p class="hint layouthint" id="layouthint" role="status"></p>
-        <div class="ctlrow" id="sizerow"><label for="size">Tile size</label><span class="sizectl"><span class="sizewrap"><input id="size" type="range" min="150" max="360" step="10" value="230"><span class="notches" aria-hidden="true"></span></span><button class="fwbtn" id="fullw" type="button" aria-pressed="false" aria-label="Full width" title="Full width: bigger tiles across the whole window (Tile size then runs up to one tile across)"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 8h13M4.5 5 1.5 8l3 3M11.5 5l3 3-3 3"/></svg></button></span></div>
+        <div class="ctlrow" id="sizerow"><label for="size">Tile size</label><span class="sizectl"><span class="sizewrap"><input id="size" type="range" min="0" max="5" step="1" value="2"><span class="notches" aria-hidden="true"></span></span><button class="fwbtn" id="fullw" type="button" aria-pressed="false" aria-label="Full width" title="Full width: bigger tiles across the whole window"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 8h13M4.5 5 1.5 8l3 3M11.5 5l3 3-3 3"/></svg></button></span></div>
         <div class="ctlrow" id="colsrow"><span>Columns</span><div class="srcseg" id="colsseg" role="group" aria-label="List columns"><button class="pill" type="button" data-c="1" aria-pressed="false" title="Easiest to scan">1</button><button class="pill" type="button" data-c="2" aria-pressed="false">2</button><button class="pill" type="button" data-c="3" aria-pressed="false">3</button><button class="pill" type="button" data-c="auto" aria-pressed="true" title="As many as fit">Auto</button></div></div>
         <label class="ctlrow" id="cardrow"><span>Card info &amp; controls</span>
           <select id="cardmode" class="field" aria-label="Card info and controls">
@@ -3377,21 +3377,22 @@ try{ const sv = localStorage.getItem('saved-posts-listcols'); if(['1','2','3','a
 function paintCols(){ document.querySelectorAll('#colsseg .pill').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.c===LCOLS))); ['1','2','3'].forEach(n=>document.body.classList.toggle('lcols-'+n, LCOLS===n)); }
 document.querySelectorAll('#colsseg .pill').forEach(b=>b.addEventListener('click',()=>{ LCOLS = b.dataset.c; try{ localStorage.setItem('saved-posts-listcols', LCOLS); }catch(e){} paintCols(); relayoutAll(); }));
 paintCols();
-/* Tile size. On desktop it is a free slider. On phones only a few column counts fit, so the slider snaps to those (1, 2, 3 across) with a notch and number for each. */
+/* Tile size (Masonry and Grid). The slider snaps to numbered steps, each one a count of tiles across, so it never rests between two
+   sizes and every step changes the layout. Phones (<=720px) get 1, 2, 3 across (left to right, as before). Desktop and tablets get
+   COL_STEPS: from as many 150px tiles as fit (left) down to 1 across (right, always there), at most as many steps as the labels have
+   room for (sizeSteps), so a wide window gets more steps than a small one. The chosen count is kept in saved-posts-tile-cols
+   (saved-posts-tile-fullw in Full width) and snaps to the nearest step when the window changes. One across caps tiles to the window
+   height (ONE_UP, MAXROWS). Dragging relayouts at most once a frame (cardSoon). */
 const phoneMQ = matchMedia('(max-width:720px)');
 let SIZE_STEPS = null;   // card widths for 1, 2, 3 columns on phones; null on desktop
-let FW_COLS = null;      // Full width: {W, nMax}; the slider's value is nMax - columns
-function fwCard(n){ return Math.floor((FW_COLS.W - 6*(n-1))/n) - 1; }
-/* Full width (#fullw, remembered in saved-posts-fullwidth): lifts the 1760px page cap and makes the tiles bigger. Tile size then counts
-   columns (buildSizeControl, FW_COLS: as many 150px tiles as fit, down to 2 across; default 3; saved-posts-tile-fullw), and no tile is taller
-   than the window (capRows / MAXROWS, worked out once per relayout). Nothing is measured per card. */
+let COL_STEPS = null;    // desktop: {W, cols:[many ... 1]}; the slider's value is the index into cols
+function colCard(W, n){ return Math.floor((W - 6*(n-1))/n) - 1; }
+/* Full width (#fullw, remembered in saved-posts-fullwidth): lifts the 1760px page cap and makes the tiles bigger (default 3 across),
+   with its own remembered column count. Nothing is measured per card. */
 var FULLW = false; try{ FULLW = localStorage.getItem('saved-posts-fullwidth')==='1'; }catch(e){}
 var cardPx = 230;
-/* Tablets (iPad portrait and other windows under ONE_W wide that are not phones): 360px tiles still fit two across, so the slider gets one
-   more stop at its right end, ONE_STOP, that means one tile across the window. Stored as that value in saved-posts-tile; a wider window
-   shows it as 360 without forgetting it, so turning the iPad back to portrait gives one across again. */
-const ONE_W = 1100, ONE_STOP = 370;
-var ONE_UP = false;      // one tile across on a tablet: tiles are then capped to the window height like Full width
+var ONE_UP = false;      // one tile across: tiles are then capped to the window height like Full width
+const MAX_STEPS = 9;     // labelled notches the desktop slider has room for (about 15px apart on its ~137px track)
 function setCard(px){ cardPx = +px || cardPx; document.documentElement.style.setProperty('--card', cardPx+'px'); relayoutAll(); }
 function setFullw(on, save){
   FULLW = !!on; document.body.classList.toggle('fullw', FULLW);
@@ -3399,65 +3400,71 @@ function setFullw(on, save){
   if(save) try{ localStorage.setItem('saved-posts-fullwidth', FULLW ? '1' : '0'); }catch(e){}
   if(!phoneMQ.matches && typeof buildSizeControl === 'function') buildSizeControl();
 }
+/* The column counts offered for a grid W px wide: every count from nMax down to 1 when they fit, otherwise 1, 2, 3 and an even spread
+   up to nMax (small counts matter most: each one is a big change). */
+function sizeSteps(W){
+  const nMax = Math.max(2, Math.floor((W + 6)/(150 + 6)));
+  let c = [];
+  if(nMax <= MAX_STEPS){ for(let n=1;n<=nMax;n++) c.push(n); }
+  else { c = [1, 2, 3]; const k = MAX_STEPS - 3; for(let i=0;i<k;i++) c.push(Math.round(4 + i*(nMax - 4)/(k - 1))); c = [...new Set(c)]; }
+  return c.reverse();    // left = most tiles (smallest), right = 1 across
+}
+function colKey(){ return FULLW ? 'saved-posts-tile-fullw' : 'saved-posts-tile-cols'; }
+function savedCols(W){
+  try{
+    const v = parseInt(localStorage.getItem(colKey()), 10); if(v>=1 && v<=60) return v;
+    if(!FULLW){ const px = +localStorage.getItem('saved-posts-tile');   // older pixel setting (370 meant one across)
+      if(px>=150 && px<=370) return px > 360 ? 1 : Math.max(1, Math.floor((W + 6)/(px + 6))); }
+  }catch(e){}
+  return FULLW ? 3 : Math.max(1, Math.floor((W + 6)/(230 + 6)));
+}
+function notchesFor(nt, labels){
+  nt.replaceChildren(...labels.map((n,i)=>{ const t = document.createElement('i'), f = labels.length>1 ? i/(labels.length-1) : .5;
+    t.textContent = String(n); t.title = n+' across';
+    t.style.left = 'calc('+(f*100)+'% + '+((.5-f)*16)+'px)';   // a range thumb never reaches the very ends of the track, so keep the notches under it
+    return t; }));
+}
 function buildSizeControl(){
   const sl = $('size'), wrap = sl.closest('.sizewrap'), nt = wrap.querySelector('.notches');
+  wrap.classList.add('stepped'); sl.min = 0; sl.step = 1;
   if(!phoneMQ.matches){
-    SIZE_STEPS = null; wrap.classList.remove('stepped', 'onestop'); nt.replaceChildren();
-    if(FULLW){
-      /* Full width: the slider counts columns, from as many 150px tiles as fit (left) down to 2 across (right), so every step changes
-         something; a pixel range up to one tile across spent two thirds of the bar on 1 or 2 enormous columns. Kept apart from the normal size. */
-      const W = Math.max(400, $('grid').clientWidth || innerWidth - 28), nMax = Math.max(3, Math.floor((W + 6)/(150 + 6))), nMin = W < ONE_W ? 1 : 2;
-      let n = 3; try{ const v = +localStorage.getItem('saved-posts-tile-fullw'); if(v>=1 && v<=40) n = v; }catch(e){}
-      n = Math.min(nMax, Math.max(nMin, n));
-      FW_COLS = {W, nMax};
-      sl.min = 0; sl.max = nMax - nMin; sl.step = 1; sl.value = nMax - n; sl.title = n+' across';
-      ONE_UP = false; setCard(fwCard(n));
-    } else {
-      FW_COLS = null; sl.title = '';
-      const W = Math.max(240, $('grid').clientWidth || innerWidth - 28), one = W < ONE_W;
-      let d = 230; try{ const v = +localStorage.getItem('saved-posts-tile'); if(v>=150 && v<=ONE_STOP) d = v; }catch(e){}
-      if(d > 360 && !one) d = 360;
-      sl.min = 150; sl.max = one ? ONE_STOP : 360; sl.step = 10; sl.value = d;
-      wrap.classList.toggle('onestop', one);
-      if(one){ const t = document.createElement('i'); t.textContent = '1'; t.title = '1 across'; t.style.left = 'calc(100% - 8px)'; nt.replaceChildren(t); }
-      paintOne(); setCard(d > 360 ? W : d);
-    }
+    SIZE_STEPS = null;
+    const W = Math.max(240, $('grid').clientWidth || innerWidth - 28), cols = sizeSteps(W), want = savedCols(W);
+    let i = 0; cols.forEach((n,k)=>{ if(Math.abs(n - want) < Math.abs(cols[i] - want)) i = k; });
+    COL_STEPS = {W, cols};
+    sl.max = cols.length - 1; sl.value = i;
+    notchesFor(nt, cols); paintNotches(); setCard(colCard(W, cols[i]));
     return;
   }
-  ONE_UP = false; wrap.classList.remove('onestop');
+  COL_STEPS = null;
   const W = Math.max(240, $('grid').clientWidth || innerWidth - 28), gap = 6;
   const steps = [];
   for(let n=1;n<=3;n++){ const w = Math.floor((W - gap*(n-1))/n) - 1; if(w >= 100) steps.push(w); }
   SIZE_STEPS = steps;
-  const cur = Math.min(steps.length-1, Math.max(0, +(sl.dataset.idx || 0)));
-  sl.min = 0; sl.max = steps.length-1; sl.step = 1; sl.value = cur; sl.dataset.idx = cur;
-  wrap.classList.add('stepped');
-  nt.replaceChildren(...steps.map((_,i)=>{ const t = document.createElement('i'); t.textContent = String(i+1); t.title = (i+1)+' across'; t.style.left = '50%'; return t; }));
-  /* a range thumb never reaches the very ends of the track, so keep the notches under it */
-  nt.querySelectorAll('i').forEach((t,i)=>{ const f = steps.length>1 ? i/(steps.length-1) : .5; t.style.left = 'calc('+(f*100)+'% + '+((.5-f)*16)+'px)'; });
+  let cur = 0; try{ const pt = parseInt(localStorage.getItem('saved-posts-tile-phone'),10); if(pt>=0) cur = pt; }catch(e){}
+  cur = Math.min(steps.length-1, Math.max(0, cur));
+  sl.max = steps.length-1; sl.value = cur;
+  notchesFor(nt, steps.map((_,i)=>i+1));
   paintNotches(); setCard(steps[cur]);
 }
 function cardSoon(px){ cardSoon.px = px; if(!cardSoon.f) cardSoon.f = requestAnimationFrame(()=>{ cardSoon.f = 0; setCard(cardSoon.px); }); }
-/* the one-across stop: its notch lights up, the slider says so, and tiles are capped to the window (ONE_UP) */
-function paintOne(){ const sl = $('size'), on = !FULLW && !SIZE_STEPS && +sl.value > 360; ONE_UP = on; sl.title = on ? '1 across' : '';
-  const t = document.querySelector('#sizerow .notches i'); if(t && sl.closest('.sizewrap').classList.contains('onestop')) t.classList.toggle('on', on); }
-function paintNotches(){ const i = +$('size').value; document.querySelectorAll('#sizerow .notches i').forEach((t,k)=>t.classList.toggle('on', k===i)); }
+/* lights the chosen notch and says it in words; one across turns on the window-height cap */
+function paintNotches(){
+  const sl = $('size'), i = +sl.value, n = COL_STEPS ? COL_STEPS.cols[i] : i + 1;
+  ONE_UP = !!COL_STEPS && n === 1;
+  sl.title = n+' across'; sl.setAttribute('aria-valuetext', n+' across');
+  document.querySelectorAll('#sizerow .notches i').forEach((t,k)=>t.classList.toggle('on', k===i));
+}
 $('size').addEventListener('input',e=>{
-  if(SIZE_STEPS){ const i = +e.target.value; e.target.dataset.idx = i; paintNotches(); setCard(SIZE_STEPS[i]); try{ localStorage.setItem('saved-posts-tile-phone', String(i)); }catch(x){} }
-  else if(FW_COLS){ const n = FW_COLS.nMax - (+e.target.value); e.target.title = n+' across'; cardSoon(fwCard(n)); try{ localStorage.setItem('saved-posts-tile-fullw', String(n)); }catch(x){} }
-  else { const v = +e.target.value; paintOne(); cardSoon(v > 360 ? Math.max(240, $('grid').clientWidth || innerWidth - 28) : v); try{ localStorage.setItem('saved-posts-tile', String(e.target.value)); }catch(x){} }
+  const i = +e.target.value; paintNotches();
+  if(SIZE_STEPS){ cardSoon(SIZE_STEPS[i]); try{ localStorage.setItem('saved-posts-tile-phone', String(i)); }catch(x){} }
+  else if(COL_STEPS){ const n = COL_STEPS.cols[i]; cardSoon(colCard(COL_STEPS.W, n)); try{ localStorage.setItem(colKey(), String(n)); }catch(x){} }
 });
-/* Tile size is remembered (desktop pixels and phone column step separately). */
-try{
-  const sl = $('size'), dt = +localStorage.getItem('saved-posts-tile'), pt = parseInt(localStorage.getItem('saved-posts-tile-phone'),10);
-  if(phoneMQ.matches){ if(pt>=0) sl.dataset.idx = pt; }
-  else if(dt>=150 && dt<=360){ sl.value = dt; setCard(dt); }   /* the one-across stop (ONE_STOP) is set up by buildSizeControl */
-}catch(e){}
 buildSizeControl();
 $('fullw').addEventListener('click',e=>{ e.preventDefault(); setFullw(!FULLW, true); });
 setFullw(FULLW, false);
 (phoneMQ.addEventListener ? phoneMQ.addEventListener('change', buildSizeControl) : phoneMQ.addListener(buildSizeControl));
-addEventListener('resize', ()=>{ clearTimeout(buildSizeControl._t); buildSizeControl._t = setTimeout(buildSizeControl, 200); });   // rotating a tablet can add or drop the one-across stop
+addEventListener('resize', ()=>{ clearTimeout(buildSizeControl._t); buildSizeControl._t = setTimeout(buildSizeControl, 200); });   // the steps follow the window width (rotating a tablet, resizing)
 
 /* ---------- live metadata from Reddit ---------- */
 function pickThumb(s){

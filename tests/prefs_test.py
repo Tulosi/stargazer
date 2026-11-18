@@ -14,7 +14,7 @@ with sync_playwright() as p:
     pg.route('**/*', lambda r: r.continue_() if r.request.url.startswith('file:') else r.abort())
     pg.goto(PAGE); pg.wait_for_timeout(700); ev = pg.evaluate
     ev(OPEN, H + rows); pg.wait_for_timeout(400)
-    ev("""()=>{ const s=document.getElementById('sort'); s.value='saved'; s.dispatchEvent(new Event('change')); const f=document.getElementById('favonly'); f.checked=true; f.dispatchEvent(new Event('change')); const t=document.getElementById('showtext'); t.checked=true; t.dispatchEvent(new Event('change')); const z=document.getElementById('size'); z.value=300; z.dispatchEvent(new Event('input')); }""")
+    ev("""()=>{ const s=document.getElementById('sort'); s.value='saved'; s.dispatchEvent(new Event('change')); const f=document.getElementById('favonly'); f.checked=true; f.dispatchEvent(new Event('change')); const t=document.getElementById('showtext'); t.checked=true; t.dispatchEvent(new Event('change')); const z=document.getElementById('size'); z.value=COL_STEPS.cols.indexOf(4); z.dispatchEvent(new Event('input')); }""")
     pg.wait_for_timeout(300)
     # a brand-new tab (no sessionStorage) in the same browser
     pg2 = ctx.new_page(); pg2.on('pageerror', lambda e: errs.append(str(e)))
@@ -24,7 +24,7 @@ with sync_playwright() as p:
     check('sort remembered', e2("state.sort")=='saved' and e2("document.getElementById('sort').value")=='saved')
     check('Starred only remembered', e2("state.fav")==True and e2("document.getElementById('favonly').checked")==True)
     check('Show text posts remembered', e2("state.showText")==True)
-    check('tile size remembered', e2("document.documentElement.style.getPropertyValue('--card')")=='300px' and e2("document.getElementById('size').value")=='300')
+    check('tile size remembered (4 across)', e2("getComputedStyle(document.getElementById('grid')).gridTemplateColumns.split(' ').length")==4 and e2("document.querySelector('#sizerow .notches i.on').textContent")=='4')
     check('no page errors', not errs)
     b.close()
 print('ALL PASS' if not bad else 'FAILED: ' + ', '.join(bad))
