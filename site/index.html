@@ -273,6 +273,7 @@ body.fullw .wrap,body.fullw .deck-in{max-width:none}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(var(--card),100%),1fr));grid-auto-rows:4px;grid-auto-flow:row dense;gap:6px}
 .card{position:relative;border-radius:10px;overflow:hidden;background:var(--bg);min-width:0;grid-row:span 40}
 .card{content-visibility:auto;contain-intrinsic-size:auto 240px}   /* off-screen cards are skipped entirely (style, layout, paint); the grid area still sets their size, so nothing moves */
+body:not(.layout-list) .thumb{-webkit-touch-callout:none}   /* a long press opens the tray, not the browser's link menu */
 .thumb{position:absolute;inset:0;display:block;overflow:hidden;background:none;text-decoration:none}
 .thumb img:not([src]){visibility:hidden}   /* an <img> still waiting for its address draws a hairline border in some browsers */
 .thumb img,.thumb .still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:filter .18s,transform .18s,opacity .2s}
@@ -442,7 +443,6 @@ body:not(.layout-list) .card.lay-shut .layer{opacity:0!important;pointer-events:
 body:not(.layout-list) .card.lay-shut :is(.badges,.ph span,.badge.rec){opacity:0!important}
 body:not(.layout-list) .card.lay-shut .lhandle{display:block!important}
 /* just after a tap opened or shut it, a layer lets a second (double) tap through to the tile instead of a tray button */
-body:not(.layout-list) .card.tap-wait .layer,body:not(.layout-list) .card.tap-wait .lhandle{pointer-events:none!important}
 body:not(.layout-list) .card.is-text.lay-shut .peek{display:block!important}
 /* a text-only post has no picture to say what it is, so its title stays on the tile until its layer opens */
 body:not(.layout-list) .card.is-text .peek{display:block;position:absolute;left:0;right:0;bottom:0;z-index:1;padding:30px 11px 10px;color:#fff;pointer-events:none;background:linear-gradient(to top,rgba(0,0,0,.74),rgba(0,0,0,0));font:500 13px/1.32 var(--font);overflow-wrap:anywhere}
@@ -880,10 +880,9 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
             <dd>Full screen: <kbd>&larr;</kbd> <kbd>&rarr;</kbd> pictures in a gallery, <kbd>&uarr;</kbd> <kbd>&darr;</kbd> previous / next post, <kbd>Space</kbd> or <kbd>K</kbd> plays / pauses a clip, <kbd>M</kbd> mutes, <kbd>F</kbd> fills the screen (crops) or fits the whole picture, <kbd>Esc</kbd> closes</dd>
           </dl>
           <dl><dt>Touch and mouse</dt>
-            <dd>Tap a picture to show or hide its controls</dd>
+            <dd>Tap a picture to open it full screen; press and hold it to show or hide its controls</dd>
             <dd>Swipe the small handle up to open them, down to put them away</dd>
-            <dd>Double tap (or double click) a clip to play, pause or resume it</dd>
-            <dd>Full screen: swipe up for the next post, down for the previous one (sideways moves through a gallery's pictures); pinch to zoom; tap or click a clip to play or pause it; double tap (or double click) the right half to jump forward 10 seconds, the left half to jump back</dd>
+                        <dd>Full screen: swipe up for the next post, down for the previous one (sideways moves through a gallery's pictures); pinch to zoom; tap or click a clip to play or pause it; double tap (or double click) the right half to jump forward 10 seconds, the left half to jump back</dd>
           </dl>
         </div>
       </details>
@@ -2526,6 +2525,20 @@ document.addEventListener('keydown',e=>{
   });
   $('grid').addEventListener('click',e=>{ const h = e.target.closest && e.target.closest('.lhandle, .lh-close'); if(h && h._swiped){ e.stopImmediatePropagation(); } },true);
 })();
+/* Long press on a tile (touch, pen or mouse held still for 450ms) opens or closes its tray; the click that follows is swallowed. */
+(function(){
+  let t = 0, x = 0, y = 0, card = null;
+  const stop = () => { clearTimeout(t); t = 0; card = null; };
+  $('grid').addEventListener('pointerdown',e=>{
+    const th = e.target.closest && e.target.closest('a.thumb'); if(!th || e.button!==0 || SEL.on || LAYOUT==='list') return;
+    card = th.closest('.card'); x = e.clientX; y = e.clientY; clearTimeout(t);
+    t = setTimeout(()=>{ if(!card) return; card._lpDone = true; toggleLayer(card); if(navigator.vibrate) try{ navigator.vibrate(8); }catch(x){} const c = card; setTimeout(()=>{ c._lpDone = false; }, 900); stop(); }, 450);
+  });
+  $('grid').addEventListener('pointermove',e=>{ if(t && (Math.abs(e.clientX-x) > 10 || Math.abs(e.clientY-y) > 10)) stop(); });
+  for(const ev of ['pointerup','pointercancel','scroll']) $('grid').addEventListener(ev, ()=>{ if(t) stop(); }, {passive:true});
+  addEventListener('scroll', ()=>{ if(t) stop(); }, {passive:true});
+  $('grid').addEventListener('contextmenu',e=>{ const c = e.target.closest && e.target.closest('.card'); if(c && c._lpDone) e.preventDefault(); });
+})();
 $('grid').addEventListener('keydown',e=>{
   const th = e.target.closest && e.target.closest('a.thumb');
   if(th && (e.key==='Enter' || e.key===' ') && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && !SEL.on && LAYOUT!=='list'){
@@ -2535,22 +2548,15 @@ $('grid').addEventListener('keydown',e=>{
 });
 $('grid').addEventListener('focusout',e=>{ const kc = e.target.closest && e.target.closest('.card'); if(kc && kc._kb && !(e.relatedTarget && kc.contains(e.relatedTarget))) kbClose(kc,false); });
 $('grid').addEventListener('click',e=>{
-  /* a plain click or tap on a tile opens its layer (Masonry / Grid); the Source button in the layer goes to the post. A double tap on a clip with player controls pauses or resumes it instead.
-     The layer answers the first tap at once (it used to wait 360ms to see if a second tap followed); if a second tap does follow, the layer goes back to how it was
-     (card._tapWas) and the clip is paused or resumed. While that window is open the layer does not catch taps (.tap-wait), so the second tap cannot land on a tray button. List keeps the link. */
+  /* Masonry / Grid: a plain click or tap on a tile opens the post in full screen (Nov 2026; it used to open the card's tray). The tray opens from the handle
+     (tap or swipe up), a long press on the tile, I, or Enter from the keyboard. A clip carries on in full screen from where the tile was. List keeps the link. */
   { const th = e.target.closest('a.thumb');
     if(th && !SEL.on && !document.body.classList.contains('layout-list') && e.button===0 && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey){
-      const card = th.closest('.card'), pp = card && (card.querySelector('.ctl .pp') || (th.dataset.v && !th._playing && !auto.hover && !auto.all));   // with both Autoplay toggles off, a still clip is started by hand with a double tap (only then does a single tap wait for a second one)
+      const card = th.closest('.card');
       if(card){
         e.preventDefault();
-        const toggle = () => toggleLayer(card);
-        if(card._tapT){
-          clearTimeout(card._tapT); card._tapT = 0; card.classList.remove('tap-wait');
-          const w = card._tapWas; if(w){ card.classList.toggle('lay-open', w.open); card.classList.toggle('lay-shut', w.shut); const h = card.querySelector('.lhandle'); if(h) h.setAttribute('aria-expanded', w.open?'true':'false'); }   // undo the first tap's layer change
-          const q = card.querySelector('.ctl .pp'); if(q) q.click(); else if(th.dataset.v){ th._manual = true; syncPlay(th); }
-        }
-        else if(pp){ card._tapWas = {open: card.classList.contains('lay-open'), shut: card.classList.contains('lay-shut')}; toggle(); card.classList.add('tap-wait'); card._tapT = setTimeout(()=>{ card._tapT = 0; card.classList.remove('tap-wait'); }, 360); }
-        else toggle();
+        if(card._lpDone){ card._lpDone = false; return; }   // the long press already opened the tray
+        if(card._p){ const clip = card.querySelector('video.clip'); openViewer(card._p, {t: clip ? clip.currentTime : 0, from: card}); }
         return;
       }
     } }
@@ -3138,13 +3144,12 @@ function syncPlay(t){
   else if(auto.all){ want = !!(hv || t._inView); tracked = true; }   // Autoplay all media in viewport: no cap, embeds included, on touch too
   else if(auto.focus){ want = auto.hover && (t===focused || hv); tracked = auto.hover && t===focused; }
   else { want = hv; tracked = false; }
-  if(t._manual && LAYOUT!=='list') want = true;   // started by hand (double tap): plays until it leaves the screen
   if(want){ startPlay(t); if(tracked) playing.add(t); }
   else { stopPlay(t); playing.delete(t); }
   applyAudio();
 }
 const playIO = new IntersectionObserver(es=>{
-  for(const e of es){ e.target._inView = e.isIntersecting; if(!e.isIntersecting) e.target._manual = false; e.isIntersecting ? viewSet.add(e.target) : viewSet.delete(e.target); if(!auto.focus || auto.all) syncPlay(e.target); }
+  for(const e of es){ e.target._inView = e.isIntersecting; e.isIntersecting ? viewSet.add(e.target) : viewSet.delete(e.target); if(!auto.focus || auto.all) syncPlay(e.target); }
   if(auto.focus){ pickFocus(); if(!auto.all) return; }
 },{threshold:0.5});
 /* Touch screens: play the one clip whose centre is closest to the middle of the visible area (below the filter bar). */
@@ -3214,7 +3219,7 @@ setInterval(()=>{
     }
   });
 },1000);
-function releasePlayable(t){ t._manual = false; t._hover = t._mouse = t._focus = false; t._inView = false; viewSet.delete(t); if(focused===t){ focused = null; schedFocus(); } stopPlay(t); playing.delete(t); playIO.unobserve(t); }
+function releasePlayable(t){ t._hover = t._mouse = t._focus = false; t._inView = false; viewSet.delete(t); if(focused===t){ focused = null; schedFocus(); } stopPlay(t); playing.delete(t); playIO.unobserve(t); }
 (function(){
   /* Autoplay active card: the card under the pointer, with keyboard focus, or (touch) in focus plays. On by default. */
   const box = $('autohover'), KEY = 'saved-posts-autoplayhover';
@@ -4556,7 +4561,7 @@ function startCsvMode(){
   if(Object.keys(META).length) onMeta(POSTS);
   loadAll();
   /* on a touch screen the controls are tucked away: say so once, until the person has opened one */
-  try{ if(POSTS.length && matchMedia('(hover:none)').matches && document.body.classList.contains('cm-collapsed') && !localStorage.getItem('saved-posts-trayhint')) setTimeout(()=>{ try{ if(!localStorage.getItem('saved-posts-trayhint')){ localStorage.setItem('saved-posts-trayhint','1'); toast('Tap a picture to show its details and controls.'); } }catch(e){} }, 2200); }catch(e){}
+  try{ if(POSTS.length && matchMedia('(hover:none)').matches && document.body.classList.contains('cm-collapsed') && !localStorage.getItem('saved-posts-trayhint')) setTimeout(()=>{ try{ if(!localStorage.getItem('saved-posts-trayhint')){ localStorage.setItem('saved-posts-trayhint','1'); toast('Tap a picture to open it. Press and hold for its details and controls.'); } }catch(e){} }, 2200); }catch(e){}
 }
 function removePosts(ids){
   const set = new Set(ids);

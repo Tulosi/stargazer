@@ -33,20 +33,11 @@ with sync_playwright() as p:
     pg.goto('http://127.0.0.1:%d/index.html' % port); pg.wait_for_timeout(600)
     pg.evaluate("openSample()"); pg.wait_for_timeout(800)
 
-    # (1) card tray on a tile that has player controls (the case that used to wait)
-    pg.evaluate("""(()=>{ const c=document.querySelector('.card'), l=c.querySelector('.lay-play') || c.querySelector('.layer'); const d=document.createElement('div'); d.className='ctl'; d.innerHTML='<button class="pp" type="button">pp</button>'; l.appendChild(d);
-      window._pp=0; d.querySelector('.pp').addEventListener('click',e=>{ e.stopPropagation(); window._pp++; }); })()""")
-    up = lambda: pg.evaluate("layerUp(document.querySelector('.card'))")
-    was = up()
-    pg.tap('.card a.thumb'); pg.wait_for_timeout(40)
-    check('one tap brings the tray up straight away (40ms later)', up() != was)
-    check('while the double-tap window is open the tray does not catch taps', pg.evaluate("document.querySelector('.card').classList.contains('tap-wait')"))
-    pg.wait_for_timeout(500)
-    check('after the window the tray takes taps again', not pg.evaluate("document.querySelector('.card').classList.contains('tap-wait')") and up() != was)
-    before = up()
-    pg.tap('.card a.thumb'); pg.wait_for_timeout(60); pg.tap('.card a.thumb'); pg.wait_for_timeout(450)
-    check('a double tap pauses / resumes the clip', pg.evaluate("window._pp") == 1)
-    check('and leaves the tray as it was', up() == before)
+    # (1) a tap on a tile opens full screen at once (no double-tap wait on tiles any more)
+    pg.tap('.card a.thumb'); pg.wait_for_timeout(60)
+    check('one tap on a tile opens it full screen straight away', pg.evaluate("!document.getElementById('viewer').hidden"))
+    check('and leaves the tray as it was', not pg.evaluate("layerUp(document.querySelector('.card'))"))
+    pg.keyboard.press('Escape'); pg.wait_for_timeout(400)
 
     # (2) full screen
     pg.evaluate("(()=>{ const p=POSTS[0], m=META[p.id]; m.m='gif'; m.u='https://www.redgifs.com/watch/seekclip'; m.g='SeekClip'; m.v='https://media.redgifs.com/SeekClip.mp4'; m.rgDone=1; openViewer(p); })()")

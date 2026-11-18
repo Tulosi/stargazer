@@ -25,7 +25,7 @@ with sync_playwright() as p:
     pg.goto(PAGE); pg.wait_for_timeout(700); ev = pg.evaluate
     ev(SEED, H); pg.wait_for_timeout(800)
     # three across: make the tile size ask for ~3 columns on the phone
-    ev("(()=>{ const s=document.getElementById('size'); if(s){ s.value=s.min; s.dispatchEvent(new Event('input',{bubbles:true})); s.dispatchEvent(new Event('change',{bubbles:true})); } })()")
+    ev("(()=>{ const s=document.getElementById('size'); if(s){ s.value=s.max; s.dispatchEvent(new Event('input',{bubbles:true})); s.dispatchEvent(new Event('change',{bubbles:true})); } })()")
     pg.wait_for_timeout(500)
     w = ev("document.querySelector('.card').getBoundingClientRect().width")
     check('tiles are small (3 across or narrower), width %d' % w, w < 150)

@@ -22,7 +22,7 @@ with sync_playwright() as p:
     hues = ev("new Set(POSTS.map(p=>(decodeURIComponent(META[p.id].th||'').match(/hsl\\((\\d+)/)||[])[1]).filter(Boolean)).size")
     check('samples come in many colours (%d hues)' % hues, hues >= 8)
     check('the sample clip plays as a GIF clip', ev("(()=>{const t=[...document.querySelectorAll('#grid .card a.thumb')].find(a=>a.dataset.v&&a.dataset.v.startsWith('data:image/gif')); return !!t && isGifFile(t.dataset.v)})()"))
-    ev("document.querySelector('#grid .card a.thumb').click()"); pg.wait_for_timeout(500)
+    ev("toggleLayer(document.querySelector('#grid .card'))"); pg.wait_for_timeout(500)
     lay = "document.querySelector('#grid .card.lay-open .layer')"
     bg = ev("getComputedStyle(%s).backgroundImage" % lay); col = ev("getComputedStyle(%s).backgroundColor" % lay)
     check('tray is neutral smoked glass (%s)' % col, bg == 'none' and col.startswith('rgba(20, 20, 24'))
