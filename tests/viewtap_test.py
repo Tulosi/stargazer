@@ -1,4 +1,4 @@
-"""Full-screen player on a touch screen: once the bar has faded, a tap on the clip brings it back and it stays up; a second tap hides it. Run: python tests/viewtap_test.py (uses tests/fixtures/clip_audio.webm)"""
+"""Full-screen player on a touch screen: once the bar has faded, a tap on the clip pauses it and brings the bar back, which stays up while paused; a second tap plays again. Run: python tests/viewtap_test.py (uses tests/fixtures/clip_audio.webm)"""
 import os, functools, http.server, socketserver, threading
 from playwright.sync_api import sync_playwright
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.join(HERE, '..', 'site')
@@ -29,12 +29,13 @@ with sync_playwright() as p:
     check('the clip plays in our own player', pg.evaluate("!!document.querySelector('#viewer .vctl') && !document.querySelector('#viewer video').paused"))
     pg.wait_for_timeout(3200)
     check('the bar fades while the clip plays untouched', idle())
+    paused = lambda: pg.evaluate("document.querySelector('#viewer video').paused")
     pg.tap('#viewer video'); pg.wait_for_timeout(400)
-    check('a tap brings the bar back', not idle())
+    check('a tap pauses the clip and brings the bar back', paused() and not idle())
     pg.wait_for_timeout(1200)
     check('and it stays up (no flash and gone)', not idle())
     pg.tap('#viewer video'); pg.wait_for_timeout(400)
-    check('a second tap hides it again', idle())
+    check('a later tap plays it again', not paused())
     cdp = ctx.new_cdp_session(pg)
     def swipe(x, y0, y1):
         pts = lambda y: [{'x': x, 'y': y}]

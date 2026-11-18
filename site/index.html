@@ -441,6 +441,8 @@ body.cm-always:not(.layout-list) .lhandle{display:none}
 body:not(.layout-list) .card.lay-shut .layer{opacity:0!important;pointer-events:none!important;transform:translateY(10px)!important}
 body:not(.layout-list) .card.lay-shut :is(.badges,.ph span,.badge.rec){opacity:0!important}
 body:not(.layout-list) .card.lay-shut .lhandle{display:block!important}
+/* just after a tap opened or shut it, a layer lets a second (double) tap through to the tile instead of a tray button */
+body:not(.layout-list) .card.tap-wait .layer,body:not(.layout-list) .card.tap-wait .lhandle{pointer-events:none!important}
 body:not(.layout-list) .card.is-text.lay-shut .peek{display:block!important}
 /* a text-only post has no picture to say what it is, so its title stays on the tile until its layer opens */
 body:not(.layout-list) .card.is-text .peek{display:block;position:absolute;left:0;right:0;bottom:0;z-index:1;padding:30px 11px 10px;color:#fff;pointer-events:none;background:linear-gradient(to top,rgba(0,0,0,.74),rgba(0,0,0,0));font:500 13px/1.32 var(--font);overflow-wrap:anywhere}
@@ -535,6 +537,12 @@ body.viewing{overflow:hidden}
 #viewer .vctl .time{font-size:12px}
 #viewer.vidle .vctl,#viewer.vidle .vposts{opacity:0;pointer-events:none}
 #viewer.vidle{cursor:none}
+/* the mark a double tap leaves on the side of the screen it jumped from (viewerSeek) */
+#viewer .vseek{position:absolute;top:50%;right:9%;z-index:4;width:84px;height:84px;margin-top:-42px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:rgba(20,16,28,.62);color:#fff;font:600 13px/1 var(--font);pointer-events:none;opacity:0;transform:scale(.9);transition:opacity .25s ease,transform .25s var(--ease-out)}
+#viewer .vseek.back{right:auto;left:9%}
+#viewer .vseek.on{opacity:1;transform:none;transition-duration:.08s}
+#viewer .vseek .vs-arr{font-size:14px;letter-spacing:-3px}
+@media (prefers-reduced-motion:reduce){#viewer .vseek{transform:none}}
 #viewer .vgone{margin:auto;padding:0 24px;max-width:36ch;text-align:center;color:rgba(255,255,255,.82);font:500 15px/1.5 var(--font)}
 #viewer .vposts{position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2;display:flex;gap:8px}
 #viewer .vpost{border:0;border-radius:999px;padding:8px 14px;background:rgba(255,255,255,.16);color:#fff;font:500 13px var(--font);cursor:pointer;white-space:nowrap}
@@ -898,7 +906,7 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
             <dd>Tap a picture to show or hide its controls</dd>
             <dd>Swipe the small handle up to open them, down to put them away</dd>
             <dd>Double tap (or double click) a clip to play, pause or resume it</dd>
-            <dd>Full screen: swipe up for the next post, down for the previous one (sideways moves through a gallery's pictures); pinch to zoom; tap a clip to show or hide its player bar (a click plays or pauses it)</dd>
+            <dd>Full screen: swipe up for the next post, down for the previous one (sideways moves through a gallery's pictures); pinch to zoom; tap or click a clip to play or pause it; double tap (or double click) the right half to jump forward 10 seconds, the left half to jump back</dd>
           </dl>
         </div>
       </details>
@@ -2158,10 +2166,7 @@ async function openViewer(p, opts){
     VIEW.root.querySelector('.vsound').hidden = true; VIEW.root.querySelector('.vvol').hidden = true;
     const vc = viewerControls(v);
     const showSnd = () => { if(tok!==VIEW.token) return; vc.classList.add('has-sound'); };   // the speaker shows only for clips that really have sound
-    /* a mouse click on the clip plays or pauses it; a tap on a touch screen shows or hides the bar instead */
-    /* Whether the bar was hidden is read on pointerdown, before the viewer's own pointerdown wakes it: reading it at click time saw the bar already woken, so a tap meant to bring it back hid it again at once. */
-    let ptype = 'mouse', wasIdle = false; v.addEventListener('pointerdown',e=>{ ptype = e.pointerType; wasIdle = VIEW.root.classList.contains('vidle'); });
-    v.addEventListener('click',e=>{ e.stopPropagation(); if(ptype==='mouse'){ if(v.paused) v.play().catch(()=>{}); else v.pause(); } else if(wasIdle) viewerWake(); else { clearTimeout(vIdleT); if(!v.paused) VIEW.root.classList.add('vidle'); } });
+    v.addEventListener('click',e=>{ e.stopPropagation(); viewerTap(v, e.clientX); });   // tap / click: play or pause; double tap on the left or right half: back or forward 10s
     if(m && m.ab){
       // Reddit video: sound comes from a separate file, kept in step with the picture
       const cands = [m.ab+'/DASH_AUDIO_128.mp4', m.ab+'/DASH_AUDIO_64.mp4', m.ab+'/DASH_audio.mp4'];
@@ -2472,16 +2477,21 @@ $('grid').addEventListener('keydown',e=>{
 });
 $('grid').addEventListener('focusout',e=>{ const kc = e.target.closest && e.target.closest('.card'); if(kc && kc._kb && !(e.relatedTarget && kc.contains(e.relatedTarget))) kbClose(kc,false); });
 $('grid').addEventListener('click',e=>{
-  /* a plain click or tap on a tile opens its layer (Masonry / Grid); the Source button in the layer goes to the post. A double tap on a clip with player controls pauses or resumes it instead,
-     so a single tap on those waits a moment to see if a second one follows. List keeps the link. */
+  /* a plain click or tap on a tile opens its layer (Masonry / Grid); the Source button in the layer goes to the post. A double tap on a clip with player controls pauses or resumes it instead.
+     The layer answers the first tap at once (it used to wait 360ms to see if a second tap followed); if a second tap does follow, the layer goes back to how it was
+     (card._tapWas) and the clip is paused or resumed. While that window is open the layer does not catch taps (.tap-wait), so the second tap cannot land on a tray button. List keeps the link. */
   { const th = e.target.closest('a.thumb');
     if(th && !SEL.on && !document.body.classList.contains('layout-list') && e.button===0 && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey){
       const card = th.closest('.card'), pp = card && (card.querySelector('.ctl .pp') || (th.dataset.v && !th._playing && !auto.hover && !auto.all));   // with both Autoplay toggles off, a still clip is started by hand with a double tap (only then does a single tap wait for a second one)
       if(card){
         e.preventDefault();
         const toggle = () => toggleLayer(card);
-        if(card._tapT){ clearTimeout(card._tapT); card._tapT = 0; const q = card.querySelector('.ctl .pp'); if(q) q.click(); else if(th.dataset.v){ th._manual = true; syncPlay(th); } else toggle(); }
-        else if(pp) card._tapT = setTimeout(()=>{ card._tapT = 0; toggle(); }, 360);
+        if(card._tapT){
+          clearTimeout(card._tapT); card._tapT = 0; card.classList.remove('tap-wait');
+          const w = card._tapWas; if(w){ card.classList.toggle('lay-open', w.open); card.classList.toggle('lay-shut', w.shut); const h = card.querySelector('.lhandle'); if(h) h.setAttribute('aria-expanded', w.open?'true':'false'); }   // undo the first tap's layer change
+          const q = card.querySelector('.ctl .pp'); if(q) q.click(); else if(th.dataset.v){ th._manual = true; syncPlay(th); }
+        }
+        else if(pp){ card._tapWas = {open: card.classList.contains('lay-open'), shut: card.classList.contains('lay-shut')}; toggle(); card.classList.add('tap-wait'); card._tapT = setTimeout(()=>{ card._tapT = 0; card.classList.remove('tap-wait'); }, 360); }
         else toggle();
         return;
       }
@@ -2894,6 +2904,35 @@ function viewerControls(v){
   const tick = () => { if(!ctl.isConnected) return; if(!v.paused || scrubbing) sync(); requestAnimationFrame(tick); };
   paint(); tick();
   return ctl;
+}
+/* Taps on a full-screen clip (touch and mouse alike): one tap plays or pauses at once, and the bar comes up with it. A second tap within VTAP_MS on the left or
+   right half of the screen undoes that play / pause and jumps back or forward VSEEK seconds instead; each further quick tap adds another VSEEK, like a phone video player.
+   The jump shows a small round mark on that side (.vseek) with the running total. */
+const VTAP_MS = 320, VSEEK = 10;
+let VTAP = {t:0, was:null, side:0, sum:0};
+function viewerTap(v, x){
+  const now = Date.now(), side = x < (VIEW.root.clientWidth || innerWidth)/2 ? -1 : 1;
+  if(now - VTAP.t < VTAP_MS && VTAP.v===v){
+    if(VTAP.was!==null){ if(VTAP.was) v.pause(); else v.play().catch(()=>{}); VTAP.was = null; }   // the first tap's play / pause was the start of a double tap
+    if(side!==VTAP.side) VTAP.sum = 0;
+    VTAP.t = now; VTAP.side = side; VTAP.sum += VSEEK;
+    viewerSeek(v, side*VSEEK, side, VTAP.sum); return;
+  }
+  VTAP = {t:now, was:v.paused, side, sum:0, v};
+  if(v.paused) v.play().catch(()=>{}); else v.pause();
+  viewerWake();
+}
+function viewerSeek(v, d, side, total){
+  const dur = v.duration;
+  if(dur && isFinite(dur)) v.currentTime = Math.max(0, Math.min(dur - 0.05, v.currentTime + d));
+  else { try{ v.currentTime = Math.max(0, v.currentTime + d); }catch(e){} }
+  let mk = VIEW.root.querySelector('.vseek');
+  if(!mk){ mk = document.createElement('div'); mk.className = 'vseek'; mk.setAttribute('aria-hidden','true'); VIEW.root.appendChild(mk); }
+  mk.classList.toggle('back', side < 0);
+  mk.innerHTML = '<span class="vs-arr">'+(side < 0 ? '&#9664;&#9664;' : '&#9654;&#9654;')+'</span><span class="vs-n">'+total+'s</span>';
+  mk.classList.remove('on'); void mk.offsetWidth; mk.classList.add('on');
+  clearTimeout(mk._t); mk._t = setTimeout(()=>mk.classList.remove('on'), 650);
+  viewerWake();
 }
 let vIdleT = 0;
 function viewerWake(){
