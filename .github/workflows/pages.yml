@@ -2,7 +2,7 @@
 # One-time: repository Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
 name: deploy-pages
 on:
-  push: {branches: [main], paths: ["site/**", ".github/workflows/pages.yml"]}
+  push: {branches: [main], paths: ["site/**", ".github/workflows/pages.yml", "tools/check_sanitized.py"]}
   workflow_dispatch: {}
 permissions: {contents: read, pages: write, id-token: write}
 concurrency: {group: pages, cancel-in-progress: true}
@@ -12,6 +12,8 @@ jobs:
     environment: {name: github-pages, url: "${{ steps.d.outputs.page_url }}"}
     steps:
       - uses: actions/checkout@v4
+      # Never publish a page (or a download) with saved posts built in: stop the deploy if site/ is not sanitized.
+      - run: python3 tools/check_sanitized.py
       # Offer the same page as a download. A .zip makes the browser save it instead of just opening the page; it is built here so it can never drift from index.html.
       - run: |
           mkdir -p /tmp/pack && cp site/index.html /tmp/pack/stargazer.html
