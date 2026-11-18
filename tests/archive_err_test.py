@@ -37,7 +37,7 @@ def run(pull_ok, ids=None):
         return out
 n, text, asked = run(True)
 check('a 400 for a full batch is retried in smaller pieces and the previews load', n == 60 and max(asked) > 25 and min(asked) <= 25)
-check('pieces are not split again', min(asked) >= 15)
+check('pieces are not split again', min(asked) >= 6)   # the first batch is 30 ids (pieces of 8 and 6); a second split would give 2s
 n, text, asked = run(False, IDS_MANY)
 check('when every archive fails, the message names each archive', 'Arctic Shift: could not connect' in text and 'PullPush: HTTP 400' in text)
 print('ALL PASS' if not bad else 'FAILED: ' + ', '.join(bad))
