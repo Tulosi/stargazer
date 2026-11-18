@@ -15,6 +15,7 @@
 <script>try{if(!localStorage.getItem("saved-posts-theme-reset1")){localStorage.removeItem("saved-posts-theme");localStorage.setItem("saved-posts-theme-reset1","1")}var t=localStorage.getItem("saved-posts-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>   <!-- one-time reset: everyone starts on System; a choice made afterwards is kept -->
 <style>
 :root{--ease-out:cubic-bezier(.23,1,.32,1)}
+[popover]{inset:auto;margin:0;border:0;padding:0;overflow:visible;color:inherit;background:none;width:auto;height:auto}   /* panels and the toast live in the top layer (popover) but keep their own boxes */
 .sronly{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
 /* Quiet chrome, loud media. Neutral monochrome UI; the only colour on the page comes from the posts themselves.
@@ -164,7 +165,7 @@ button,select,input{font:inherit;color:inherit}
 .actgrid.inner{margin-top:0}
 .actgrid .hint{margin:0;font-size:12px;color:var(--muted);line-height:1.45}
 .actgrid .pill:disabled{opacity:.45;cursor:default}
-#decktoggle[aria-expanded="true"]{background:var(--sel);color:var(--sel-ink)}
+#decktoggle[aria-expanded="true"],#viewtoggle[aria-expanded="true"]{background:var(--sel);color:var(--sel-ink)}
 #decktoggle{position:relative}
 #decktoggle[data-n]::after{content:attr(data-n);position:absolute;top:-3px;right:-3px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;line-height:1;background:var(--sel);color:var(--sel-ink);box-shadow:0 0 0 2px var(--bg)}
 #decktoggle[aria-expanded="true"][data-n]::after{background:var(--sel-ink);color:var(--sel);box-shadow:0 0 0 2px var(--sel)}
@@ -176,10 +177,10 @@ button,select,input{font:inherit;color:inherit}
   body{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))}
   body #toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}   /* body: the base #toast rule comes later in the file and would win, putting toasts on top of the bottom bar */
   #pausebar{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
-  #panel,#srcpanel{position:fixed;top:auto;max-width:none;margin:0;left:8px;right:8px;bottom:calc(86px + env(safe-area-inset-bottom,0px));max-height:min(72dvh,calc(100dvh - 120px));animation:sheetIn .2s ease-out}
+  #panel,#srcpanel,#viewpanel{position:fixed;top:auto;max-width:none;margin:0;left:8px;right:8px;bottom:calc(86px + env(safe-area-inset-bottom,0px));max-height:min(72dvh,calc(100dvh - 120px));animation:sheetIn .2s ease-out}
   @keyframes sheetIn{from{opacity:0;transform:translateY(12px)}}
-  #panel::before,#srcpanel::before{content:"";grid-column:1/-1;display:block;width:36px;height:4px;border-radius:2px;background:var(--line);margin:-4px auto 10px}   /* sheet handle */
-  #panel,#srcpanel{background:linear-gradient(var(--surface) 30%,transparent) top/100% 36px no-repeat local,linear-gradient(transparent,var(--surface) 70%) bottom/100% 36px no-repeat local,radial-gradient(farthest-side at 50% 0,rgba(0,0,0,.2),transparent) top/100% 12px no-repeat scroll,radial-gradient(farthest-side at 50% 100%,rgba(0,0,0,.2),transparent) bottom/100% 12px no-repeat scroll,var(--surface)}   /* a soft shadow shows where the sheet scrolls */
+  #panel::before,#srcpanel::before,#viewpanel::before{content:"";grid-column:1/-1;display:block;width:36px;height:4px;border-radius:2px;background:var(--line);margin:-4px auto 10px}   /* sheet handle */
+  #panel,#srcpanel,#viewpanel{background:linear-gradient(var(--surface) 30%,transparent) top/100% 36px no-repeat local,linear-gradient(transparent,var(--surface) 70%) bottom/100% 36px no-repeat local,radial-gradient(farthest-side at 50% 0,rgba(0,0,0,.2),transparent) top/100% 12px no-repeat scroll,radial-gradient(farthest-side at 50% 100%,rgba(0,0,0,.2),transparent) bottom/100% 12px no-repeat scroll,var(--surface)}   /* a soft shadow shows where the sheet scrolls */
   .deck-bar.search-open .search{display:block;position:fixed;left:12px;right:12px;bottom:calc(86px + env(safe-area-inset-bottom,0px));top:auto;transform:none;z-index:46;max-width:none;border-radius:999px;box-shadow:var(--shadow)}
   .deck-bar.search-open #q{background:var(--surface);border:1px solid var(--line);height:44px}
 }
@@ -191,12 +192,13 @@ button,select,input{font:inherit;color:inherit}
 }
 
 /* ---- filter panel: floats over the grid, closed by default ---- */
-.panel{position:absolute;right:max(14px,env(safe-area-inset-right,0px));left:max(14px,env(safe-area-inset-left,0px));top:calc(100% + 8px);max-width:980px;margin-left:auto;
+.panel{position:fixed;right:max(14px,env(safe-area-inset-right,0px),var(--panr,0px));left:max(14px,env(safe-area-inset-left,0px));top:calc(var(--deckb,60px) + 8px);max-width:980px;margin-left:auto;
   background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:22px;
   display:grid;grid-template-columns:1fr 1fr;gap:28px;max-height:calc(100dvh - 84px);overflow:auto;overscroll-behavior:contain;animation:panelIn .14s ease-out}
 @keyframes panelIn{from{opacity:0;transform:translateY(-6px)}}
-body.deck-collapsed #panel,body.src-collapsed #srcpanel{display:none}
+body.deck-collapsed #panel,body.src-collapsed #srcpanel,body.view-collapsed #viewpanel{display:none}
 #srcpanel{grid-template-columns:1fr;max-width:460px;gap:12px}
+#viewpanel{grid-template-columns:1fr;max-width:420px}
 @media (max-width:720px){.panel{grid-template-columns:1fr;gap:22px;padding:18px}}
 body.stats-flat .stats .st:not(:first-child){display:none}   /* nothing filtered, nothing loading: one number, labelled Posts (every width) */
 .pcol{display:grid;gap:12px;align-content:start;min-width:0}
@@ -743,7 +745,7 @@ body:not(.layout-list) .layer .btn{-webkit-backdrop-filter:none;backdrop-filter:
 @keyframes fadein{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
-  #panel,#srcpanel,.panel,#selbar{animation:fadein .15s ease-out!important}
+  #panel,#srcpanel,#viewpanel,.panel,#selbar{animation:fadein .15s ease-out!important}
   .srcbadge[data-s=syncing] svg{animation:pulse 1.4s ease-in-out infinite}
   .card:not(.is-dead) .thumb .ph::after{animation:pulse 1.8s ease-in-out infinite;background:rgba(255,255,255,.1)}
   body.previews-loading .loaddot::before{animation:none}
@@ -783,7 +785,7 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
 @media (prefers-reduced-motion:reduce){.kbhelp>summary::after{transition:none}}
 </style>
 </head>
-<body class="deck-collapsed src-collapsed">
+<body class="deck-collapsed src-collapsed view-collapsed">
 <section class="deck" aria-label="Search and filters">
   <div class="deck-in">
     <div class="deck-bar">
@@ -803,6 +805,10 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
         <span class="srcbadge" id="srcBadge" hidden aria-hidden="true"><svg viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 12.2h6.2a2.6 2.6 0 0 0 .5-5.15A3.7 3.7 0 0 0 4.2 6.3a2.95 2.95 0 0 0 .4 5.9z"/></svg></span>
         <span class="nl">Source</span>
         </button>
+        <button class="pill" id="viewtoggle" type="button" aria-expanded="false" aria-controls="viewpanel" aria-label="Display" title="Display: layout, columns, card info, autoplay, theme" style="padding-left:10px;padding-right:10px">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="5" height="5" rx="1.2"/><rect x="9" y="2" width="5" height="5" rx="1.2"/><rect x="2" y="9" width="5" height="5" rx="1.2"/><rect x="9" y="9" width="5" height="5" rx="1.2"/></svg>
+        <span class="nl">Display</span>
+        </button>
         <button class="pill" id="decktoggle" type="button" aria-expanded="false" aria-controls="panel" aria-label="Filters" title="Filters" style="padding-left:10px;padding-right:10px">
         <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 4.5h7M12 4.5h2M2 11.5h2M7 11.5h7"/><circle cx="10.5" cy="4.5" r="1.6"/><circle cx="5.5" cy="11.5" r="1.6"/></svg>
         <span class="nl">Filters</span>
@@ -818,32 +824,7 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
       </nav>
     </div>
 
-    <div class="panel" id="panel" role="region" aria-label="Filters">
-      <div class="pcol">
-        <h2>View</h2>
-        <div class="ctlrow"><span>Layout</span><div class="srcseg" id="layoutseg" role="group" aria-label="Layout"><button class="pill" type="button" data-l="masonry" aria-pressed="true" title="Best for media">Masonry</button><button class="pill" type="button" data-l="grid" aria-pressed="false" title="Equal square tiles in strict rows">Grid</button><button class="pill" type="button" data-l="list" aria-pressed="false" title="Best for text posts">List</button></div></div>
-        <p class="hint layouthint" id="layouthint" role="status"></p>
-        <div class="ctlrow" id="sizerow"><label for="size">Columns</label><span class="sizectl"><span class="sizewrap"><input id="size" type="range" min="0" max="5" step="1" value="2"><span class="notches" aria-hidden="true"></span></span><button class="fwbtn" id="fullw" type="button" aria-pressed="false" aria-label="Full width" title="Full width: bigger tiles across the whole window"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 8h13M4.5 5 1.5 8l3 3M11.5 5l3 3-3 3"/></svg></button></span></div>
-        <div class="ctlrow" id="colsrow"><span>Columns</span><div class="srcseg" id="colsseg" role="group" aria-label="List columns"><button class="pill" type="button" data-c="1" aria-pressed="false" title="Easiest to scan">1</button><button class="pill" type="button" data-c="2" aria-pressed="false">2</button><button class="pill" type="button" data-c="3" aria-pressed="false">3</button><button class="pill" type="button" data-c="auto" aria-pressed="true" title="As many as fit">Auto</button></div></div>
-        <label class="ctlrow" id="cardrow"><span>Card info &amp; controls</span>
-          <select id="cardmode" class="field" aria-label="Card info and controls">
-            <option value="collapsed">Collapsed</option>
-            <option value="hover">Show on hover / focus</option>
-            <option value="always">Show always</option>
-          </select>
-        </label>
-        <label class="toggle" for="autohover" title="The card under the pointer (or with keyboard focus) plays. On touch screens, the card in focus plays.">Autoplay active card<input id="autohover" type="checkbox"></label>
-        <label class="toggle" for="autoplayall" title="Every clip and embed on screen plays, with no limit, and stops again when it leaves the screen.">Autoplay all media in viewport<input id="autoplayall" type="checkbox"></label>
-        <p class="apwarn" id="apwarn">Plays every clip on screen at once. Can be heavy on your device.</p>
-        <label class="ctlrow"><span>Theme</span>
-          <select id="theme" class="field" aria-label="Theme">
-            <option value="system">System</option>
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
-          </select>
-        </label>
-      </div>
-
+    <div class="panel" id="panel" role="region" aria-label="Filters" popover="manual">
       <div class="pcol">
         <h2>Filter and sort</h2>
         <label class="ctlrow"><span>Sort</span>
@@ -908,7 +889,34 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
       </details>
     </div>
 
-    <div class="panel" id="srcpanel" role="region" aria-label="Source and account">
+    <div class="panel" id="viewpanel" role="region" aria-label="Display" popover="manual">
+      <div class="pcol">
+        <h2>Display</h2>
+        <div class="ctlrow"><span>Layout</span><div class="srcseg" id="layoutseg" role="group" aria-label="Layout"><button class="pill" type="button" data-l="masonry" aria-pressed="true" title="Best for media">Masonry</button><button class="pill" type="button" data-l="grid" aria-pressed="false" title="Equal square tiles in strict rows">Grid</button><button class="pill" type="button" data-l="list" aria-pressed="false" title="Best for text posts">List</button></div></div>
+        <p class="hint layouthint" id="layouthint" role="status"></p>
+        <div class="ctlrow" id="sizerow"><label for="size">Columns</label><span class="sizectl"><span class="sizewrap"><input id="size" type="range" min="0" max="5" step="1" value="2"><span class="notches" aria-hidden="true"></span></span><button class="fwbtn" id="fullw" type="button" aria-pressed="false" aria-label="Full width" title="Full width: bigger tiles across the whole window"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 8h13M4.5 5 1.5 8l3 3M11.5 5l3 3-3 3"/></svg></button></span></div>
+        <div class="ctlrow" id="colsrow"><span>Columns</span><div class="srcseg" id="colsseg" role="group" aria-label="List columns"><button class="pill" type="button" data-c="1" aria-pressed="false" title="Easiest to scan">1</button><button class="pill" type="button" data-c="2" aria-pressed="false">2</button><button class="pill" type="button" data-c="3" aria-pressed="false">3</button><button class="pill" type="button" data-c="auto" aria-pressed="true" title="As many as fit">Auto</button></div></div>
+        <label class="ctlrow" id="cardrow"><span>Card info &amp; controls</span>
+          <select id="cardmode" class="field" aria-label="Card info and controls">
+            <option value="collapsed">Collapsed</option>
+            <option value="hover">Show on hover / focus</option>
+            <option value="always">Show always</option>
+          </select>
+        </label>
+        <label class="toggle" for="autohover" title="The card under the pointer (or with keyboard focus) plays. On touch screens, the card in focus plays.">Autoplay active card<input id="autohover" type="checkbox"></label>
+        <label class="toggle" for="autoplayall" title="Every clip and embed on screen plays, with no limit, and stops again when it leaves the screen.">Autoplay all media in viewport<input id="autoplayall" type="checkbox"></label>
+        <p class="apwarn" id="apwarn">Plays every clip on screen at once. Can be heavy on your device.</p>
+        <label class="ctlrow"><span>Theme</span>
+          <select id="theme" class="field" aria-label="Theme">
+            <option value="system">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div class="panel" id="srcpanel" role="region" aria-label="Source and account" popover="manual">
       <div class="pcol">
         <h2>Source</h2>
         <div class="srcseg"><button class="pill" id="srcCsv" type="button" aria-pressed="true">Saved CSV</button><button class="pill" id="srcSub" type="button" aria-pressed="false">Subreddit</button></div>
@@ -1013,7 +1021,7 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
 <div id="pausebar" role="status" aria-live="polite" hidden><span class="pdot"></span><span id="pauseTxt"></span><button type="button" id="pauseSkip" title="Retry now">Retry now</button></div>
 <button id="totop" type="button" aria-label="Back to top" title="Back to top" hidden><svg viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 10L8 5.5l4.5 4.5"/></svg></button>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><linearGradient id="nsfwGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:color-mix(in srgb,var(--g1) 55%,#fff)"/><stop offset=".5" style="stop-color:color-mix(in srgb,var(--g2) 55%,#fff)"/><stop offset="1" style="stop-color:color-mix(in srgb,var(--g3) 55%,#fff)"/></linearGradient></defs></svg>
-<div id="toast" role="status" aria-live="polite"></div>
+<div id="toast" role="status" aria-live="polite" popover="manual"></div>
 
 <script>
 const SUBCAT = {"gaming": "Gaming", "games": "Gaming", "pcgaming": "Gaming", "gamedeals": "Gaming", "pcmasterrace": "Tech & Hardware", "buildapc": "Tech & Hardware", "technology": "Tech & Hardware", "android": "Tech & Hardware", "askreddit": "General & Humor", "pics": "General & Humor", "funny": "General & Humor", "todayilearned": "General & Humor", "science": "General & Humor", "worldnews": "General & Humor", "memes": "General & Humor", "movies": "Film, TV & Video", "television": "Film, TV & Video", "videos": "Film, TV & Video", "music": "Music", "listentothis": "Music", "food": "Food & Drink", "cooking": "Food & Drink", "recipes": "Food & Drink", "coffee": "Food & Drink", "diy": "DIY & Home", "homeimprovement": "DIY & Home", "personalfinance": "General & Humor", "canada": "Local & Canada", "nsfw": "Adult", "gonewild": "Adult", "realgirls": "Adult", "rule34": "Adult", "porn": "Adult"};
@@ -1793,6 +1801,7 @@ function toast(msg, action, ms){
     b.onclick = ()=>{ t.classList.remove('on','act'); clearTimeout(toastT); action.fn(); };
     t.appendChild(b);
   }
+  try{ if(t.showPopover){ if(t.matches(':popover-open')) t.hidePopover(); t.showPopover(); } }catch(e){}   // above any open panel or sheet
   t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove('on','act'), ms || (action ? 8000 : 4000));
 }
 
@@ -3279,27 +3288,71 @@ function setNsfw(m){
 $('showtext').addEventListener('change',e=>{ state.showText = e.target.checked; textTouched = true; saveListPrefs(); refresh(); paintLayoutHint(); });
 $('nsfwseg').addEventListener('click',e=>{ const b = e.target.closest('.pill'); if(b && b.dataset.m!==state.nsfw) setNsfw(b.dataset.m); });
 (function(){
-  const fb = $('decktoggle'), sb = $('srctoggle'), body = document.body;
-  /* Two floating panels share the bar: Filters (what is shown) and Source (which list, sign-in, sync). Opening one closes the other. */
-  const apply = which => {
-    body.classList.toggle('deck-collapsed', which!=='filters'); body.classList.toggle('src-collapsed', which!=='source');
-    fb.setAttribute('aria-expanded', which==='filters' ? 'true' : 'false'); sb.setAttribute('aria-expanded', which==='source' ? 'true' : 'false');
+  const fb = $('decktoggle'), sb = $('srctoggle'), vb = $('viewtoggle'), body = document.body;
+  /* Three floating panels share the bar: Display (how things look), Filters (what is shown) and Source (which list, sign-in, sync). Opening one closes the others.
+     Each is a manual popover, so it sits in the top layer above tiles, the bar and its blur; showing and hiding stay in this code (with the body classes
+     the rest of the page reads), because the browser's own light dismiss would also close a panel when its confirm dialog or an Undo toast appears. */
+  const PANELS = {filters:[fb,'deck-collapsed','panel'], source:[sb,'src-collapsed','srcpanel'], display:[vb,'view-collapsed','viewpanel']};
+  const place = () => {
+    const deck = document.querySelector('.deck'), nav = $('navbtns');
+    if(deck) document.documentElement.style.setProperty('--deckb', Math.max(0, deck.getBoundingClientRect().bottom)+'px');
+    if(nav && innerWidth > 720){ const r = Math.max(0, ...[...nav.querySelectorAll('.pill')].filter(x=>x.offsetParent).map(x=>x.getBoundingClientRect().right)); if(r > 0) document.documentElement.style.setProperty('--panr', Math.max(0, innerWidth - r)+'px'); }   // the nav is display:contents on wide screens, so measure its buttons
   };
+  const apply = which => {
+    if(which) place();
+    for(const k in PANELS){
+      const [btn, cls, id] = PANELS[k], on = k===which, el = $(id);
+      body.classList.toggle(cls, !on); btn.setAttribute('aria-expanded', on ? 'true' : 'false');
+      try{ if(el.showPopover){ const open = el.matches(':popover-open'); if(on && !open) el.showPopover(); else if(!on && open) el.hidePopover(); } }catch(e){}
+    }
+    if(which){ const t = $('toast'); if(t && !t.classList.contains('act')) t.classList.remove('on'); }   // a passing hint must not sit on top of the sheet that just opened
+  };
+  window.openPanel = apply;
+  /* Phone sheets can be dragged down to close: from the handle, or from any plain part of the sheet while it is scrolled to the top.
+     Past 30% of its height, or a quick flick (over 0.11px/ms), it closes; otherwise it springs back. Dragging up is damped. */
+  const RM = matchMedia('(prefers-reduced-motion: reduce)');
+  for(const k in PANELS){
+    const el = $(PANELS[k][2]); let y0 = 0, t0 = 0, dy = 0, on = false, cand = false;
+    el.addEventListener('touchstart',e=>{
+      cand = false; if(innerWidth > 720 || e.touches.length !== 1) return;
+      const y = e.touches[0].clientY, top = el.getBoundingClientRect().top, t = e.target;
+      const ctl = t.closest && t.closest('input,select,textarea,button,summary,a,label,.srcseg,.chips,.sizectl');
+      cand = (y - top < 30) || (!ctl && el.scrollTop <= 0); if(!cand) return;
+      y0 = y; t0 = performance.now(); dy = 0; on = false;
+    },{passive:true});
+    el.addEventListener('touchmove',e=>{
+      if(!cand) return; const d = e.touches[0].clientY - y0;
+      if(!on){ if(d > 6 && el.scrollTop <= 0){ on = true; el.style.transition = 'none'; el.style.animation = 'none'; } else { if(Math.abs(d) > 6) cand = false; return; } }
+      e.preventDefault(); dy = d > 0 ? d - 6 : (d - 6)/4; el.style.transform = 'translateY('+dy+'px)';
+    },{passive:false});
+    const end = () => {
+      if(!cand || !on){ cand = false; return; } cand = on = false;
+      const v = dy / Math.max(1, performance.now() - t0), close = dy > el.offsetHeight*.3 || (v > .11 && dy > 20);
+      if(close){
+        if(RM.matches){ apply(null); el.style.transform = el.style.transition = el.style.animation = ''; return; }
+        el.style.transition = 'transform .22s var(--ease-out)'; el.style.transform = 'translateY(calc(100% + 120px))';
+        setTimeout(()=>{ apply(null); el.style.transform = el.style.transition = el.style.animation = ''; }, 220);
+      } else { el.style.transition = 'transform .32s cubic-bezier(.32,.72,0,1)'; el.style.transform = ''; setTimeout(()=>{ el.style.transition = ''; }, 340); }
+    };
+    el.addEventListener('touchend', end); el.addEventListener('touchcancel', end);
+  }
   apply(null);
-  fb.addEventListener('click',()=>apply(body.classList.contains('deck-collapsed') ? 'filters' : null));
-  sb.addEventListener('click',()=>apply(body.classList.contains('src-collapsed') ? 'source' : null));
+  const isOpen = k => !body.classList.contains(PANELS[k][1]);
+  fb.addEventListener('click',()=>apply(isOpen('filters') ? null : 'filters'));
+  sb.addEventListener('click',()=>apply(isOpen('source') ? null : 'source'));
+  vb.addEventListener('click',()=>apply(isOpen('display') ? null : 'display'));
+  addEventListener('resize',()=>{ if(isOpen('filters')||isOpen('source')||isOpen('display')) place(); });
   /* tap or click outside an open panel (and outside the buttons that open them) puts it away */
   document.addEventListener('click',e=>{
-    if(body.classList.contains('deck-collapsed') && body.classList.contains('src-collapsed')) return;
+    if(!isOpen('filters') && !isOpen('source') && !isOpen('display')) return;
     if(!e.isTrusted) return;   // the page's own programmatic clicks (such as a download link) are not a tap outside
     const t = e.target; if(!t || !t.closest || !t.isConnected) return;
-    if(t.closest('#panel,#srcpanel,#navbtns,dialog,#confirm,#rvw')) return;
+    if(t.closest('#panel,#srcpanel,#viewpanel,#navbtns,dialog,#confirm,#rvw,#toast')) return;
     apply(null);
   });
   document.addEventListener('keydown',e=>{
     if(e.key!=='Escape' || e.defaultPrevented) return;
-    if(!body.classList.contains('deck-collapsed')){ apply(null); fb.focus(); }
-    else if(!body.classList.contains('src-collapsed')){ apply(null); sb.focus(); }
+    for(const k of ['filters','source','display']) if(isOpen(k)){ apply(null); PANELS[k][0].focus(); return; }
   });
 })();
 (function(){
@@ -3419,8 +3472,8 @@ function setFullw(on, save){
    Full width) down to 1. */
 function sizeSteps(W){
   const nMax = Math.max(2, Math.min(FULLW ? MAX_COLS_FW : MAX_COLS, Math.floor((W + 6)/(150 + 6))));
-  const c = []; for(let n=nMax;n>=1;n--) c.push(n);
-  return c;    // left = most tiles (smallest), right = 1 across
+  const c = []; for(let n=1;n<=nMax;n++) c.push(n);
+  return c;    // left = 1 across, right = most tiles: the slider is labelled Columns, so more columns sit to the right
 }
 function colKey(){ return phoneMQ.matches ? 'saved-posts-tile-phonecols' : FULLW ? 'saved-posts-tile-fullw' : 'saved-posts-tile-cols'; }
 function savedCols(W){
@@ -3441,8 +3494,8 @@ function notchesFor(nt, labels){
 function buildSizeControl(){
   const sl = $('size'), wrap = sl.closest('.sizewrap'), nt = wrap.querySelector('.notches');
   const W = Math.max(240, $('grid').clientWidth || innerWidth - 28);
-  /* phones: 3, 2, 1 across (the counts whose tiles are at least 100px), in the same order as desktop */
-  const cols = phoneMQ.matches ? [3, 2, 1].filter(n => colCard(W, n) >= 100) : sizeSteps(W), want = savedCols(W);
+  /* phones: 1, 2, 3 across (the counts whose tiles are at least 100px), in the same order as desktop */
+  const cols = phoneMQ.matches ? [1, 2, 3].filter(n => colCard(W, n) >= 100) : sizeSteps(W), want = savedCols(W);
   let i = 0; cols.forEach((n,k)=>{ if(Math.abs(n - want) < Math.abs(cols[i] - want)) i = k; });
   COL_STEPS = {W, cols};
   wrap.classList.add('stepped'); sl.min = 0; sl.step = 1; sl.max = cols.length - 1; sl.value = i;
