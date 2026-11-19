@@ -1009,6 +1009,14 @@ html[data-skin="lemondrop"][data-theme="light"] body:not(.layout-list) .layer .c
 @media (hover:hover){html[data-skin="lemondrop"][data-theme="light"] body:not(.layout-list) .lay-cap :is(.star,.fs,.save):hover,html[data-skin="lemondrop"][data-theme="light"] body:not(.layout-list) .layer .actions .btn:hover{background:rgba(18,17,15,.08)}}
 /* list rows: the accent stripe becomes the 2px mark */
 html[data-skin="lemondrop"] body.layout-list .card::after{background:var(--sg-mark)}
+/* List rows keep to the yellow budget: subreddit names, the bin and the tags are plain ink / graphite; only a lit star (and an NSFW mark that is on) keep the mark colour */
+html[data-skin="lemondrop"] body.layout-list .meta .sub{color:var(--ink)}
+html[data-skin="lemondrop"] body.layout-list .save[aria-pressed=true]:not(.nsfwb){color:var(--muted)}
+@media (hover:hover) and (pointer:fine){html[data-skin="lemondrop"] body.layout-list .save:not(.nsfwb):hover{color:var(--ink)}}
+html[data-skin="lemondrop"] body.layout-list .badges .badge.tag{background:var(--surface-2);color:var(--muted)}
+html[data-skin="lemondrop"] body.layout-list .thumb .ph{background:var(--surface-2)}
+html[data-skin="lemondrop"] body.layout-list .card:focus-within{border-color:var(--line-2)}
+@media (hover:hover) and (pointer:fine){html[data-skin="lemondrop"] body.layout-list .card:hover{border-color:var(--line-2)}}
 /* full screen stays dark in both modes (option B): the dark Lemondrop chrome over black */
 html[data-skin="lemondrop"] #viewer{--font:'Chakra Petch','Geist',ui-sans-serif,system-ui,sans-serif}
 html[data-skin="lemondrop"] #viewer :is(.vclose,.vsound){background:rgba(11,11,10,.72);box-shadow:inset 0 0 0 1px rgba(241,238,230,.18)}
