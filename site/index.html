@@ -517,19 +517,21 @@ body.layout-list #cardrow{display:none}   /* List keeps its own arrangement (inl
 #viewer .vghost{position:absolute;inset:0;pointer-events:none;z-index:1}   /* the post sliding away while the next one slides in */
 #viewer img,#viewer video{width:100%;height:100%;object-fit:contain;background:#000}   /* fill the screen like the browser's own full screen: a 480p clip scales up instead of sitting at its own small size */
 #viewer.vcover img,#viewer.vcover video{object-fit:cover}   /* Fill screen: crop in instead of leaving bars */
-#viewer .vfill{position:absolute;top:max(12px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));z-index:2;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;cursor:pointer;display:grid;place-items:center;padding:0}
-#viewer .vfill[aria-pressed="true"]{background:rgba(255,255,255,.3)}
+#viewer .vfill{position:absolute;top:max(12px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));z-index:2;width:40px;height:40px;border-radius:50%;border:0;color:#fff;cursor:pointer;display:grid;place-items:center;padding:0}
+/* corner buttons float on the media itself, so they carry their own dark glass, a light ring and a shadow: readable over a white frame and a black one alike */
+#viewer :is(.vfill,.vclose,.vsound){background:rgba(18,18,22,.72);box-shadow:inset 0 0 0 1px rgba(255,255,255,.28),0 1px 6px rgba(0,0,0,.35);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+#viewer .vfill[aria-pressed="true"]{background:rgba(255,255,255,.92);color:#16161a;box-shadow:0 0 0 1px rgba(0,0,0,.25),0 1px 6px rgba(0,0,0,.35)}   /* lit: this post is filled */
 #viewer:not(:has(>.vstage:not(.vghost) :is(img,video))) .vfill{display:none}   /* only pictures and clips can be cropped; not YouTube, RedGifs' player or a message */
-@media (hover:hover){#viewer .vfill:hover{background:rgba(255,255,255,.34)}}
+@media (hover:hover){#viewer .vfill:not([aria-pressed="true"]):hover{background:rgba(52,52,60,.78)}}
 #viewer iframe.vyt.vrg{width:100%;height:100%;aspect-ratio:auto;max-height:none}
 #viewer .vstage:has(iframe.vrg){height:calc(100% - 64px - env(safe-area-inset-bottom,0px));align-self:flex-start}   /* RedGifs' own player has its controls along the bottom, so leave a band for the previous/next post buttons instead of covering them */
 #viewer iframe.vyt{border:0;background:#000;width:min(100%,calc(100vh*16/9));aspect-ratio:16/9;max-height:100%}
 #viewer .vytlink{position:absolute;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translateX(-50%);padding:10px 18px;border-radius:999px;background:rgba(255,255,255,.9);color:#111;text-decoration:none;font-weight:600;font-size:14px}
 #viewer img{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-user-drag:none;will-change:transform;transition:none}
 #viewer .vstage{touch-action:none;overflow:hidden}
-#viewer .vclose{position:absolute;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));z-index:2;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:16px;line-height:1;cursor:pointer;display:grid;place-items:center}
-@media (hover:hover){#viewer .vclose:hover,#viewer .vsound:hover{background:rgba(255,255,255,.3)}}
-#viewer .vsound{position:absolute;top:max(12px,env(safe-area-inset-top));right:calc(max(12px,env(safe-area-inset-right)) + 50px);z-index:2;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;cursor:pointer;display:grid;place-items:center}
+#viewer .vclose{position:absolute;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));z-index:2;width:40px;height:40px;border-radius:50%;border:0;color:#fff;font-size:16px;line-height:1;cursor:pointer;display:grid;place-items:center}
+@media (hover:hover){#viewer .vclose:hover,#viewer .vsound:hover{background:rgba(52,52,60,.78)}}
+#viewer .vsound{position:absolute;top:max(12px,env(safe-area-inset-top));right:calc(max(12px,env(safe-area-inset-right)) + 50px);z-index:2;width:40px;height:40px;border-radius:50%;border:0;color:#fff;cursor:pointer;display:grid;place-items:center}
 #viewer .vsound[hidden],#viewer .vvol[hidden]{display:none}
 #viewer .vvol{position:absolute;top:calc(max(12px,env(safe-area-inset-top)) + 11px);right:calc(max(12px,env(safe-area-inset-right)) + 98px);z-index:2;width:96px;height:18px;margin:0;accent-color:#fff;cursor:pointer}
 #viewer :focus-visible{outline-color:#fff}
@@ -564,7 +566,7 @@ body.viewing,body.triaging{overflow:hidden}
 #triage .tg-done button{margin-top:16px}
 #viewer .vctl{left:50%;right:auto;bottom:calc(64px + env(safe-area-inset-bottom,0px));width:min(720px,calc(100% - 32px));transform:translateX(-50%);height:46px;padding:0 14px 0 10px;gap:12px;border-radius:14px;background:rgba(28,28,30,.72);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);z-index:3;transition:opacity .25s var(--ease-out)}
 #viewer .vctl .pp,#viewer .vctl .vol,#viewer .vctl .vfs{width:32px;height:32px}
-#viewer .vctl .vfs{flex:none;border:0;border-radius:50%;padding:0;display:grid;place-items:center;background:rgba(255,255,255,.2);color:#fff;cursor:pointer}
+#viewer .vctl .vfs{flex:none;border:0;border-radius:50%;padding:0;display:grid;place-items:center;background:rgba(255,255,255,.2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.3);color:#fff;cursor:pointer}
 @media (hover:hover) and (pointer:fine){#viewer .vctl .vfs:hover{background:rgba(255,255,255,.34)}}
 #viewer .vctl .time{font-size:12px}
 /* Full-screen overlay (Nov 2026 audit, item 9, option A): caption bottom left, labelled action rail on the right, over a dark scrim (no blur).
@@ -933,7 +935,7 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
             <dd><kbd>Tab</kbd> moves from card to card</dd>
             <dd><kbd>Enter</kbd> on a card steps into its controls; <kbd>Esc</kbd> steps back out</dd>
             <dd><kbd>I</kbd> shows or hides the controls of the card under the pointer or in focus</dd>
-            <dd>Full screen: <kbd>&larr;</kbd> <kbd>&rarr;</kbd> pictures in a gallery, <kbd>&uarr;</kbd> <kbd>&darr;</kbd> previous / next post, <kbd>Space</kbd> or <kbd>K</kbd> plays / pauses a clip, <kbd>M</kbd> mutes, <kbd>F</kbd> fills the screen (crops) or fits the whole picture, <kbd>H</kbd> hides or shows the caption and buttons, <kbd>Esc</kbd> closes</dd>
+            <dd>Full screen: <kbd>&larr;</kbd> <kbd>&rarr;</kbd> pictures in a gallery, <kbd>&uarr;</kbd> <kbd>&darr;</kbd> previous / next post, <kbd>Space</kbd> or <kbd>K</kbd> plays / pauses a clip, <kbd>M</kbd> mutes, <kbd>F</kbd> fills the screen (crops) or fits the whole picture for that post, <kbd>H</kbd> hides or shows the caption and buttons, <kbd>Esc</kbd> closes</dd>
           </dl>
           <dl><dt>Touch and mouse</dt>
             <dd>Tap a picture to open it full screen; press and hold it to show or hide its controls</dd>
@@ -2112,6 +2114,7 @@ function slideTo(d){
      so both are seen moving together, like a feed. A clip in the ghost is paused on its current frame and dropped once it is off screen. */
   const ghost = document.createElement('div'); ghost.className = 'vstage vghost'; ghost.setAttribute('aria-hidden','true');
   ghost.append(...st.childNodes); ghost.querySelectorAll('video').forEach(v=>{ try{ v.pause(); }catch(e){} });
+  ghost.querySelectorAll('img,video').forEach(x=>{ x.style.objectFit = VFILL ? 'cover' : 'contain'; });   // Fit / Fill is per post: the leaving post keeps its own while the next one takes its own
   ghost.style.transform = 'translate3d(0,'+from+'px,0)';
   VIEW.root.insertBefore(ghost, st);
   stageY(d > 0 ? H + from : -H + from);
@@ -2264,7 +2267,7 @@ async function openViewer(p, opts){
   const thumbSrc = thumbImg ? (thumbImg.currentSrc || thumbImg.src) : '';
   const mkImg = url => { const im = new Image(); im.referrerPolicy = 'no-referrer'; im.alt = titleOf(p); im.src = url; return im; };
   if(!opts.keep){ VIEW.opener = document.activeElement; VIEW.first = p; VIEW.dir = 0; }
-  VIEW.cur = p; VIEW.idx = list.indexOf(p); updatePostNav(); paintChrome(p);
+  VIEW.cur = p; VIEW.idx = list.indexOf(p); updatePostNav(); paintChrome(p); loadViewFill(p);
   VIEW.stage.replaceChildren(); VIEW.root.querySelectorAll('.vctl').forEach(n=>n.remove()); VIEW.root.classList.remove('vidle','vplaying');
   VIEW.root.hidden = false; document.body.classList.add('viewing');
   if(opts.from && !opts.keep) morphOpen(opts.from);
@@ -2405,19 +2408,27 @@ async function openViewer(p, opts){
   next();
 }
 VIEW.root.querySelector('.vclose').addEventListener('click',closeViewer);
-/* Fit / Fill: full screen shows the whole picture (contain) or fills the screen and crops what does not fit (cover). Remembered for this browser. */
-const FILLKEY = 'saved-posts-viewfill';
+/* Fit / Fill: full screen shows the whole picture (contain, the default) or fills the screen and crops what does not fit (cover).
+   Chosen per post (it matters for some clips far more than others) and remembered for this browser: ids of filled posts in FILLKEY. */
+const FILLKEY = 'saved-posts-viewfill-posts', FILL_MAX = 3000;
 const FIT_ICON = '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.5" y="3" width="13" height="10" rx="1.5"/><path d="M3.5 8h3M5 6.5 6.5 8 5 9.5M12.5 8h-3M11 6.5 9.5 8 11 9.5"/></svg>';   // arrows pointing in: shrink back to the whole picture
 const FILL_ICON = '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.5" y="3" width="13" height="10" rx="1.5"/><path d="M6 8H3.5M5 6.5 3.5 8 5 9.5M10 8h2.5M11 6.5 12.5 8 11 9.5"/></svg>';   // arrows pointing out: spread to the edges (not the corner arrows, which mean leave full screen)
-let VFILL = false; try{ VFILL = localStorage.getItem(FILLKEY)==='1'; }catch(e){}
-function setViewFill(on){
-  VFILL = !!on; try{ localStorage.setItem(FILLKEY, VFILL ? '1' : '0'); }catch(e){}
+let VFILL = false, VFILLS = [];
+try{ const a = JSON.parse(localStorage.getItem(FILLKEY) || '[]'); if(Array.isArray(a)) VFILLS = a.filter(x=>typeof x==='string'); localStorage.removeItem('saved-posts-viewfill'); }catch(e){}   // the old one-for-all switch is dropped
+function paintViewFill(){
   VIEW.root.classList.toggle('vcover', VFILL);
   const b = VIEW.root.querySelector('.vfill'), lbl = VFILL ? 'Fit to screen (F)' : 'Fill screen (F)';
   b.setAttribute('aria-pressed', String(VFILL)); b.setAttribute('aria-label', VFILL ? 'Fit to screen' : 'Fill screen'); b.title = lbl;
   b.innerHTML = VFILL ? FIT_ICON : FILL_ICON;   // the icon shows what a press will do
 }
-setViewFill(VFILL);
+function fillOf(p){ return !!(p && VFILLS.includes(p.id)); }
+function loadViewFill(p){ VFILL = fillOf(p); paintViewFill(); }   // each post opens the way it was left; never set before means Fit
+function setViewFill(on){
+  VFILL = !!on; const id = VIEW.cur && VIEW.cur.id;
+  if(id){ VFILLS = VFILLS.filter(x=>x!==id); if(VFILL){ VFILLS.push(id); if(VFILLS.length > FILL_MAX) VFILLS = VFILLS.slice(-FILL_MAX); } try{ localStorage.setItem(FILLKEY, JSON.stringify(VFILLS)); }catch(e){} }
+  paintViewFill();
+}
+paintViewFill();
 VIEW.root.querySelector('.vfill').addEventListener('click',e=>{ e.stopPropagation(); setViewFill(!VFILL); });
 VIEW.root.addEventListener('click',e=>{ if(e.target===VIEW.root || e.target===VIEW.stage) closeViewer(); });
 ['pointermove','pointerdown'].forEach(ev=>VIEW.root.addEventListener(ev,e=>{
