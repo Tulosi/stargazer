@@ -40,7 +40,13 @@ os.makedirs(WORK,exist_ok=True)
 with sync_playwright() as p:
     b=p.chromium.launch()
     # 1 gallery (dark, masonry)
-    pg=session(b,{'width':1400,'height':860},'dark'); settle(pg); pg.evaluate("window.scrollTo(0,0)"); snap(pg,WORK+'/gallery.png')
+    pg=session(b,{'width':1400,'height':860},'dark'); settle(pg); pg.evaluate("window.scrollTo(0,0)")
+    # the headline shows one card with its info tray up: the biggest tile that sits wholly in the first screen
+    pg.evaluate("""()=>{ const vh = innerHeight; let best = null, area = 0;
+        for(const c of document.querySelectorAll('#grid .card')){ const r = c.getBoundingClientRect(); if(r.top < 60 || r.bottom > vh-20) continue; const a = r.width*r.height; if(a > area){ area = a; best = c; } }
+        if(best){ ensureLayer(best); setLayer(best, true); window._shotCard = best; } }""")
+    pg.wait_for_timeout(600); snap(pg,WORK+'/gallery.png')
+    pg.evaluate("()=>{ if(window._shotCard) setLayer(window._shotCard, false); }"); pg.wait_for_timeout(400)
     # 2 filters panel (dark)
     pg.click('#decktoggle'); pg.wait_for_timeout(500); snap(pg,WORK+'/filters.png'); pg.context.close()
     # 3 list 2 columns (light)
