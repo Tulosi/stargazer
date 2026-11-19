@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f5f3f9">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f4f5">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#131118">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src data:; img-src * data: blob:; media-src * data: blob:; connect-src *; frame-src https://www.youtube.com https://www.redgifs.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <script src="config.js"></script>
@@ -21,13 +21,13 @@
 /* Quiet chrome, loud media. Neutral monochrome UI; the only colour on the page comes from the posts themselves.
    Tokens keep their old names so existing component rules and scripts keep working. */
 :root{
-  --seg-on:#ffffff; --lav:#ddd5f3; --bg:#f5f3f9; --surface:#ffffff; --surface-2:#ece9f3; --ink:#17151f; --muted:#6b6780; --line:#e0dce9;
+  --seg-on:#ffffff; --lav:#ddd5f3; --bg:#f4f4f5; --surface:#ffffff; --surface-2:#ebebee; --ink:#17171a; --muted:#66666f; --line:#e0e0e4;   /* neutral graphite surfaces (audit 2): the accent alone carries the lavender */
   --sel:#4a3b78; --sel-ink:#ffffff; --hot:#4a3b78; --g1:#7c3aed; --g2:#c026d3; --g3:#ec4899;
   --accent:#4a3b78; --accent-ink:#ffffff; --chip-on:#4a3b78; --warn:#9c4607; --alert-ink:#a24743; --alert-bg:rgba(176,74,70,.10); --alert-line:rgba(176,74,70,.38);
-  --glass:rgba(245,243,249,.8);
+  --glass:rgba(244,244,245,.8);
   --shadow:0 18px 50px rgba(18,20,28,.16),0 2px 8px rgba(18,20,28,.06);
-  --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%236b6780' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
-  --ph:#e7e3ef; --ph-mix:9%;   /* loading placeholder tile: one quiet violet-grey for every card, not a colour per subreddit */
+  --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%2366666f' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
+  --ph:#e6e6ea; --ph-mix:9%;   /* loading placeholder tile: one quiet grey for every card, not a colour per subreddit */
   --font:'Geist',ui-sans-serif,system-ui,-apple-system,'Segoe UI Variable Text','Segoe UI',Roboto,'Helvetica Neue',sans-serif;
   --font-display:var(--font); --font-body:var(--font); --font-mono:var(--font);
   --card:230px;
@@ -75,7 +75,8 @@ button,select,input{font:inherit;color:inherit}
 .deck-bar{display:flex;align-items:center;gap:12px}
 .brand{display:inline-flex;align-items:center;margin-right:4px;line-height:0;color:inherit}
 .brand:not(:has(.logo)){font-weight:600;font-size:15px;line-height:1.2;text-decoration:none}
-.brand .logo{display:block;height:40px;width:auto;overflow:visible}
+.brand .logo{display:block;height:40px;width:auto;overflow:visible;color:var(--ink)}
+.brand .logo .logostar{fill:var(--accent)}
 .deck-bar{position:relative}
 #srctoggle{position:relative}
 .srcbadge{position:absolute;right:-3px;top:-3px;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--sel);color:var(--sel-ink);box-shadow:0 0 0 2px var(--bg)}
@@ -84,22 +85,20 @@ button,select,input{font:inherit;color:inherit}
 .stats[hidden]{display:none}
 .stats .st{position:relative;white-space:nowrap;cursor:default;outline:none}
 .stats .st b{color:color-mix(in srgb,var(--ink) 62%,var(--muted));font-weight:500}
-.stats .lb{margin-left:.3em}
-.stats .st+.st::before{content:"\2022";position:absolute;left:-10px;color:var(--faint,var(--muted));opacity:.6}
+.stats .st.sx{margin-left:.45em}
+.stats .st.sx[hidden]{display:none}
+.stats .st.sx::before{content:"\00b7";margin-right:.45em;color:var(--muted)}
 .stats .st em{display:none;position:absolute;left:0;top:calc(100% + 4px);z-index:5;font-style:normal;white-space:normal;width:max-content;max-width:min(260px,80vw);padding:6px 9px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink);box-shadow:0 6px 18px rgba(0,0,0,.35)}
 .stats .st:hover em,.stats .st:focus em,.stats .st.open em{display:block}
 .stats .st:last-child em{left:auto;right:0}
 @media (max-width:720px){
-  /* beside the logo, right-aligned: number over label, three columns */
-  .stats{position:relative;margin-left:auto;flex:0 0 auto;padding:0;display:grid;grid-template-columns:repeat(3,auto);column-gap:0;text-align:center}
+  /* beside the logo, right-aligned: "13 shown of 15", with "2 loading" on a second line while it applies */
+  .stats{position:relative;margin-left:auto;flex:0 0 auto;padding:0 2px 0 0;display:flex;flex-direction:column;align-items:flex-end;text-align:right;font-size:12px;line-height:1.25}
   .stats[hidden]{display:none}
-  .stats .st{position:static;display:flex;flex-direction:column;align-items:center;padding:0 11px;line-height:1.15;font-size:10px;text-transform:uppercase;letter-spacing:.05em}
-  .stats .st:last-child{padding-right:2px}
-  .stats .st b{font-size:13px;letter-spacing:0;text-transform:none;line-height:1.2}
-  .stats .lb{margin-left:0}
-  .stats .st+.st::before{display:none}
-  .stats .st em{left:auto;right:0;transform:none;text-transform:none;letter-spacing:0;font-size:12px;text-align:left}
-  .stats .st:last-child em{right:0}
+  .stats .st{position:static}
+  .stats .st.sx{margin-left:0;font-size:11px;color:var(--muted)}
+  .stats .st.sx::before{display:none}
+  .stats .st em{left:auto;right:0;transform:none;font-size:12px;text-align:left}
 }
 .search{display:none}
 /* navigation: on wide screens the four buttons sit in the bar with labels and the search box is always there; on phones they form a bottom bar */
@@ -139,7 +138,7 @@ button,select,input{font:inherit;color:inherit}
 .listfacts{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);line-height:1.45}
 .listfacts #csvStatus{display:block}
 .pullline{font-size:12px;color:var(--muted)}   /* quiet while all is well; only a stale list gets the loud box */
-.pullline[data-warn="1"]{margin-top:4px;padding:7px 10px;border-radius:8px;font-size:13px;font-weight:700;color:var(--alert-ink);background:var(--alert-bg);border:1px solid var(--alert-line)}
+.pullline[data-warn="1"]{margin-top:4px;padding:7px 10px;border-radius:8px;font-size:13px;font-weight:600;color:var(--alert-ink);background:var(--alert-bg);border:1px solid var(--alert-line)}
 .mrghint .btnrow{display:inline-flex;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap}
 .mrghint .btnrow .linkbtn{padding-left:0}
 #srctoggle[data-attn]::before{content:"";position:absolute;left:-3px;top:-3px;width:11px;height:11px;border-radius:50%;background:var(--warn);box-shadow:0 0 0 2px var(--bg)}
@@ -165,20 +164,32 @@ button,select,input{font:inherit;color:inherit}
 .actgrid.inner{margin-top:0}
 .actgrid .hint{margin:0;font-size:12px;color:var(--muted);line-height:1.45}
 .actgrid .pill:disabled{opacity:.45;cursor:default}
+.actgrid .actlbl{margin:6px 0 -2px;font-size:12px;color:var(--muted)}
+.actgrid .actlbl:first-child{margin-top:0}
+.holdhint{position:absolute;left:50%;bottom:12px;translate:-50% 0;z-index:5;padding:6px 11px;border-radius:999px;background:rgba(20,20,24,.82);color:#fff;font:500 12px var(--font);white-space:nowrap;pointer-events:none;transition:opacity .2s var(--ease-out),translate .2s var(--ease-out)}
+@starting-style{.holdhint{opacity:0;translate:-50% 6px}}
+.holdhint.out{opacity:0}
+.pill.quietwarn{background:none;color:var(--alert-ink);box-shadow:inset 0 0 0 1px var(--alert-line)}
+@media (hover:hover) and (pointer:fine){.pill.quietwarn:hover{background:var(--alert-bg)}}
 #decktoggle[aria-expanded="true"],#viewtoggle[aria-expanded="true"]{background:var(--sel);color:var(--sel-ink)}
 #decktoggle{position:relative}
-#decktoggle[data-n]::after{content:attr(data-n);position:absolute;top:-3px;right:-3px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;line-height:1;background:var(--sel);color:var(--sel-ink);box-shadow:0 0 0 2px var(--bg)}
+#decktoggle[data-n]::after{content:attr(data-n);position:absolute;top:-3px;right:-3px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;line-height:1;background:var(--sel);color:var(--sel-ink);box-shadow:0 0 0 2px var(--bg)}
 #decktoggle[aria-expanded="true"][data-n]::after{background:var(--sel-ink);color:var(--sel);box-shadow:0 0 0 2px var(--sel)}
 @media (max-width:720px){
   .deck{-webkit-backdrop-filter:none;backdrop-filter:none;background:color-mix(in srgb,var(--bg) 96%,transparent)}   /* a blurred parent would trap the fixed bottom bar */
+  /* Phones: the top bar tucks away while scrolling down and comes back on the way up (audit 2, item 44). It moves its sticky top, not a transform:
+     a transformed .deck would trap its fixed children (the bottom nav and the Select sheet live inside it). */
+  .deck{transition:top .22s var(--ease-out)}
+  body.bar-tucked .deck{top:calc(-1 * var(--deckh, 64px))}
   .navbtns{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:45;justify-content:space-around;align-items:flex-start;padding:8px 10px calc(10px + env(safe-area-inset-bottom,0px));background:color-mix(in srgb,var(--bg) 90%,transparent);-webkit-backdrop-filter:saturate(1.4) blur(16px);backdrop-filter:saturate(1.4) blur(16px);border-top:1px solid var(--line)}
   .navbtns .pill{margin-bottom:15px;position:relative}
   .navbtns .pill .nl{display:block;position:absolute;top:calc(100% + 3px);left:50%;transform:translateX(-50%);font-size:11px;font-weight:500;color:var(--muted);letter-spacing:.01em;line-height:1.2}
   body{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))}
   body #toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}   /* body: the base #toast rule comes later in the file and would win, putting toasts on top of the bottom bar */
   #pausebar{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
-  #panel,#srcpanel,#viewpanel{position:fixed;top:auto;max-width:none;margin:0;left:8px;right:8px;bottom:calc(86px + env(safe-area-inset-bottom,0px));max-height:min(72dvh,calc(100dvh - 120px));animation:sheetIn .2s ease-out}
-  @keyframes sheetIn{from{opacity:0;transform:translateY(12px)}}
+  #panel,#srcpanel,#viewpanel{position:fixed;top:auto;max-width:none;margin:0;left:8px;right:8px;bottom:calc(86px + env(safe-area-inset-bottom,0px));max-height:min(72dvh,calc(100dvh - 120px));transform-origin:bottom center}
+  @starting-style{#panel,#srcpanel,#viewpanel{opacity:0;transform:translateY(12px)}}
+  body.deck-collapsed #panel,body.src-collapsed #srcpanel,body.view-collapsed #viewpanel{transform:translateY(12px)}
   #panel::before,#srcpanel::before,#viewpanel::before{content:"";grid-column:1/-1;display:block;width:36px;height:4px;border-radius:2px;background:var(--line);margin:-4px auto 10px}   /* sheet handle */
   #panel,#srcpanel,#viewpanel{background:linear-gradient(var(--surface) 30%,transparent) top/100% 36px no-repeat local,linear-gradient(transparent,var(--surface) 70%) bottom/100% 36px no-repeat local,radial-gradient(farthest-side at 50% 0,rgba(0,0,0,.2),transparent) top/100% 12px no-repeat scroll,radial-gradient(farthest-side at 50% 100%,rgba(0,0,0,.2),transparent) bottom/100% 12px no-repeat scroll,var(--surface)}   /* a soft shadow shows where the sheet scrolls */
   .deck-bar.search-open .search{display:block;position:fixed;left:12px;right:12px;bottom:calc(86px + env(safe-area-inset-bottom,0px));top:auto;transform:none;z-index:46;max-width:none;border-radius:999px;box-shadow:var(--shadow)}
@@ -194,14 +205,26 @@ button,select,input{font:inherit;color:inherit}
 /* ---- filter panel: floats over the grid, closed by default ---- */
 .panel{position:fixed;right:max(14px,env(safe-area-inset-right,0px),var(--panr,0px));left:max(14px,env(safe-area-inset-left,0px));top:calc(var(--deckb,60px) + 8px);max-width:980px;margin-left:auto;
   background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:22px;
-  display:grid;grid-template-columns:1fr 1fr;gap:28px;max-height:calc(100dvh - 84px);overflow:auto;overscroll-behavior:contain;animation:panelIn .14s ease-out}
-@keyframes panelIn{from{opacity:0;transform:translateY(-6px)}}
-body.deck-collapsed #panel,body.src-collapsed #srcpanel,body.view-collapsed #viewpanel{display:none}
+  display:grid;grid-template-columns:1fr 1fr;gap:28px;max-height:calc(100dvh - 84px);overflow:auto;overscroll-behavior:contain;
+  transform-origin:top right;transition:opacity .2s var(--ease-out),transform .2s var(--ease-out),display .2s allow-discrete,overlay .2s allow-discrete}
+/* Panels and sheets enter from their button and leave in a shorter fade (audit 2): @starting-style for the entry, allow-discrete so display and the top layer wait for the exit */
+@starting-style{.panel{opacity:0;transform:translateY(-6px) scale(.98)}}
+body.deck-collapsed #panel,body.src-collapsed #srcpanel,body.view-collapsed #viewpanel{display:none;opacity:0;transform:translateY(-4px) scale(.98);transition-duration:.15s}
 #srcpanel{grid-template-columns:1fr;max-width:460px;gap:12px}
 #viewpanel{grid-template-columns:1fr;max-width:420px}
 @media (max-width:720px){.panel{grid-template-columns:1fr;gap:22px;padding:18px}}
-body.stats-flat .stats .st:not(:first-child){display:none}   /* nothing filtered, nothing loading: one number, labelled Posts (every width) */
+body.stats-flat .stats .sof{display:none}   /* nothing filtered, nothing loading: "15 posts" (every width) */
 .pcol{display:grid;gap:12px;align-content:start;min-width:0}
+.morefilt{display:block;interpolate-size:allow-keywords}
+.morefilt>:not(summary){margin-top:12px}
+.morefilt>label.toggle{display:flex}
+.morefilt>summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:28px;color:var(--muted);font-size:13px;width:max-content}
+.morefilt>summary::-webkit-details-marker{display:none}
+.morefilt>summary::after{content:"";width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg) translate(-1px,-1px);transition:transform .15s var(--ease-out)}
+.morefilt[open]>summary::after{transform:rotate(-135deg) translate(-1px,-1px)}
+.morefilt::details-content{height:0;overflow:clip;transition:height .2s var(--ease-out),content-visibility .2s allow-discrete}
+.morefilt[open]::details-content{height:auto}
+#morefiltn{color:var(--ink)}
 .pcol[hidden]{display:none}
 .kindbadge{display:inline-flex;align-items:center;gap:6px;width:fit-content;max-width:100%;font-size:12px;font-weight:600;padding:0;color:var(--muted)}   /* plain text with an icon: it states a fact, it is not a button */
 .kindbadge[data-k=account]{color:var(--ink)}
@@ -236,9 +259,9 @@ body.fullw .wrap,body.fullw .deck-in{max-width:none}
 .notches i{position:absolute;bottom:0;transform:translateX(-50%);font:500 11px/1 var(--font);font-style:normal;color:var(--muted);text-align:center}
 .notches i::before{content:"";display:block;width:3px;height:3px;margin:0 auto 4px;border-radius:50%;background:var(--muted);opacity:.55}
 .notches i.on::before{background:var(--ink);opacity:1}
-.notches i.on{color:var(--ink);font-weight:650}
+.notches i.on{color:var(--ink);font-weight:600}
 .chips{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
-.chip{border:0;background:var(--surface-2);color:var(--ink);border-radius:999px;padding:5px 12px;cursor:pointer;display:inline-flex;gap:7px;align-items:baseline;font-size:12.5px;line-height:1.3}
+.chip{border:0;background:var(--surface-2);color:var(--ink);border-radius:999px;padding:5px 12px;cursor:pointer;display:inline-flex;gap:7px;align-items:baseline;font-size:12px;line-height:1.3}
 .chip small{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
 @media (hover:hover){.chip:hover{background:var(--line)}}
 .chip[aria-pressed=true]{background:var(--chip-on);color:var(--accent-ink)}
@@ -262,10 +285,10 @@ body.fullw .wrap,body.fullw .deck-in{max-width:none}
 .load .err{color:var(--warn)}
 .load button{margin-left:8px;border:0;background:var(--surface-2);border-radius:999px;padding:3px 11px;cursor:pointer;font-size:12px}
 .load .bar{position:fixed;top:0;left:0;right:0;height:2px;z-index:60;pointer-events:none}
-.load .bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
-.load .bar i[style*="100%"]{opacity:0;transition:width .3s,opacity .5s .7s}
+.load .bar i{display:block;height:100%;width:100%;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .3s var(--ease-out)}   /* a scale, not a width: no layout on every step (audit 2) */
+.load .bar i.full{opacity:0;transition:transform .3s var(--ease-out),opacity .5s .7s}
 .summary{white-space:nowrap}
-/* Phones: a long status message (recovery progress) gets its own full-width line; the filter summary and Bulk Actions share the line below it. */
+/* Phones: a long status message (recovery progress) gets its own full-width line; the filter summary and the Select button share the line below it. */
 @media (max-width:720px){.status{flex-wrap:wrap;row-gap:8px}.load{flex:1 1 100%}.summary{flex:1 1 auto;min-width:0;white-space:normal}.selbtn{margin-left:auto}}
 
 /* ---- bento grid ---- */
@@ -282,8 +305,10 @@ body:not(.layout-list) .thumb{-webkit-touch-callout:none}   /* a long press open
 .thumb .still.ready{opacity:1}
 .thumb iframe.clip{position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none;background:transparent}
 .thumb .ph{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:12px;
-  background:linear-gradient(155deg,color-mix(in srgb,var(--g1) var(--ph-mix),var(--ph)),var(--ph) 65%);color:var(--ink);font:500 13px/1.25 var(--font);overflow-wrap:anywhere;transition:opacity .15s}
+  background:linear-gradient(155deg,color-mix(in srgb,var(--accent) var(--ph-mix),var(--ph)),var(--ph) 65%);color:var(--ink);font:500 13px/1.25 var(--font);overflow-wrap:anywhere;transition:opacity .15s}
 .thumb .ph span{opacity:.88}
+.thumb .ph .lq{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(10px);transform:scale(1.12);opacity:.92}
+.thumb .ph:has(.lq) span{display:none}
 /* a text-only post has no thumbnail: a lavender tile with a faint picture mark instead of the plain placeholder */
 body:not(.layout-list) .card.is-text .thumb .ph{background:var(--lav)}
 body:not(.layout-list) .card.is-text .thumb .ph span{display:none}
@@ -370,12 +395,23 @@ body:not(.layout-list) .badge.media{background:none;-webkit-backdrop-filter:none
 /* small touches (Nov 2026 audit, item 31): a star pops when it is turned on (pop), List's first rows arrive one after another (listIn) */
 @keyframes starpop{0%{scale:1}40%{scale:1.32}100%{scale:1}}
 @media (prefers-reduced-motion:no-preference){.pop{animation:starpop .32s var(--ease-out)}}
+/* The star is Stargazer's signature (audit 2): a starred post carries a small drawn star in its top-right corner in every layout, and starring
+   lands it there. Same five-point shape as the logo and the Star buttons. */
+.card{--star-mark:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.8 6.6 19.7l1.1-6.1L3.2 9.4l6.1-.8z'/%3E%3C/svg%3E")}
+body:not(.selecting) .card.is-star::before{content:"";position:absolute;top:8px;right:8px;width:15px;height:15px;z-index:4;pointer-events:none;background:#fff;-webkit-mask:var(--star-mark) center/contain no-repeat;mask:var(--star-mark) center/contain no-repeat;filter:drop-shadow(0 1px 2px rgba(0,0,0,.55))}
+body.layout-list:not(.selecting) .card.is-star::before{background:var(--accent);filter:none;top:10px;right:10px}
+@media (prefers-reduced-motion:no-preference){body:not(.selecting) .card.is-star.star-new::before{animation:starland .3s cubic-bezier(.23,1,.32,1)}}
+@media (prefers-reduced-motion:reduce){body:not(.selecting) .card.is-star.star-new::before{animation:fadein .2s ease-out}}
+@keyframes starland{from{opacity:0;transform:scale(1.8) translate(-8px,8px)}}
+.starbtn{min-height:30px;padding:0 12px;font-size:12px;font-weight:600;margin-left:auto}
+.starbtn[hidden]{display:none}
+.starbtn:not([hidden])+.selbtn{margin-left:8px}
 @media (hover:hover) and (pointer:fine){.title a:hover{text-decoration:underline;text-underline-offset:2px}}
 .meta a.cm{color:inherit;text-decoration:none}
 .meta a.cm:focus-visible{text-decoration:underline;text-underline-offset:2px;color:#fff}@media (hover:hover) and (pointer:fine){.meta a.cm:hover{text-decoration:underline;text-underline-offset:2px;color:#fff}}
 body.layout-list .meta a.cm:focus-visible{color:var(--ink)}@media (hover:hover) and (pointer:fine){body.layout-list .meta a.cm:hover{color:var(--ink)}}
-.meta{display:flex;flex-wrap:wrap;gap:1px 10px;align-items:baseline;font:400 11.5px/1.35 var(--font);font-variant-numeric:tabular-nums;color:rgba(255,255,255,.72);margin-top:4px}
-.meta .sub{border:0;background:none;padding:0;cursor:pointer;color:#fff;font:500 11.5px var(--font)}
+.meta{display:flex;flex-wrap:wrap;gap:1px 10px;align-items:baseline;font:400 12px/1.35 var(--font);font-variant-numeric:tabular-nums;color:rgba(255,255,255,.72);margin-top:4px}
+.meta .sub{border:0;background:none;padding:0;cursor:pointer;color:#fff;font:500 12px var(--font)}
 .meta .sub:focus-visible{text-decoration:underline;text-underline-offset:2px}@media (hover:hover) and (pointer:fine){.meta .sub:hover{text-decoration:underline;text-underline-offset:2px}}
 @media (hover:hover) and (pointer:fine){.meta .sub:hover{text-decoration:underline;text-underline-offset:2px}}
 .meta .note{color:rgba(255,255,255,.72)}
@@ -384,7 +420,7 @@ body.layout-list .meta a.cm:focus-visible{color:var(--ink)}@media (hover:hover) 
 .card:hover .actions,.card:focus-within .actions,.card:hover .arch,.card:focus-within .arch{display:flex}
 @media (hover:none){.actions,.arch{display:flex}}
 .actions{gap:6px;margin-top:9px}
-.btn{flex:1;text-align:center;text-decoration:none;border:0;border-radius:999px;padding:6px 10px;font-weight:500;font-size:11.5px;background:rgba(255,255,255,.2);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);color:#fff}
+.btn{flex:1;text-align:center;text-decoration:none;border:0;border-radius:999px;padding:6px 10px;font-weight:500;font-size:12px;background:rgba(255,255,255,.2);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);color:#fff}
 @media (hover:hover){.btn:hover{background:rgba(255,255,255,.32)}}
 .btn.primary{background:#fff;color:#111}
 @media (hover:hover){.btn.primary:hover{background:rgba(255,255,255,.85)}}
@@ -399,7 +435,7 @@ body:not(.layout-list) .layer{--ico-star:url("data:image/svg+xml,%3Csvg xmlns='h
 body:not(.layout-list) .layer .info{position:static;display:block;padding:0;background:none;transition:none}
 /* The tray is neutral smoked glass: the picture carries the colour, not the chrome. White text stays 5.6:1 or better even over a white picture. */
 body:not(.layout-list) .layer *{pointer-events:inherit}   /* a layer that is down must not catch taps meant for the media underneath */
-body:not(.layout-list) .layer .title{font:650 15px/1.25 var(--font);-webkit-line-clamp:2}
+body:not(.layout-list) .layer .title{font:600 15px/1.25 var(--font);-webkit-line-clamp:2}
 body:not(.layout-list) .layer .meta{margin-top:3px}
 body:not(.layout-list) .layer .arch{display:flex;margin-top:5px}
 body:not(.layout-list) .layer .lh-close{display:block;position:relative;align-self:center;width:72px;height:14px;margin:-4px 0 -5px;padding:0;border:0;background:none;cursor:pointer;touch-action:none}   /* a small target in the middle, so a scroll that starts on the tray rarely grabs it */
@@ -422,8 +458,8 @@ body:not(.layout-list) .lay-cap .nsfwb svg{width:calc(var(--gi)*1.3);height:calc
 /* a taller invisible catch area on every tray button (about 44px), so a thumb does not need the glyph's size */
 body:not(.layout-list) .lay-cap :is(.star,.fs,.save):not(.nsfwb)::after,body:not(.layout-list) .layer .actions .btn::after{content:"";position:absolute;inset:-6px 0}
 body:not(.layout-list) .layer .actions{display:flex;margin:0;gap:6px;min-width:0}
-body:not(.layout-list) .layer .actions .btn{position:relative;flex:none;height:var(--lh);padding:0 10px;border-radius:10px;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;color:rgba(255,255,255,.88);font-size:12.5px;font-weight:500;white-space:nowrap;display:grid;place-items:center}
-body:not(.layout-list) .layer .actions .btn.primary{color:#fff;font-weight:650}
+body:not(.layout-list) .layer .actions .btn{position:relative;flex:none;height:var(--lh);padding:0 10px;border-radius:10px;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;color:rgba(255,255,255,.88);font-size:12px;font-weight:500;white-space:nowrap;display:grid;place-items:center}
+body:not(.layout-list) .layer .actions .btn.primary{color:#fff;font-weight:600}
 @media (hover:hover){body:not(.layout-list) .layer .actions .btn:hover{background:rgba(255,255,255,.14)}}
 .btn .bi{display:none}
 /* Open post, Comments and the pill share one row. Where words no longer fit beside the pill, the two links become round icon buttons (their names stay in aria-label and the tooltip). */
@@ -480,7 +516,7 @@ body.cm-always:not(.layout-list) .card .peek,body:not(.layout-list) .card.lay-op
 }
 @container (max-width:200px){
   body:not(.layout-list) .layer{--lw:clamp(22px,calc((100cqw - 16px) / 5),28px);--lh:30px;--gi:17px;padding:3px 8px 6px;gap:2px}
-  body:not(.layout-list) .lay-cap .nsfwb{display:none}   /* five icons is what a 2-across phone tile has room for; NSFW stays in Bulk Actions, Filters and the full-screen view */
+  body:not(.layout-list) .lay-cap .nsfwb{display:none}   /* five icons is what a 2-across phone tile has room for; NSFW stays in Select mode, Filters and the full-screen view */
   body:not(.layout-list) .layer .title{font-size:11px;-webkit-line-clamp:1}
   body:not(.layout-list) .layer .meta{display:none}
   body:not(.layout-list) .layer .ctl{gap:5px}
@@ -508,7 +544,7 @@ body.layout-list #cardrow{display:none}   /* List keeps its own arrangement (inl
 .volwrap.open .volfly{display:block;touch-action:none}
 .volfly .volr{position:absolute;left:50%;top:50%;display:block;width:84px;max-width:none;height:24px;margin:-12px 0 0 -42px;transform:rotate(-90deg);accent-color:#fff;cursor:pointer}   /* a vertical slider: min at the bottom */
 .ctl .seek{flex:1;min-width:30px;height:14px;margin:0;accent-color:#fff;cursor:pointer;touch-action:pan-y}   /* a vertical swipe that starts on the scrubber scrolls the page; only a sideways drag scrubs */
-.ctl .time{flex:none;font:400 10.5px var(--font);font-variant-numeric:tabular-nums;color:rgba(255,255,255,.9);white-space:nowrap}
+.ctl .time{flex:none;font:400 11px var(--font);font-variant-numeric:tabular-nums;color:rgba(255,255,255,.9);white-space:nowrap}
 
 /* ---- viewer, toast, misc ---- */
 #viewer{position:fixed;inset:0;z-index:200;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden}
@@ -551,19 +587,31 @@ body.viewing,body.triaging{overflow:hidden}
 #triage .tg-cap{position:absolute;left:0;right:0;bottom:0;padding:60px 18px 18px;background:linear-gradient(to top,rgba(0,0,0,.78),rgba(0,0,0,0));display:flex;flex-direction:column;gap:5px}
 #triage .tg-card.is-text .tg-cap{top:0;justify-content:center;background:none;color:#1a1530}
 #triage .tg-cap b{font:600 13px var(--font)}
-#triage .tg-cap span{font:500 17px/1.3 var(--font);text-wrap:pretty;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+#triage .tg-cap span{font:500 15px/1.3 var(--font);text-wrap:pretty;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 #triage .tg-stamp{position:absolute;top:22px;padding:6px 12px;border:3px solid currentColor;border-radius:10px;font:800 22px var(--font);letter-spacing:.06em;opacity:0;pointer-events:none}
-#triage .tg-stamp.keep{left:20px;color:#5ee08a;rotate:-12deg}
-#triage .tg-stamp.rm{right:20px;color:#ff6b6b;rotate:12deg}
-#triage .tg-stamp.star{left:50%;translate:-50% 0;color:#ffd166}
+#triage .tg-stamp.keep{left:20px;color:#fff;rotate:-12deg}
+#triage .tg-stamp.rm{right:20px;color:#e49a95;rotate:12deg}
+#triage .tg-stamp.star{left:50%;translate:-50% 0;color:#cbbdf2}
 #triage .tg-acts{display:flex;justify-content:center;gap:22px}
 #triage .tg-acts button{width:76px;height:76px;border-radius:50%;border:0;background:rgba(255,255,255,.12);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font:500 11px var(--font);cursor:pointer}
-#triage .tg-acts .tg-rm{color:#ff8a8a}
-#triage .tg-acts .tg-star{color:#ffd166}
-#triage .tg-acts .tg-keep{color:#7be3a0}
+#triage .tg-acts .tg-rm{color:#e49a95}   /* one system (audit 2): ink for keep, the quiet alert for remove, the accent for star; Triage is always on black, so the dark tokens are written out */
+#triage .tg-acts .tg-star{color:#cbbdf2}
+#triage .tg-acts .tg-keep{color:#fff}
 #triage .tg-acts button:disabled{opacity:.35;cursor:default}
 #triage .tg-done{position:absolute;inset:0;margin:auto;height:fit-content;max-width:36ch;text-align:center;font:500 16px/1.5 var(--font);color:rgba(255,255,255,.85)}
-#triage .tg-done button{margin-top:16px}
+#triage .tg-done button{margin-top:20px}
+#triage .tg-done p{margin:0 0 10px;font-size:18px;color:#fff}
+#triage .tg-tally{display:flex;justify-content:center;gap:22px;font-size:14px;color:rgba(255,255,255,.7)}
+#triage .tg-tally b{display:block;font-size:22px;font-weight:600;color:#fff;font-variant-numeric:tabular-nums}
+#triage .tg-tally span:last-child b{color:#cbbdf2}
+#triage .tg-fan{position:relative;height:150px;margin:0 auto 22px;width:220px}
+#triage .tg-fan img{position:absolute;left:50%;top:0;width:104px;height:140px;object-fit:cover;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.5);translate:-50% 0;rotate:calc(var(--i)*12deg);transform-origin:50% 120%;transition:rotate .5s cubic-bezier(.23,1,.32,1),opacity .3s}
+@starting-style{#triage .tg-fan img{rotate:0deg;opacity:0}}
+@media (prefers-reduced-motion:reduce){#triage .tg-fan img{transition:opacity .2s}}
+#triage .tg-hint{margin:10px auto 0;text-align:center;font-size:12px;color:rgba(255,255,255,.7)}
+#triage .tg-hint kbd{display:inline-block;min-width:18px;padding:0 4px;border-radius:4px;background:rgba(255,255,255,.14);font:inherit;color:#fff}
+#triage .tg-hint .tgt{display:none}
+@media (pointer:coarse){#triage .tg-hint .tgk{display:none}#triage .tg-hint .tgt{display:inline}}
 #viewer .vctl{left:50%;right:auto;bottom:calc(64px + env(safe-area-inset-bottom,0px));width:min(720px,calc(100% - 32px));transform:translateX(-50%);height:46px;padding:0 14px 0 10px;gap:12px;border-radius:14px;background:rgba(28,28,30,.72);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);z-index:3;transition:opacity .25s var(--ease-out)}
 #viewer .vctl .pp,#viewer .vctl .vol,#viewer .vctl .vfs{width:32px;height:32px}
 #viewer .vctl .vfs{flex:none;border:0;border-radius:50%;padding:0;display:grid;place-items:center;background:rgba(255,255,255,.2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.3);color:#fff;cursor:pointer}
@@ -577,14 +625,16 @@ body.viewing,body.triaging{overflow:hidden}
 #viewer .vcap{position:absolute;left:max(16px,env(safe-area-inset-left));right:calc(max(8px,env(safe-area-inset-right)) + 76px);bottom:calc(66px + env(safe-area-inset-bottom,0px));z-index:2;max-width:60ch;display:flex;flex-direction:column;gap:5px;color:#fff;pointer-events:none;text-shadow:0 1px 2px rgba(0,0,0,.45)}
 #viewer .vcap .vc-sub{font:600 13px/1.3 var(--font)}
 #viewer .vcap .vc-sub span{font-weight:400;color:rgba(255,255,255,.72)}
-#viewer .vcap .vc-t{font:500 16px/1.3 var(--font);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;text-wrap:pretty}
+#viewer .vcap .vc-t{font:500 15px/1.3 var(--font);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;text-wrap:pretty}
 #viewer .vcap .vc-by{font:400 12px/1.3 var(--font);color:rgba(255,255,255,.72)}
+#viewer.vside .vscrim{opacity:0}
+#viewer.vside .vcap{left:24px;right:auto;width:calc(var(--vside) - 48px);max-width:44ch}
 #viewer .vrail{position:absolute;right:max(8px,env(safe-area-inset-right));bottom:calc(62px + env(safe-area-inset-bottom,0px));z-index:3;display:flex;flex-direction:column;align-items:center;gap:14px}
 #viewer:has(.vctl) .vcap{bottom:calc(126px + env(safe-area-inset-bottom,0px))}
 #viewer:has(.vctl) .vrail{bottom:calc(122px + env(safe-area-inset-bottom,0px))}
 #viewer .vrail :is(button,a){position:relative;width:56px;min-height:44px;border:0;padding:0;background:none;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font:500 11px/1.2 var(--font);text-decoration:none;cursor:pointer;filter:drop-shadow(0 1px 2px rgba(0,0,0,.45));-webkit-tap-highlight-color:transparent}
 #viewer .vrail svg{width:26px;height:26px;display:block}
-#viewer .vrail .vr-nsfw{font:700 12px/1.05 var(--font);letter-spacing:.02em;color:rgba(255,255,255,.55)}
+#viewer .vrail .vr-nsfw{font:600 12px/1.05 var(--font);letter-spacing:.02em;color:rgba(255,255,255,.55)}
 #viewer .vrail .vr-nsfw[aria-pressed="true"]{color:#fff}
 #viewer .vrail [hidden]{display:none}
 @media (hover:hover) and (pointer:fine){#viewer .vrail :is(button,a):hover{color:rgba(255,255,255,.82)}}
@@ -610,26 +660,26 @@ img.vmorph.back{position:fixed;z-index:201}
 @media (hover:hover){#viewer .vnav:hover{background:rgba(255,255,255,.3)}}
 #viewer .vprev{left:max(12px,env(safe-area-inset-left))}
 #viewer .vnext{right:max(12px,env(safe-area-inset-right))}
-#viewer .vcount{position:absolute;top:calc(max(12px,env(safe-area-inset-top)) + 9px);left:50%;transform:translateX(-50%);z-index:2;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.16);color:#fff;font-size:12.5px;font-variant-numeric:tabular-nums}
+#viewer .vcount{position:absolute;top:calc(max(12px,env(safe-area-inset-top)) + 9px);left:50%;transform:translateX(-50%);z-index:2;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.16);color:#fff;font-size:12px;font-variant-numeric:tabular-nums}
 dialog#reader{border:0;border-radius:18px;padding:20px 22px 22px;max-width:680px;width:calc(100% - 24px);max-height:86vh;overflow:auto;background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
 dialog#reader::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
-#reader .rdhead{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--muted);font-size:12.5px}
+#reader .rdhead{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--muted);font-size:13px}
 #reader .rdhead p{margin:0}
 #rdClose{border:0;background:var(--surface-2);color:var(--ink);width:32px;height:32px;border-radius:50%;font-size:20px;line-height:1;cursor:pointer}
 #reader h3{margin:10px 0 4px;font-size:18px;line-height:1.3}
-#rdSrc{margin:0 0 6px;color:var(--muted);font-size:12.5px}
-#rdBody p{margin:10px 0;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5;font-size:14.5px}
+#rdSrc{margin:0 0 6px;color:var(--muted);font-size:13px}
+#rdBody p{margin:10px 0;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5;font-size:14px}
 #rdBody p.muted,#rdCm .muted{color:var(--muted)}
 #rdLinks{display:flex;flex-wrap:wrap;gap:6px 14px;margin:14px 0 4px;font-size:13px}
 #rdLinks a{color:var(--sel)}
-#rdCm{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);font-size:13.5px}
-#rdCm .rc{margin:10px 0 0;padding-left:12px;border-left:2px solid color-mix(in srgb,var(--g2) 30%,var(--line))}
+#rdCm{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);font-size:13px}
+#rdCm .rc{margin:10px 0 0;padding-left:12px;border-left:2px solid color-mix(in srgb,var(--accent) 30%,var(--line))}
 #rdCm .rc .rh{color:var(--muted);font-size:12px}
 #rdCm .rc .rb{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.45;margin-top:2px}
 dialog#confirm{border:0;border-radius:18px;padding:24px;max-width:440px;width:calc(100% - 32px);background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
 dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
-#confirm h3{margin:0 0 10px;font-size:17px;font-weight:600}
-#confirm p{margin:8px 0;color:var(--muted);font-size:13.5px}
+#confirm h3{margin:0 0 10px;font-size:18px;font-weight:600}
+#confirm p{margin:8px 0;color:var(--muted);font-size:13px}
 #confirm .danger{background:#c62828;color:#fff}
 @media (hover:hover) and (pointer:fine){#confirm .danger:hover{background:#a81f1f}}
 .srcseg{display:flex;gap:2px;padding:3px;border-radius:999px;background:var(--surface-2)}
@@ -640,7 +690,7 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
 .nsfwgrp{display:grid;gap:6px;margin-bottom:6px}
 .nsfwlbl{font-size:13px;display:flex;gap:6px;font-variant-numeric:tabular-nums}
 .nsfwlbl span{color:var(--muted)}
-.nsfwseg .pill{padding:0 8px;font-size:12.5px}
+.nsfwseg .pill{padding:0 8px;font-size:12px}
 .subform{display:grid;gap:8px}
 .subform input{height:36px;border:0;border-radius:10px;background:var(--surface-2);padding:0 12px;min-width:0;width:100%}
 .prefixed{display:flex;align-items:center;height:36px;border-radius:10px;background:var(--surface-2);padding-left:12px;color:var(--muted);font-size:13px;white-space:nowrap}
@@ -652,18 +702,18 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
 #acMsg,#acWho,#acHint{font-size:12px;color:var(--muted)}
 #acct input.field{width:100%}
 .more{display:flex;flex-direction:column;align-items:center;gap:8px;padding:26px 0 8px;color:var(--muted);font-size:12px}
-#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:50;background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font:500 12.5px var(--font);box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw}
-#toast.on{opacity:1}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:50;background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font:500 12px var(--font);box-shadow:var(--shadow);opacity:0;pointer-events:none;transform:translateX(-50%) translateY(8px);transition:opacity .15s var(--ease-out),transform .15s var(--ease-out);max-width:90vw}
+#toast.on{opacity:1;transform:translateX(-50%);transition-duration:.2s}   /* rises 8px from the bottom bar; leaves faster than it comes */
 #toast.act.on{pointer-events:auto}
-.selbtn{margin-left:10px;min-height:30px;padding:0 14px;font-size:12.5px;font-weight:600}
+.selbtn{margin-left:10px;min-height:30px;padding:0 14px;font-size:12px;font-weight:600}
 .selbtn[aria-pressed=true]{background:var(--sel);color:var(--sel-ink)}
-/* Selection actions. Desktop: a tinted strip docked under the top bar (inside .deck), so it appears right where Bulk Actions was clicked and stays put while scrolling. Phones: a bottom sheet, below. */
-#selbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding:8px max(14px,calc((100% - 1732px)/2));background:color-mix(in srgb,var(--g2) 13%,var(--surface));border-top:1px solid color-mix(in srgb,var(--g2) 35%,var(--line));animation:selin .18s ease-out}
+/* Selection actions. Desktop: a tinted strip docked under the top bar (inside .deck), so it appears right where Select was clicked and stays put while scrolling. Phones: a bottom sheet, below. */
+#selbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding:8px max(14px,calc((100% - 1732px)/2));background:color-mix(in srgb,var(--accent) 13%,var(--surface));border-top:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));animation:selin .18s ease-out}
 @keyframes selin{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){#selbar{animation:none}}
 #selbar[hidden]{display:none}
 #selbar b{font-weight:600;font-size:13px;margin-right:4px;min-width:84px}
-#selbar .selsep{width:1px;align-self:stretch;margin:4px 4px;background:color-mix(in srgb,var(--g2) 30%,var(--line))}
+#selbar .selsep{width:1px;align-self:stretch;margin:4px 4px;background:color-mix(in srgb,var(--accent) 30%,var(--line))}
 #selbar [data-a=done]{margin-left:auto;background:var(--sel);color:var(--sel-ink)}
 #selbar .pill.danger{color:var(--alert-ink);border-color:var(--alert-line)}
 @media (max-width:720px){
@@ -671,7 +721,7 @@ dialog#confirm::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(
   #selbar .selsep{display:none}
   #selbar [data-a=done]{margin-left:0}
   #selbar b{flex:1 0 100%;text-align:center;margin:0 0 2px}
-  #selbar .pill{padding:7px 8px;font-size:12.5px}
+  #selbar .pill{padding:7px 8px;font-size:12px}
   body.selecting #totop{bottom:130px}
 }
 body.selecting .card{cursor:pointer}
@@ -683,24 +733,30 @@ body.selecting #totop{bottom:90px}
 #totop{position:fixed;right:16px;bottom:20px;z-index:40;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);display:grid;place-items:center;cursor:pointer;box-shadow:var(--shadow)}
 #totop[hidden]{display:none}
 @media (max-width:720px){#totop{bottom:calc(84px + env(safe-area-inset-bottom,0px));right:12px}}
-#toast .tact{margin-left:12px;background:none;border:0;color:inherit;font:700 12.5px var(--font);text-decoration:underline;cursor:pointer;padding:2px 0}
+#toast .tact{margin-left:12px;background:none;border:0;color:inherit;font:600 12px var(--font);text-decoration:underline;cursor:pointer;padding:2px 0}
 .intro{max-width:620px;margin:0 auto;text-align:left;color:var(--ink)}
+.introsky{columns:3 96px;column-gap:8px;margin:0 0 28px;max-height:220px;overflow:hidden;opacity:.9;-webkit-mask-image:linear-gradient(#000 45%,transparent);mask-image:linear-gradient(#000 45%,transparent);pointer-events:none;user-select:none}
+.introsky img{display:block;width:100%;height:auto;margin:0 0 8px;border-radius:8px;break-inside:avoid}
+@media (min-width:900px){
+  .intro{max-width:1000px;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:56px;align-items:start}
+  .introsky{order:2;max-height:560px;margin:0;-webkit-mask-image:linear-gradient(#000 60%,transparent);mask-image:linear-gradient(#000 60%,transparent)}
+}
 p.nodata{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100%;margin:0 0 28px;padding:0;color:var(--muted);font-size:13px;font-weight:500;line-height:1.4}
 .intro p.nodata{font-size:13px;font-weight:400}   /* a status line under the buttons: quieter than the steps and the call to action, not louder */
 .nodata svg{flex:none}
 .steps{list-style:none;margin:0 0 30px;padding:0;display:grid;gap:12px}
-.steps li{display:flex;gap:12px;align-items:flex-start;font-size:13.5px;line-height:1.55;color:var(--muted)}
-.steps .n{flex:none;width:24px;height:24px;margin-top:0;border-radius:50%;border:1.5px solid var(--sel);color:var(--sel);display:grid;place-items:center;font-size:12px;font-weight:650;line-height:1}
-.intro p{margin:0 0 18px;font-size:14.5px;line-height:1.6;color:var(--muted)}
+.steps li{display:flex;gap:12px;align-items:flex-start;font-size:13px;line-height:1.55;color:var(--muted)}
+.steps .n{flex:none;width:24px;height:24px;margin-top:0;border-radius:50%;border:1.5px solid var(--sel);color:var(--sel);display:grid;place-items:center;font-size:12px;font-weight:600;line-height:1}
+.intro p{margin:0 0 18px;font-size:14px;line-height:1.6;color:var(--muted)}
 .intro .introuse{color:var(--ink)}
 .intro .introuse{margin-bottom:30px}
 .intro .introh{margin:0 0 14px;font-size:15px;font-weight:600;color:var(--ink)}
 .intro a{color:var(--sel);text-decoration:underline;text-underline-offset:2px;overflow-wrap:anywhere}
 .introcta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:26px 0 14px!important}
-.introcta .dropnote{font-size:12.5px;color:var(--muted)}
-.intro .introacct{display:flex;align-items:center;gap:12px;margin:18px 0 0;padding:12px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--line);color:var(--muted);font-size:13.5px}
+.introcta .dropnote{font-size:12px;color:var(--muted)}
+.intro .introacct{display:flex;align-items:center;gap:12px;margin:18px 0 0;padding:12px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--line);color:var(--muted);font-size:13px}
 .introacct svg{flex:none;color:var(--sel)}
-.intro .introfoot{margin:40px 0 0;padding-top:16px;border-top:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;color:var(--muted);opacity:.8}
+.intro .introfoot{margin:48px 0 0;display:flex;flex-direction:column;align-items:flex-start;gap:2px;font-size:11px;color:var(--muted);opacity:.65}   /* quieter than the steps (audit 2) */
 .intro .introfoot a{color:inherit;text-decoration:underline;text-decoration-color:color-mix(in srgb,currentColor 35%,transparent);text-underline-offset:3px}
 .intro .introfoot a:focus-visible{color:var(--ink);text-decoration-color:currentColor}@media (hover:hover) and (pointer:fine){.intro .introfoot a:hover{color:var(--ink);text-decoration-color:currentColor}}
 @media (hover:none){.introcta .dropnote{display:none}}
@@ -774,7 +830,7 @@ body.layout-list .badges{display:contents}
 @media (pointer:coarse){body.layout-list .star,body.layout-list .fs,body.layout-list .save{margin-top:-20px}}
 /* ---- List layout, redesigned: calm rows with a small square thumbnail on the left, text on a solid surface, purple/magenta accents ---- */
 body.layout-list .card{background:var(--surface);border:1px solid var(--line);transition:background .15s,border-color .15s}
-body.layout-list .card:focus-within{background:var(--surface-2);border-color:color-mix(in srgb,var(--g2) 40%,var(--line))}@media (hover:hover) and (pointer:fine){body.layout-list .card:hover{background:var(--surface-2);border-color:color-mix(in srgb,var(--g2) 40%,var(--line))}}
+body.layout-list .card:focus-within{background:var(--surface-2);border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}@media (hover:hover) and (pointer:fine){body.layout-list .card:hover{background:var(--surface-2);border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}}
 body.layout-list .card::after{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 3px 3px 0;background:var(--accent);opacity:0;transition:opacity .15s;pointer-events:none}
 body.layout-list .card:focus-within::after,body.layout-list .card.sel::after{opacity:1}@media (hover:hover) and (pointer:fine){body.layout-list .card:hover::after{opacity:1}}
 body.layout-list .thumb{inset:auto;left:10px;top:50%;margin-top:-32px;width:64px;height:64px;border-radius:9px;background:var(--surface-2)}
@@ -803,7 +859,10 @@ body:not(.layout-list) .layer .btn{-webkit-backdrop-filter:none;backdrop-filter:
 @keyframes fadein{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
-  #panel,#srcpanel,#viewpanel,.panel,#selbar{animation:fadein .15s ease-out!important}
+  .deck{transition:none!important}
+  #panel,#srcpanel,#viewpanel,.panel{transform:none!important}   /* panels and sheets keep their fade, drop the movement */
+  #selbar{animation:fadein .15s ease-out!important}
+  #toast,#toast.on{transform:translateX(-50%)!important}
   .srcbadge[data-s=syncing] svg{animation:pulse 1.4s ease-in-out infinite}
   .card:not(.is-dead) .thumb .ph::after{animation:pulse 1.8s ease-in-out infinite;background:rgba(255,255,255,.1)}
   body.previews-loading .loaddot::before{animation:none}
@@ -847,15 +906,15 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
 <section class="deck" aria-label="Search and filters">
   <div class="deck-in">
     <div class="deck-bar">
-      <h1 class="sronly">Stargazer: your saved Reddit posts</h1><a class="brand" href="./" aria-label="Stargazer" title="Stargazer"><svg class="logo" viewBox="0 0 187 46" width="163" height="40" role="img" aria-label="Stargazer" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="logoGrad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="187" y2="14"><stop offset="0" stop-color="#7c3aed"/><stop offset=".55" stop-color="#c026d3"/><stop offset="1" stop-color="#ec4899"/></linearGradient></defs><g fill="url(#logoGrad)"><path d="M1.4280000000000002 28.86H7.6160000000000005Q7.752000000000001 30.186 8.534 30.883Q9.316 31.58 10.574000000000002 31.58Q11.866000000000001 31.58 12.614 30.985Q13.362 30.39 13.362 29.336Q13.362 28.451999999999998 12.767 27.874Q12.172 27.296 11.305 26.922Q10.438 26.548000000000002 8.84 26.072Q6.5280000000000005 25.357999999999997 5.066000000000001 24.644Q3.604 23.93 2.55 22.536Q1.496 21.142 1.496 18.898Q1.496 15.565999999999999 3.91 13.678999999999998Q6.324000000000001 11.791999999999998 10.200000000000001 11.791999999999998Q14.144000000000002 11.791999999999998 16.558 13.678999999999998Q18.972 15.565999999999999 19.142000000000003 18.932H12.852Q12.784 17.776 12.002 17.113Q11.22 16.45 9.996 16.45Q8.942 16.45 8.296 17.011Q7.65 17.572 7.65 18.625999999999998Q7.65 19.782 8.738 20.427999999999997Q9.826 21.073999999999998 12.138000000000002 21.822Q14.450000000000001 22.604 15.895 23.317999999999998Q17.34 24.032 18.394 25.392Q19.448 26.752 19.448 28.894Q19.448 30.933999999999997 18.411 32.599999999999994Q17.374000000000002 34.266 15.402000000000001 35.251999999999995Q13.430000000000001 36.238 10.744000000000002 36.238Q8.126000000000001 36.238 6.0520000000000005 35.388Q3.978 34.538 2.737 32.872Q1.496 31.206 1.4280000000000002 28.86ZM32.992 31.07V36.0H30.034Q26.872 36.0 25.104 34.453Q23.336 32.906 23.336 29.404V21.855999999999998H21.023999999999997V17.028H23.336V12.404H29.15V17.028H32.958V21.855999999999998H29.15V29.472Q29.15 30.322 29.558 30.695999999999998Q29.966 31.07 30.918 31.07ZM42.83 16.756Q44.836 16.756 46.349 17.572Q47.861999999999995 18.387999999999998 48.678 19.714V17.028H54.492V36.0H48.678V33.314Q47.827999999999996 34.64 46.315 35.456Q44.80199999999999 36.272 42.79599999999999 36.272Q40.483999999999995 36.272 38.58 35.065Q36.675999999999995 33.858 35.571 31.631Q34.465999999999994 29.404 34.465999999999994 26.479999999999997Q34.465999999999994 23.555999999999997 35.571 21.345999999999997Q36.675999999999995 19.136 38.58 17.945999999999998Q40.483999999999995 16.756 42.83 16.756ZM44.529999999999994 21.822Q42.79599999999999 21.822 41.589 23.063Q40.382 24.304 40.382 26.479999999999997Q40.382 28.656 41.589 29.930999999999997Q42.79599999999999 31.206 44.529999999999994 31.206Q46.263999999999996 31.206 47.471 29.948Q48.678 28.689999999999998 48.678 26.514Q48.678 24.338 47.471 23.08Q46.263999999999996 21.822 44.529999999999994 21.822ZM69.872 16.823999999999998V22.978H68.274Q66.098 22.978 65.00999999999999 23.913Q63.922 24.848 63.922 27.194V36.0H58.108V17.028H63.922V20.189999999999998Q64.94200000000001 18.625999999999998 66.47200000000001 17.724999999999998Q68.002 16.823999999999998 69.872 16.823999999999998ZM85.116 19.714V17.028H90.93V35.966Q90.93 38.584 89.893 40.709Q88.856 42.834 86.731 44.092Q84.606 45.35 81.444 45.35Q77.228 45.35 74.61 43.361000000000004Q71.992 41.372 71.618 37.972H77.364Q77.636 39.06 78.656 39.689Q79.676 40.318 81.172 40.318Q82.974 40.318 84.045 39.281Q85.116 38.244 85.116 35.966V33.28Q84.266 34.606 82.77000000000001 35.439Q81.274 36.272 79.268 36.272Q76.922 36.272 75.018 35.065Q73.114 33.858 72.009 31.631Q70.904 29.404 70.904 26.479999999999997Q70.904 23.555999999999997 72.009 21.345999999999997Q73.114 19.136 75.018 17.945999999999998Q76.922 16.756 79.268 16.756Q81.274 16.756 82.787 17.572Q84.3 18.387999999999998 85.116 19.714ZM80.968 21.822Q79.234 21.822 78.02699999999999 23.063Q76.82 24.304 76.82 26.479999999999997Q76.82 28.656 78.02699999999999 29.930999999999997Q79.234 31.206 80.968 31.206Q82.702 31.206 83.90899999999999 29.948Q85.116 28.689999999999998 85.116 26.514Q85.116 24.338 83.90899999999999 23.08Q82.702 21.822 80.968 21.822ZM101.754 16.756Q103.76 16.756 105.273 17.572Q106.786 18.387999999999998 107.602 19.714V17.028H113.416V36.0H107.602V33.314Q106.75200000000001 34.64 105.239 35.456Q103.726 36.272 101.72 36.272Q99.408 36.272 97.504 35.065Q95.60000000000001 33.858 94.495 31.631Q93.39 29.404 93.39 26.479999999999997Q93.39 23.555999999999997 94.495 21.345999999999997Q95.60000000000001 19.136 97.504 17.945999999999998Q99.408 16.756 101.754 16.756ZM103.45400000000001 21.822Q101.72 21.822 100.513 23.063Q99.306 24.304 99.306 26.479999999999997Q99.306 28.656 100.513 29.930999999999997Q101.72 31.206 103.45400000000001 31.206Q105.188 31.206 106.39500000000001 29.948Q107.602 28.689999999999998 107.602 26.514Q107.602 24.338 106.39500000000001 23.08Q105.188 21.822 103.45400000000001 21.822ZM122.47200000000001 31.206H130.70000000000002V36.0H115.97800000000001V31.375999999999998L123.86600000000001 21.822H116.046V17.028H130.53V21.652ZM151.07800000000003 27.908H137.92000000000002Q138.056 29.676 139.05900000000003 30.610999999999997Q140.062 31.546 141.52400000000003 31.546Q143.70000000000002 31.546 144.55 29.71H150.73800000000003Q150.26200000000003 31.58 149.02100000000002 33.076Q147.78000000000003 34.572 145.91000000000003 35.422Q144.04000000000002 36.272 141.728 36.272Q138.94000000000003 36.272 136.764 35.082Q134.58800000000002 33.892 133.36400000000003 31.682000000000002Q132.14000000000001 29.472 132.14000000000001 26.514Q132.14000000000001 23.555999999999997 133.34700000000004 21.345999999999997Q134.55400000000003 19.136 136.73000000000002 17.945999999999998Q138.906 16.756 141.728 16.756Q144.48200000000003 16.756 146.62400000000002 17.912Q148.76600000000002 19.067999999999998 149.973 21.209999999999997Q151.18 23.351999999999997 151.18 26.208Q151.18 27.024 151.07800000000003 27.908ZM145.23000000000002 24.677999999999997Q145.23000000000002 23.182 144.21000000000004 22.298000000000002Q143.19000000000003 21.414 141.66000000000003 21.414Q140.198 21.414 139.195 22.264Q138.192 23.113999999999997 137.954 24.677999999999997ZM165.40400000000002 16.823999999999998V22.978H163.806Q161.63000000000002 22.978 160.54200000000003 23.913Q159.454 24.848 159.454 27.194V36.0H153.64000000000001V17.028H159.454V20.189999999999998Q160.47400000000002 18.625999999999998 162.00400000000002 17.724999999999998Q163.53400000000002 16.823999999999998 165.40400000000002 16.823999999999998Z"/><path d="M174.484 0 Q175.744 5.74 181.484 7 Q175.744 8.26 174.484 14 Q173.22400000000002 8.26 167.484 7 Q173.22400000000002 5.74 174.484 0Z"/><path d="M166.484 -0.20000000000000018 Q167.06 2.424 169.684 3 Q167.06 3.576 166.484 6.2 Q165.90800000000002 3.576 163.28400000000002 3 Q165.90800000000002 2.424 166.484 -0.20000000000000018Z"/><path d="M179.484 18 Q180.024 20.46 182.484 21 Q180.024 21.54 179.484 24 Q178.94400000000002 21.54 176.484 21 Q178.94400000000002 20.46 179.484 18Z"/><path d="M70 0 Q70.54 2.46 73 3 Q70.54 3.54 70 6 Q69.46 3.54 67 3 Q69.46 2.46 70 0Z"/><path d="M20 1.0 Q20.45 3.05 22.5 3.5 Q20.45 3.95 20 6.0 Q19.55 3.95 17.5 3.5 Q19.55 3.05 20 1.0Z"/></g></svg></a>
+      <h1 class="sronly">Stargazer: your saved Reddit posts</h1><a class="brand" href="./" aria-label="Stargazer" title="Stargazer"><svg class="logo" viewBox="0 0 187 46" width="163" height="40" role="img" aria-label="Stargazer" xmlns="http://www.w3.org/2000/svg"><g fill="currentColor"><path d="M1.4280000000000002 28.86H7.6160000000000005Q7.752000000000001 30.186 8.534 30.883Q9.316 31.58 10.574000000000002 31.58Q11.866000000000001 31.58 12.614 30.985Q13.362 30.39 13.362 29.336Q13.362 28.451999999999998 12.767 27.874Q12.172 27.296 11.305 26.922Q10.438 26.548000000000002 8.84 26.072Q6.5280000000000005 25.357999999999997 5.066000000000001 24.644Q3.604 23.93 2.55 22.536Q1.496 21.142 1.496 18.898Q1.496 15.565999999999999 3.91 13.678999999999998Q6.324000000000001 11.791999999999998 10.200000000000001 11.791999999999998Q14.144000000000002 11.791999999999998 16.558 13.678999999999998Q18.972 15.565999999999999 19.142000000000003 18.932H12.852Q12.784 17.776 12.002 17.113Q11.22 16.45 9.996 16.45Q8.942 16.45 8.296 17.011Q7.65 17.572 7.65 18.625999999999998Q7.65 19.782 8.738 20.427999999999997Q9.826 21.073999999999998 12.138000000000002 21.822Q14.450000000000001 22.604 15.895 23.317999999999998Q17.34 24.032 18.394 25.392Q19.448 26.752 19.448 28.894Q19.448 30.933999999999997 18.411 32.599999999999994Q17.374000000000002 34.266 15.402000000000001 35.251999999999995Q13.430000000000001 36.238 10.744000000000002 36.238Q8.126000000000001 36.238 6.0520000000000005 35.388Q3.978 34.538 2.737 32.872Q1.496 31.206 1.4280000000000002 28.86ZM32.992 31.07V36.0H30.034Q26.872 36.0 25.104 34.453Q23.336 32.906 23.336 29.404V21.855999999999998H21.023999999999997V17.028H23.336V12.404H29.15V17.028H32.958V21.855999999999998H29.15V29.472Q29.15 30.322 29.558 30.695999999999998Q29.966 31.07 30.918 31.07ZM42.83 16.756Q44.836 16.756 46.349 17.572Q47.861999999999995 18.387999999999998 48.678 19.714V17.028H54.492V36.0H48.678V33.314Q47.827999999999996 34.64 46.315 35.456Q44.80199999999999 36.272 42.79599999999999 36.272Q40.483999999999995 36.272 38.58 35.065Q36.675999999999995 33.858 35.571 31.631Q34.465999999999994 29.404 34.465999999999994 26.479999999999997Q34.465999999999994 23.555999999999997 35.571 21.345999999999997Q36.675999999999995 19.136 38.58 17.945999999999998Q40.483999999999995 16.756 42.83 16.756ZM44.529999999999994 21.822Q42.79599999999999 21.822 41.589 23.063Q40.382 24.304 40.382 26.479999999999997Q40.382 28.656 41.589 29.930999999999997Q42.79599999999999 31.206 44.529999999999994 31.206Q46.263999999999996 31.206 47.471 29.948Q48.678 28.689999999999998 48.678 26.514Q48.678 24.338 47.471 23.08Q46.263999999999996 21.822 44.529999999999994 21.822ZM69.872 16.823999999999998V22.978H68.274Q66.098 22.978 65.00999999999999 23.913Q63.922 24.848 63.922 27.194V36.0H58.108V17.028H63.922V20.189999999999998Q64.94200000000001 18.625999999999998 66.47200000000001 17.724999999999998Q68.002 16.823999999999998 69.872 16.823999999999998ZM85.116 19.714V17.028H90.93V35.966Q90.93 38.584 89.893 40.709Q88.856 42.834 86.731 44.092Q84.606 45.35 81.444 45.35Q77.228 45.35 74.61 43.361000000000004Q71.992 41.372 71.618 37.972H77.364Q77.636 39.06 78.656 39.689Q79.676 40.318 81.172 40.318Q82.974 40.318 84.045 39.281Q85.116 38.244 85.116 35.966V33.28Q84.266 34.606 82.77000000000001 35.439Q81.274 36.272 79.268 36.272Q76.922 36.272 75.018 35.065Q73.114 33.858 72.009 31.631Q70.904 29.404 70.904 26.479999999999997Q70.904 23.555999999999997 72.009 21.345999999999997Q73.114 19.136 75.018 17.945999999999998Q76.922 16.756 79.268 16.756Q81.274 16.756 82.787 17.572Q84.3 18.387999999999998 85.116 19.714ZM80.968 21.822Q79.234 21.822 78.02699999999999 23.063Q76.82 24.304 76.82 26.479999999999997Q76.82 28.656 78.02699999999999 29.930999999999997Q79.234 31.206 80.968 31.206Q82.702 31.206 83.90899999999999 29.948Q85.116 28.689999999999998 85.116 26.514Q85.116 24.338 83.90899999999999 23.08Q82.702 21.822 80.968 21.822ZM101.754 16.756Q103.76 16.756 105.273 17.572Q106.786 18.387999999999998 107.602 19.714V17.028H113.416V36.0H107.602V33.314Q106.75200000000001 34.64 105.239 35.456Q103.726 36.272 101.72 36.272Q99.408 36.272 97.504 35.065Q95.60000000000001 33.858 94.495 31.631Q93.39 29.404 93.39 26.479999999999997Q93.39 23.555999999999997 94.495 21.345999999999997Q95.60000000000001 19.136 97.504 17.945999999999998Q99.408 16.756 101.754 16.756ZM103.45400000000001 21.822Q101.72 21.822 100.513 23.063Q99.306 24.304 99.306 26.479999999999997Q99.306 28.656 100.513 29.930999999999997Q101.72 31.206 103.45400000000001 31.206Q105.188 31.206 106.39500000000001 29.948Q107.602 28.689999999999998 107.602 26.514Q107.602 24.338 106.39500000000001 23.08Q105.188 21.822 103.45400000000001 21.822ZM122.47200000000001 31.206H130.70000000000002V36.0H115.97800000000001V31.375999999999998L123.86600000000001 21.822H116.046V17.028H130.53V21.652ZM151.07800000000003 27.908H137.92000000000002Q138.056 29.676 139.05900000000003 30.610999999999997Q140.062 31.546 141.52400000000003 31.546Q143.70000000000002 31.546 144.55 29.71H150.73800000000003Q150.26200000000003 31.58 149.02100000000002 33.076Q147.78000000000003 34.572 145.91000000000003 35.422Q144.04000000000002 36.272 141.728 36.272Q138.94000000000003 36.272 136.764 35.082Q134.58800000000002 33.892 133.36400000000003 31.682000000000002Q132.14000000000001 29.472 132.14000000000001 26.514Q132.14000000000001 23.555999999999997 133.34700000000004 21.345999999999997Q134.55400000000003 19.136 136.73000000000002 17.945999999999998Q138.906 16.756 141.728 16.756Q144.48200000000003 16.756 146.62400000000002 17.912Q148.76600000000002 19.067999999999998 149.973 21.209999999999997Q151.18 23.351999999999997 151.18 26.208Q151.18 27.024 151.07800000000003 27.908ZM145.23000000000002 24.677999999999997Q145.23000000000002 23.182 144.21000000000004 22.298000000000002Q143.19000000000003 21.414 141.66000000000003 21.414Q140.198 21.414 139.195 22.264Q138.192 23.113999999999997 137.954 24.677999999999997ZM165.40400000000002 16.823999999999998V22.978H163.806Q161.63000000000002 22.978 160.54200000000003 23.913Q159.454 24.848 159.454 27.194V36.0H153.64000000000001V17.028H159.454V20.189999999999998Q160.47400000000002 18.625999999999998 162.00400000000002 17.724999999999998Q163.53400000000002 16.823999999999998 165.40400000000002 16.823999999999998Z"/></g><path class="logostar" transform="translate(166.5 0) scale(.62)" d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.8 6.6 19.7l1.1-6.1L3.2 9.4l6.1-.8z"/></svg></a>
       <label class="search" id="searchbox">
         <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.6"/><path d="M10.6 10.6L14 14"/></svg>
         <input id="q" type="search" placeholder="Search titles, subreddits, authors" aria-label="Search">
       </label>
-      <div class="stats" id="stats" hidden aria-live="off">
-        <span class="st" tabindex="0"><b id="stActive">0</b><span class="lb">Active</span><em>(Excludes filtered results)</em></span>
-        <span class="st" tabindex="0"><b id="stGot">0</b><span class="lb">Loaded</span><em>(Total successfully retrieved from the data source)</em></span>
-        <span class="st" tabindex="0"><b id="stAll">0</b><span class="lb">Total</span><em>(The total number of items in the data source, retrievable or not)</em></span>
+      <span class="sronly" id="statsSay" role="status" aria-live="polite"></span>
+      <div class="stats" id="stats" hidden>
+        <span class="st" tabindex="0"><b id="stActive">0</b> <span class="lb" id="stLb">shown</span><span class="sof"> of <b id="stAll">0</b></span><em>Posts shown with your filters, out of every post in this list</em></span>
+        <span class="st sx" id="stX" tabindex="0" hidden><b id="stGot">0</b> <span class="lb" id="stXlb">loading</span><em id="stXnote">Previews still on their way from the archives</em></span>
       </div>
       <nav class="navbtns" id="navbtns" aria-label="Main">
         <button class="pill" id="srctoggle" type="button" aria-expanded="false" aria-controls="srcpanel" aria-label="Source, account and sync" title="Source, account and sync" style="padding-left:10px;padding-right:10px">
@@ -899,14 +958,6 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
             <option value="short">Shortest clips</option>
           </select>
         </label>
-        <label class="ctlrow"><span>Time range</span>
-          <select id="range" class="field" aria-label="Time range">
-            <option value="all">All time</option>
-            <option value="month">This month</option>
-            <option value="week">This week</option>
-            <option value="day">Today</option>
-          </select>
-        </label>
         <div class="ctlrow"><span></span><button class="pill" id="reshuffle" type="button" hidden>Reshuffle</button></div>
         <label class="ctlrow"><span>Subreddit</span><select id="subsel" class="field" aria-label="Subreddit"></select></label>
         <div class="nsfwgrp" role="group" aria-label="NSFW content"><span class="nsfwlbl">NSFW <span id="nsfwcount"></span></span>
@@ -917,9 +968,20 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
             <button class="pill" type="button" data-m="only" aria-pressed="false">Only</button>
           </div>
         </div>
+        <!-- Sort, Subreddit and NSFW stay in view; the rest folds under More filters (audit 2, item 14). It opens by itself when one of them is changed. -->
+        <details class="morefilt" id="morefilt"><summary>More filters <span id="morefiltn"></span></summary>
+          <label class="ctlrow"><span>Time range</span>
+          <select id="range" class="field" aria-label="Time range">
+            <option value="all">All time</option>
+            <option value="month">This month</option>
+            <option value="week">This week</option>
+            <option value="day">Today</option>
+          </select>
+        </label>
         <label class="toggle" for="showtext" title="Posts that are only text, with no image or video">Show text posts <span id="textcount"></span><input id="showtext" type="checkbox"></label>
         <label class="toggle" for="favonly">Starred only <span id="favcount"></span><input id="favonly" type="checkbox"></label>
         <label class="toggle" for="hidebroken" title="Hides posts with no working thumbnail or media, including ones with nothing to display">Hide broken media <span id="deadcount"></span><input id="hidebroken" type="checkbox"></label>
+        </details>
       </div>
 
       <div class="pcol" id="browseCol" hidden>
@@ -933,7 +995,7 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
         <div class="kbcols">
           <dl><dt>Keyboard</dt>
             <dd><kbd>Tab</kbd> moves from card to card</dd>
-            <dd><kbd>Enter</kbd> on a card steps into its controls; <kbd>Esc</kbd> steps back out</dd>
+            <dd><kbd>Enter</kbd> on a card opens it full screen; <kbd>Space</kbd> steps into its controls; <kbd>Esc</kbd> steps back out</dd>
             <dd><kbd>I</kbd> shows or hides the controls of the card under the pointer or in focus</dd>
             <dd>Full screen: <kbd>&larr;</kbd> <kbd>&rarr;</kbd> pictures in a gallery, <kbd>&uarr;</kbd> <kbd>&darr;</kbd> previous / next post, <kbd>Space</kbd> or <kbd>K</kbd> plays / pauses a clip, <kbd>M</kbd> mutes, <kbd>F</kbd> fills the screen (crops) or fits the whole picture for that post, <kbd>H</kbd> hides or shows the caption and buttons, <kbd>Esc</kbd> closes</dd>
           </dl>
@@ -977,7 +1039,7 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
     <div class="panel" id="srcpanel" role="region" aria-label="Source and account" popover="manual">
       <div class="pcol">
         <h2>Source</h2>
-        <div class="srcseg"><button class="pill" id="srcCsv" type="button" aria-pressed="true">Saved CSV</button><button class="pill" id="srcSub" type="button" aria-pressed="false">Subreddit</button></div>
+        <div class="srcseg"><button class="pill" id="srcCsv" type="button" aria-pressed="true">My saved posts</button><button class="pill" id="srcSub" type="button" aria-pressed="false">Subreddit</button></div>
         <div class="grp" id="csvTools">
           <select id="csvSel" class="field" aria-label="CSV file"></select>
           <div class="listfacts">
@@ -990,6 +1052,7 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
             <span class="btnrow"><button class="pill primary" id="mrgDo" type="button">Merge CSV</button> <button class="linkbtn quiet" id="mrgLater" type="button">Remind me later</button></span></div>
           <span class="exphint" id="expHint" hidden></span>
           <div class="actgrid">
+            <button class="pill primary wide" id="csvMergeTop" type="button" title="Add the posts from a newer Reddit export to this list" hidden>Merge CSV</button>
             <button class="pill primary wide" id="csvOpen" type="button" title="Open a CSV and keep it linked for saving">Open CSV</button>
             <button class="pill wide" id="csvCloud" type="button" hidden></button>
             <button class="pill wide" id="csvSync" type="button" title="Re-read the linked file and merge changes made on another device" hidden>Sync now</button>
@@ -997,13 +1060,16 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
             <details class="wide moreact" id="csvMore">
               <summary class="pill">More actions</summary>
               <div class="actgrid inner">
-                <button class="pill" id="csvMerge" type="button" title="Add posts from another CSV">Merge CSV</button>
-                <button class="pill" id="csvExport" type="button">Export CSV</button>
-                <button class="pill" id="csvUnload" type="button" title="Remove this list from this browser. A linked file and your account copy are left untouched.">Unload CSV</button>
+                <!-- two groups (audit 2, item 15): curating the posts, then the file itself; the two destructive actions are quiet text in the alert colour -->
+                <p class="actlbl wide">Curate</p>
                 <button class="pill" id="triageBtn" type="button" title="Go through random posts one at a time: swipe right to keep, left to remove, up to star">Triage</button>
                 <button class="pill" id="dupBtn" type="button" title="Find pictures and clips saved more than once">Find duplicates</button>
+                <button class="pill quietwarn" id="csvPrune" type="button" title="Delete removed, not-found and broken posts from the CSV">Remove dead posts</button>
+                <p class="actlbl wide">File</p>
+                <button class="pill" id="csvMerge" type="button" title="Add posts from another CSV">Merge CSV</button>
+                <button class="pill" id="csvExport" type="button">Export CSV</button>
+                <button class="pill quietwarn" id="csvUnload" type="button" title="Remove this list from this browser. A linked file and your account copy are left untouched.">Unload CSV</button>
                 <p class="hint wide">Merge adds the posts from another CSV to this list without duplicates, and carries over stars and deletions.</p>
-                <button class="pill warnbtn wide" id="csvPrune" type="button" title="Delete removed, not-found and broken posts from the CSV">Remove dead posts</button>
               </div>
             </details>
           </div>
@@ -1068,20 +1134,22 @@ button,summary,[role=button]{-webkit-user-select:none;user-select:none}   /* a l
       <div class="bar"><i id="loadBar"></i></div>
     </div>
     <div class="summary" id="summary"></div>
-    <button class="pill selbtn" id="selbtn" type="button" hidden>Bulk Actions</button>
+    <button class="pill starbtn" id="starbtn" type="button" aria-pressed="false" hidden>Starred</button>
+    <button class="pill selbtn" id="selbtn" type="button" hidden>Select</button>
   </div>
-  <main class="grid" id="grid"></main>
+  <h2 class="sronly" id="feedHead">Your saved posts</h2>
+  <main class="grid" id="grid" aria-labelledby="feedHead"></main>
   <div class="more" id="moreWrap" hidden><span id="moreNote"></span><button class="pill" id="moreBtn" type="button">Load next 100</button></div>
   <div id="sentinel"></div>
 </div>
 
-<div id="triage" role="dialog" aria-modal="true" aria-label="Triage" hidden><div class="tg-top"><span class="tg-count" role="status"></span><button class="tg-undo" type="button" hidden>Undo</button><button class="tg-close" type="button" aria-label="Close triage">&#10005;</button></div><div class="tg-stack"></div><div class="tg-acts"><button class="tg-rm" type="button" aria-label="Remove from the list (Left arrow)"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg><span>Remove</span></button><button class="tg-star" type="button" aria-label="Star and keep (Up arrow)"><svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.8 6.6 19.7l1.1-6.1L3.2 9.4l6.1-.8z"/></svg><span>Star</span></button><button class="tg-keep" type="button" aria-label="Keep (Right arrow)"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Keep</span></button></div></div>
+<div id="triage" role="dialog" aria-modal="true" aria-label="Triage" hidden><div class="tg-top"><span class="tg-count" role="status"></span><button class="tg-undo" type="button" hidden>Undo</button><button class="tg-close" type="button" aria-label="Close triage">&#10005;</button></div><div class="tg-stack"></div><p class="tg-hint" hidden><span class="tgk">Arrow keys: <kbd>&rarr;</kbd> keep, <kbd>&larr;</kbd> remove, <kbd>&uarr;</kbd> star, <kbd>Z</kbd> undo</span><span class="tgt">Swipe right to keep, left to remove, up to star</span></p><div class="tg-acts"><button class="tg-rm" type="button" aria-label="Remove from the list (Left arrow)"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg><span>Remove</span></button><button class="tg-star" type="button" aria-label="Star and keep (Up arrow)"><svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.8 6.6 19.7l1.1-6.1L3.2 9.4l6.1-.8z"/></svg><span>Star</span></button><button class="tg-keep" type="button" aria-label="Keep (Right arrow)"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Keep</span></button></div></div>
 <div id="viewer" role="dialog" aria-modal="true" aria-label="Media viewer" hidden><button class="vnav vprev" type="button" aria-label="Previous image" hidden>&#8249;</button><button class="vnav vnext" type="button" aria-label="Next image" hidden>&#8250;</button><span class="vcount" hidden></span><div class="vposts"><button class="vpost vpp" type="button" aria-label="Previous post" title="Previous post (Up arrow)">&#8249; Previous post</button><button class="vpost vpn" type="button" aria-label="Next post" title="Next post (Down arrow)">Next post &#8250;</button></div><input class="vvol" type="range" min="0" max="100" step="1" value="0" aria-label="Volume" hidden><button class="vsound" type="button" aria-label="Unmute" hidden></button><button class="vclose" type="button" aria-label="Close">&#10005;</button><button class="vfill" type="button" aria-pressed="false"></button><div class="vstage"></div><div class="vscrim" aria-hidden="true"></div><div class="vcap"></div><div class="vrail" role="group" aria-label="Post actions"></div></div>
 <dialog id="reader" aria-labelledby="rdTitle"><div class="rdhead"><p id="rdMeta"></p><button type="button" id="rdClose" aria-label="Close">&times;</button></div><h3 id="rdTitle"></h3><p class="hint" id="rdSrc"></p><div id="rdBody"></div><div id="rdLinks"></div><section id="rdCm"></section></dialog>
 <dialog id="confirm"><form method="dialog"><h3 id="cTitle"></h3><div id="cBody"></div><label id="cOptWrap" class="toggle" hidden><span id="cOptLbl"></span><input type="checkbox" id="cOpt"></label><div class="btnrow" style="justify-content:flex-end;margin-top:18px"><button class="pill" id="cExtra" value="extra" hidden></button><button class="pill" value="cancel" autofocus>Cancel</button><button class="pill danger" id="cOk" value="ok"></button></div></form></dialog>
 <div id="pausebar" role="status" aria-live="polite" hidden><span class="pdot"></span><span id="pauseTxt"></span><button type="button" id="pauseSkip" title="Retry now">Retry now</button></div>
 <button id="totop" type="button" aria-label="Back to top" title="Back to top" hidden><svg viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 10L8 5.5l4.5 4.5"/></svg></button>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><linearGradient id="nsfwGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:color-mix(in srgb,var(--g1) 55%,#fff)"/><stop offset=".5" style="stop-color:color-mix(in srgb,var(--g2) 55%,#fff)"/><stop offset="1" style="stop-color:color-mix(in srgb,var(--g3) 55%,#fff)"/></linearGradient></defs></svg>
+
 <div id="toast" role="status" aria-live="polite" popover="manual"></div>
 
 <script>
@@ -1255,7 +1323,9 @@ function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 const WB_TS = '20230601';
 const wbImg = u => 'https://web.archive.org/web/'+WB_TS+'im_/'+u;
 const wbVid = u => 'https://web.archive.org/web/'+WB_TS+'id_/'+u;
-const NSFW_ICON = '<svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><g text-anchor="middle" font-family="Geist,Inter,system-ui,sans-serif" font-weight="700" font-size="6.8" fill="currentColor"><text x="8" y="7.2">NS</text><text x="8" y="13.2">FW</text></g></svg>';
+/* NSFW mark in the tray: an eye with a stroke through it (audit 2: the stacked 10px NS / FW text read as a shouty label); the word lives in the
+   button's label and title. The full-screen rail keeps its two-line NS FW at 11px. */
+const NSFW_ICON = '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8s2.2-4.3 6-4.3S14 8 14 8s-2.2 4.3-6 4.3S2 8 2 8z"/><circle cx="8" cy="8" r="1.7"/><path d="M2.8 2.8l10.4 10.4"/></svg>';
 const FS_EXIT_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2v4H2M10 2v4h4M14 10h-4v4M2 10h4v4"/></svg>';
 const FS_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>';
 const isAnimUrl = u => { u = String(u).replace(/^https?:\/\/web\.archive\.org\/web\/\d+[a-z_]*\//i,''); return /\.gif(\?|#|$)/i.test(u) || isMp4Fmt(u); };   // Reddit's own preview copies of a GIF (external-preview.redd.it/NAME.gif?format=png8) are animated GIFs too
@@ -1315,10 +1385,11 @@ const farIO = new IntersectionObserver(es=>{
   for(const e of es){
     const c = e.target;
     if(e.isIntersecting){
+      ensureLayer(c);
       if(!c._far) continue; c._far = false;
       for(const m of c.querySelectorAll('.thumb [data-far]')){ m.setAttribute('src', m.dataset.far); delete m.dataset.far; }
     } else if(!c._far){
-      c._far = true;
+      c._far = true; dropLayer(c);
       for(const m of c.querySelectorAll('.thumb > img[src]:not(.clip), .thumb > video.still[src]')){
         const u = m.getAttribute('src'); if(!u || u.startsWith('data:')) continue;
         m.dataset.far = u; m.removeAttribute('src'); if(m.tagName==='VIDEO'){ try{ m.load(); }catch(x){} }
@@ -1326,10 +1397,31 @@ const farIO = new IntersectionObserver(es=>{
     }
   }
 },{rootMargin:'300% 0px'});
-function buildCard(p){
+/* The tray (.layer: info, links, the action pill, the player bar) is most of a card's elements, so it is built on demand (audit 2, item 7):
+   for the first cards on the page, for cards within about three screens (farIO), and whenever it is opened, focused, hovered or playing.
+   A card far from the screen gives its tray back (dropLayer) unless it is open, focused, hovered or playing. el._lh keeps the markup;
+   syncCardState brings star, list and NSFW state up to date when it is built again. */
+function layerIn(el, html){ el._lh = html; const on = !!(el._lzOn || el._eager); el._lzOn = on; return on ? html : ''; }
+function ensureLayer(el){
+  if(!el || el._lzOn || !el._lh) return;
+  const L = el.querySelector('.layer'); if(!L) return;
+  L.innerHTML = el._lh; el._lzOn = true; syncCardState(el); cardTabs(el, !!el._kb);
+}
+function dropLayer(el){
+  if(!el || !el._lzOn || el._kb || el.classList.contains('lay-open') || el.classList.contains('playing')) return;
+  const L = el.querySelector('.layer'); if(!L || L.querySelector('.lay-play > *') || L.contains(document.activeElement) || el.matches(':hover')) return;
+  L.replaceChildren(); el._lzOn = false;
+}
+function syncCardState(el){
+  const id = el.dataset.id, inList = ROWSET.has(id), on = FAVS.has(id);
+  const b = el.querySelector('button.star'); if(b){ b.setAttribute('aria-pressed', on?'true':'false'); b.textContent = on ? '★' : '☆'; }
+  const r = el.querySelector('button.save:not(.nsfwb)'); if(r){ r.setAttribute('aria-pressed', inList?'true':'false'); r.innerHTML = inList ? RM_ON : RM_OFF; r.setAttribute('aria-label', rmLabel(inList)); r.title = r.getAttribute('aria-label'); }
+  const n = el.querySelector('button.nsfwb'); if(n) n.hidden = !inList;
+}
+function buildCard(p, eager){
   const el = document.createElement('article');
   el.className = 'card';
-  el.dataset.id = p.id;
+  el.dataset.id = p.id; el._eager = !!eager;
   if(typeof SEL!=='undefined' && SEL.on && SEL.ids.has(p.id)) el.classList.add('sel');
   fillCard(el,p);
   cardIO.observe(el); farIO.observe(el);
@@ -1588,11 +1680,12 @@ function fillCard(el,p){
   const vs = dead ? [] : playSources(m), v0 = vs[0] || '';
   const gl = m && m.gl && m.gl.length > 1 ? m.gl : null;
   const stats = m && !m.miss ? ((m.s||0) > 1 ? '<span>'+fmt(m.s)+' pts</span>' : '')+((m.n||0) > 0 ? '<a class="cm" href="'+esc(p.link)+'" target="_blank" rel="noopener noreferrer" title="Open the comments on Reddit">'+fmt(m.n)+(m.n===1?' comment':' comments')+'</a>' : '') : '';
-  const ph = '<div class="ph'+(!m && !dead ? ' pending' : '')+'"><span>r/'+esc(p.sub)+(dead?'<br><small>media unavailable</small>':'')+'</span></div>';
-  el._p = p; el._gi = 0; el.classList.toggle('is-dead', dead); el.classList.toggle('is-text', media==='text');
+  const lq = !dead && m && m.lq && thumb && m.lq !== thumb && /^https:/.test(thumb) && !SEEN.has(imgKey(thumb)) ? m.lq : '';   // a picture seen before shows at once from the cache; no blur needed
+  const ph = '<div class="ph'+(!m && !dead ? ' pending' : '')+'">'+(lq ? '<img class="lq" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" src="'+esc(lq)+'">' : '')+'<span>r/'+esc(p.sub)+(dead?'<br><small>media unavailable</small>':'')+'</span></div>';
+  el._p = p; el._gi = 0; el.classList.toggle('is-dead', dead); el.classList.toggle('is-text', media==='text'); el.classList.toggle('is-star', FAVS.has(p.id));
   el.innerHTML =
-    '<a class="thumb'+(nsfw?' nsfw':'')+'" data-open'+(v0 ? ' data-v="'+esc(v0)+'"'+(vs.length>1 ? ' data-vc="'+esc(vs.slice(1,12).join('|'))+'"' : '') : '')+(m && m.ab ? ' data-ab="'+esc(m.ab)+'"' : '')+(m && m.ha!==undefined ? ' data-ha="'+(m.ha?1:0)+'"' : '')+' href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" aria-label="Open: '+esc(titleOf(p))+'">'
-    + (thumb ? ph + '<img referrerpolicy="no-referrer" alt="">' : (v0 && !/^(yt|rg):/.test(v0) ? ph + '<video class="still" muted playsinline preload="none"></video>' : ph))
+    '<a class="thumb'+(nsfw?' nsfw':'')+'" data-open'+(v0 ? ' data-v="'+esc(v0)+'"'+(vs.length>1 ? ' data-vc="'+esc(vs.slice(1,12).join('|'))+'"' : '') : '')+(m && m.ab ? ' data-ab="'+esc(m.ab)+'"' : '')+(m && m.ha!==undefined ? ' data-ha="'+(m.ha?1:0)+'"' : '')+' href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" aria-label="Open: '+esc(titleOf(p)||'Post in r/'+p.sub)+'">'
+    + (thumb ? ph + '<img referrerpolicy="no-referrer" decoding="async" alt="">' : (v0 && !/^(yt|rg):/.test(v0) ? ph + '<video class="still" muted playsinline preload="none"></video>' : ph))
     + '<span class="badges"><span class="badge media'+(v0 ? ' playable' : '')+'">'+esc(MEDIA_LABEL[media]||media)+(gl ? ' 1/'+gl.length : '')+'</span>'
     + (nsfw ? '<span class="badge tag">NSFW</span>' : '') + '</span>'
     + (m && m.rec ? '<span class="badge rec" title="Rebuilt from an archive">Recovered: '+esc(m.rec)+'</span>' : '')
@@ -1600,10 +1693,10 @@ function fillCard(el,p){
     + (nsfw && thumb ? '<button class="reveal" type="button">Reveal</button>' : '')
     + (media==='text' ? '<div class="peek">'+esc(titleOf(p))+'</div>' : '')
     + '<button class="lhandle" type="button" aria-expanded="false" aria-label="Show details and controls" title="Details and controls"></button>'
-    + '<div class="layer">'
+    + '<div class="layer">' + layerIn(el, ''
     + '<button class="lh-close" type="button" aria-label="Hide details and controls" title="Hide"></button>'
     + '<div class="info">'
-    + '<h3 class="title"><a data-open href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" title="'+esc(titleOf(p))+'">'+esc(titleOf(p))+'</a></h3>'
+    + '<h3 class="title"><a data-open href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" title="'+esc(titleOf(p)||'Post in r/'+p.sub)+'">'+esc(titleOf(p)||'Post in r/'+p.sub)+'</a></h3>'
     + '<div class="meta"><button class="sub" type="button" data-sub="'+esc(p.sub)+'" title="Show only r/'+esc(p.sub)+' posts in your list">r/'+esc(p.sub)+'</button>'+stats
     + (m && m.c ? '<span class="dt">'+new Date(m.c*1000).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'})+'</span>' : '')
     + (note ? '<span class="note'+(dead?' dead':'')+'">'+esc(note)+'</span>' : '')+'</div>'
@@ -1617,11 +1710,10 @@ function fillCard(el,p){
     + '<div class="lay-cap">'
     + '<button class="save nsfwb" type="button" data-id="'+esc(p.id)+'"'+(ROWSET.has(p.id) ? '' : ' hidden')+' aria-pressed="'+(nsfw?'true':'false')+'" aria-label="'+(nsfw ? 'Unmark as NSFW' : 'Mark as NSFW')+'" title="'+(nsfw ? 'Unmark as NSFW' : 'Mark as NSFW')+'">'+NSFW_ICON+'</button>'
     + '<button class="star" type="button" data-id="'+esc(p.id)+'" aria-pressed="'+(FAVS.has(p.id)?'true':'false')+'" aria-label="Star this post" title="Star this post">'+(FAVS.has(p.id)?'\u2605':'\u2606')+'</button>'
-    + '<button class="save" type="button" data-id="'+esc(p.id)+'" aria-pressed="'+(ROWSET.has(p.id)?'true':'false')+'" aria-label="'+(ROWSET.has(p.id)?'In your list: tap to remove':'Not in your list: tap to add')+'" title="'+(ROWSET.has(p.id)?'In your list: tap to remove':'Not in your list: tap to add')+'">'+(ROWSET.has(p.id)?BM_ON:BM_OFF)+'</button>'
     + (MEDIA_KINDS.has(media) && (thumb || v0) ? '<button class="fs" type="button" aria-label="Full screen" title="Full screen">'+FS_ICON+'</button>' : '')
+    + '<button class="save rm" type="button" data-id="'+esc(p.id)+'" aria-pressed="'+(ROWSET.has(p.id)?'true':'false')+'" aria-label="'+rmLabel(ROWSET.has(p.id))+'" title="'+rmLabel(ROWSET.has(p.id))+'">'+(ROWSET.has(p.id)?RM_ON:RM_OFF)+'</button>'
     + '</div></div>'
-    + '<div class="lay-play"></div>'
-    + '</div>'
+    + '<div class="lay-play"></div>') + '</div>'
     + '<button class="morebtn" type="button" aria-expanded="false" aria-label="More actions" title="More actions"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5L5.5 8l4.5 4.5"/></svg></button>'
     + (gl ? '<button class="gnav gprev" type="button" aria-label="Previous image">&#8249;</button><button class="gnav gnext" type="button" aria-label="Next image">&#8250;</button>' : '');
   const tEl = el.querySelector('.thumb'); if(tEl && tEl.dataset.v) wirePlayable(tEl);
@@ -1636,7 +1728,7 @@ function fillCard(el,p){
       if(mayMove(r.href,p)) im.addEventListener('load',()=>{ const c = freezeFrame(im); if(c && im.isConnected) im.replaceWith(c); },{once:true});
     });
   };
-  const img = el.querySelector('.thumb img, .thumb video.still');
+  const img = el.querySelector('.thumb > img, .thumb > video.still');
   if(img){ img._cands = img.tagName==='VIDEO' ? vs : cands; img._p = p; img._el = el; img._rescue = rescue; imgIO.observe(img); }
   else if(!dead && !h) rescue();
   layoutCard(el,p); cardTabs(el, !!el._kb);
@@ -1839,7 +1931,8 @@ function applyTarget(p,r){
   const el = cardEls.get(p.id);
   if(el && el._p===p){
     const dead = !!r.dead, href = dead ? recHref(p) : r.href;
-    el.querySelectorAll('a[data-open]').forEach(a=>{ a.href = href; });
+    el.querySelectorAll('a[data-open]').forEach(a=>{ if(a.classList.contains('thumb')) a.dataset.media = href; else a.href = href; });
+    cardTabs(el, !!el._kb);   // puts the thumb's link back: the post in Masonry / Grid, this address in List
     el.classList.toggle('is-dead', dead);
     const th = el.querySelector('.thumb');
     if(th) th.title = dead ? (metaOf(p) && metaOf(p).rec ? 'No working media found. Opens the archived copy.' : 'No working media found. Opens the Reddit post.') : r.kind==='archive' ? 'The original link is dead. Opens an archived copy.' : r.kind==='preview' ? 'The original media is unavailable. Opens the preview image.' : '';
@@ -1875,7 +1968,8 @@ $('grid').addEventListener('mouseover',e=>{
 });
 $('grid').addEventListener('mouseleave',()=>{ hoverCard = null; clearTimeout(hoverT); });
 $('grid').addEventListener('touchstart',e=>{ const c = e.target.closest('.card'); if(c && c._p) resolveTarget(c._p); },{passive:true});
-$('grid').addEventListener('focusin',e=>{ const c = e.target.closest('.card'); if(c && c._p) resolveTarget(c._p); });
+$('grid').addEventListener('focusin',e=>{ const c = e.target.closest('.card'); if(c){ ensureLayer(c); if(c._p) resolveTarget(c._p); } });
+$('grid').addEventListener('pointerover',e=>{ const c = e.target.closest && e.target.closest('.card'); if(c && !c._lzOn) ensureLayer(c); },{passive:true});   // hover shows the tray in Show on hover
 $('grid').addEventListener('load',()=>{ lastOk = Date.now(); },true);
 /* Any clip that loads (a tile, a still, full screen) tells us its length, for clips whose post data did not say (imgur, archived copies). Not re-sorted on the spot, so the feed does not jump; the next refresh uses it. */
 document.addEventListener('loadedmetadata',e=>{
@@ -2083,7 +2177,10 @@ function updatePostNav(){ const a = VIEW.root.querySelector('.vpp'), b = VIEW.ro
    (they are repeated fast), and reduced motion skips the slide. The stage is what moves; the player bar and buttons stay put. */
 const SLIDE = {busy:false};
 const slideOK = () => !matchMedia('(prefers-reduced-motion: reduce)').matches;
-const SLIDE_EASE = 'cubic-bezier(.32,.72,0,1)', SPRING_EASE = 'cubic-bezier(.34,1.36,.64,1)';
+/* SPRING_EASE is a real damped spring (damping 0.6, about 9% overshoot, settled by 440ms) sampled into a CSS linear() curve once, so a spring-back
+   settles instead of overshooting once and stopping (audit 2). Browsers without linear() keep the old cubic-bezier. */
+const SPRING_LINEAR = 'linear(0, 0.029, 0.102, 0.206, 0.325, 0.45, 0.573, 0.686, 0.787, 0.874, 0.944, 1, 1.041, 1.069, 1.086, 1.094, 1.094, 1.09, 1.082, 1.071, 1.059, 1.048, 1.036, 1.026, 1.017, 1.009, 1.003, 0.998, 1)';
+const SLIDE_EASE = 'cubic-bezier(.32,.72,0,1)', SPRING_EASE = (window.CSS && CSS.supports && CSS.supports('transition-timing-function', SPRING_LINEAR)) ? SPRING_LINEAR : 'cubic-bezier(.34,1.36,.64,1)';
 function stageY(px, anim){ const s = VIEW.stage; s.style.transition = anim || 'none'; s.style.transform = px ? 'translate3d(0,'+px+'px,0)' : ''; }
 function dragFollow(dx, dy){
   if(SLIDE.busy || !slideOK()) return;
@@ -2189,7 +2286,7 @@ function closeViewer(){
   VIEW.fs = false;
   if(VIEW.refreshOnClose){ VIEW.refreshOnClose = false; refresh(); }   // a star taken off in full screen while Starred only is on
   const last = VIEW.cur;
-  if(last && last===VIEW.first) morphBack(last, VIEW.box);
+  if(last && last===VIEW.first){ morphBack(last, VIEW.box); const hc = cardEls.get(last.id); if(hc) setTimeout(()=>holdHint(hc), 420); }
   if(last && last!==VIEW.first && list.includes(last)){ landOn(last); return; }   // moved on through posts in full screen: the feed picks up at the last one shown
   if(VIEW.opener && VIEW.opener.isConnected) try{ VIEW.opener.focus({preventScroll:true}); }catch(e){}
 }
@@ -2263,7 +2360,7 @@ function landOn(p){
 async function openViewer(p, opts){
   opts = opts || {};
   let m = metaOf(p); const card = cardEls.get(p.id), tok = ++VIEW.token;
-  const thumbImg = card && card.querySelector('.thumb img');
+  const thumbImg = card && card.querySelector('.thumb > img');
   const thumbSrc = thumbImg ? (thumbImg.currentSrc || thumbImg.src) : '';
   const mkImg = url => { const im = new Image(); im.referrerPolicy = 'no-referrer'; im.alt = titleOf(p); im.src = url; return im; };
   if(!opts.keep){ VIEW.opener = document.activeElement; VIEW.first = p; VIEW.dir = 0; }
@@ -2426,11 +2523,27 @@ function loadViewFill(p){ VFILL = fillOf(p); paintViewFill(); }   // each post o
 function setViewFill(on){
   VFILL = !!on; const id = VIEW.cur && VIEW.cur.id;
   if(id){ VFILLS = VFILLS.filter(x=>x!==id); if(VFILL){ VFILLS.push(id); if(VFILLS.length > FILL_MAX) VFILLS = VFILLS.slice(-FILL_MAX); } try{ localStorage.setItem(FILLKEY, JSON.stringify(VFILLS)); }catch(e){} }
-  paintViewFill();
+  paintViewFill(); if(typeof sideCap==='function') sideCap();
 }
 paintViewFill();
 VIEW.root.querySelector('.vfill').addEventListener('click',e=>{ e.stopPropagation(); setViewFill(!VFILL); });
-VIEW.root.addEventListener('click',e=>{ if(e.target===VIEW.root || e.target===VIEW.stage) closeViewer(); });
+/* A tap on the black around the post shows or hides the overlay, like a tap on the post. It never closes full screen: on a phone the bars are most of
+   the screen, and an idle overlay leaves empty space where its buttons were. Closing is the ✕, the exit button, Esc and Back (audit 2, item 1). */
+VIEW.root.addEventListener('click',e=>{ if(e.target===VIEW.root || e.target===VIEW.stage){ if(Date.now() - (VIEW.peekEnd || 0) < 450) return; toggleChrome(); } });
+VIEW.root.addEventListener('mouseleave',()=>{ if(!VIEW.root.hidden && !VIEW.root.classList.contains('vidle')) viewerWake(); });   // restarts the idle clock, which a resting mouse had held
+/* Wide screens, a post narrower than the screen: the caption moves into the black beside it instead of over it (audit 2, item 5) */
+function sideCap(){
+  const R = VIEW.root; if(R.hidden) return;
+  const el = VIEW.stage.querySelector('img,video'), W = R.clientWidth, H = R.clientHeight;
+  let side = 0;
+  if(el && !VFILL && W >= 1100 && matchMedia('(pointer:fine)').matches){
+    const nw = el.naturalWidth || el.videoWidth, nh = el.naturalHeight || el.videoHeight;
+    if(nw && nh) side = morphRect(nw, nh, W, H).x;
+  }
+  const on = side >= 300; R.classList.toggle('vside', on); if(on) R.style.setProperty('--vside', Math.round(side)+'px');
+}
+VIEW.stage.addEventListener('load', sideCap, true); VIEW.stage.addEventListener('loadedmetadata', sideCap, true);
+addEventListener('resize', ()=>{ if(!VIEW.root.hidden) sideCap(); });
 ['pointermove','pointerdown'].forEach(ev=>VIEW.root.addEventListener(ev,e=>{
   if(ev==='pointerdown'){ VIEW.ptype = e.pointerType; if(e.target.closest && e.target.closest('.vstage img,.vstage video')) return; viewerWake(); return; }   // a press on the media is a tap or a hold; those decide
   if(e.pointerType!=='mouse' || VIEW.root.classList.contains('vpeek')) return;
@@ -2601,6 +2714,16 @@ function fillHoles(now){
   const run = ()=>{
     const g = $('grid'), kids = [...g.children].filter(c=>c._p);
     for(const c of kids) if(c._fill){ layoutCard(c, c._p); c._fill = 0; }
+    /* Grid's last row (audit 2, item 10): when every card is on the page and the last row is short, its tiles share the row's full width
+       (5 across with 3 left: 2, 2 and 1 columns), so the grid ends square instead of ragged. Order is unchanged; only those few widen. */
+    if(LAYOUT === 'grid'){
+      for(const c of kids) if(c._gw){ c.style.gridColumn = ''; c._gw = 0; }
+      const r = kids.length % cols;
+      if(cols < 2 || !r || shown < list.length) return;
+      const base = Math.floor(cols / r), more = cols % r;
+      kids.slice(-r).forEach((c,i)=>{ const w = base + (i < more ? 1 : 0); if(w > 1){ c.style.gridColumn = 'span '+w; c._gw = w; } });
+      return;
+    }
     if(LAYOUT !== 'masonry' || cols < 2 || !kids.length || shown < list.length) return;
     const gl = g.getBoundingClientRect().left, pitch = colW + GAP, low = [], rs = new Map();
     for(const c of kids.slice(-cols*4)){
@@ -2624,7 +2747,7 @@ function showGallery(card,p,m){
   const n = m.gl.length, i = card._gi || 0, name = m.gl[i];
   const urls = [i===0 ? m.th : '', 'https://i.redd.it/'+name, 'https://preview.redd.it/'+name].filter(Boolean);
   const t = card.querySelector('.thumb');
-  let img = t.querySelector('img');
+  let img = t.querySelector(':scope > img');
   if(!img){ img = document.createElement('img'); img.alt = ''; img.referrerPolicy = 'no-referrer'; t.prepend(img); }
   const ph = t.querySelector('.ph'); if(ph) ph.remove();
   let k = 0; img.onerror = () => { if(++k < urls.length) img.src = urls[k]; };
@@ -2640,13 +2763,29 @@ function cardTabs(c, on){
     if(list || (on && !n.matches('.lhandle,.lh-close'))) n.removeAttribute('tabindex'); else n.setAttribute('tabindex','-1');
   });
   const th = c.querySelector('a.thumb');
-  if(th){ const raw = th.dataset.lbl || (th.dataset.lbl = (th.getAttribute('aria-label')||'').replace(/^[^:]*:\s*/,'')); th.setAttribute('aria-label', (list ? 'Open: ' : 'Show details and controls: ')+raw); }
+  if(th){ const raw = th.dataset.lbl || (th.dataset.lbl = (th.getAttribute('aria-label')||'').replace(/^[^:]*:\s*/,'')); th.setAttribute('aria-label', (list ? 'Open: ' : 'Open full screen: ')+raw);
+    if(list) th.removeAttribute('aria-description'); else th.setAttribute('aria-description', 'Space shows its details and controls');
+    /* Masonry / Grid: a click opens full screen, so the link itself (open in a new tab, copy link) goes to the post on Reddit, not the bare picture. List keeps its plain link. */
+    if(!th.dataset.media) th.dataset.media = th.getAttribute('href') || '';
+    const pl = c._p && c._p.link; th.setAttribute('href', !list && pl ? pl : th.dataset.media); }
 }
-function kbOpen(c){ c._kb = true; setLayer(c,true); cardTabs(c,true); const f = c.querySelector('.layer .actions a, .layer .actions button, .layer .lay-cap button'); if(f) f.focus(); }
+/* Touch: the first two times someone comes back from full screen to the tile they opened, a small note on that tile says how to reach its details
+   (audit 2, item 17). It stops for good once a tray has been opened. Replaces the one-time toast at load, which covered the feed. */
+function holdHint(card){
+  try{
+    if(!matchMedia('(hover:none)').matches || localStorage.getItem('saved-posts-trayhint') || LAYOUT==='list') return;
+    const n = +(localStorage.getItem('saved-posts-holdhint') || 0); if(n >= 2) return;
+    localStorage.setItem('saved-posts-holdhint', String(n+1));
+  }catch(e){ return; }
+  const h = document.createElement('div'); h.className = 'holdhint'; h.setAttribute('role','status'); h.textContent = 'Press and hold for details';
+  card.appendChild(h); setTimeout(()=>h.classList.add('out'), 2800); setTimeout(()=>h.remove(), 3100);
+}
+function kbOpen(c){ ensureLayer(c); c._kb = true; setLayer(c,true); cardTabs(c,true); const f = c.querySelector('.layer .actions a, .layer .actions button, .layer .lay-cap button'); if(f) f.focus(); }
 function kbClose(c, refocus){ if(!c._kb) return; c._kb = false; cardTabs(c,false); if(refocus){ const t = c.querySelector('a.thumb'); if(t) t.focus(); } }
 function setLayer(c,on){
   if(on) try{ localStorage.setItem('saved-posts-trayhint','1'); }catch(e){}
   if(!c || !c.classList) return;
+  if(on) ensureLayer(c);
   c.classList.toggle('lay-open', !!on);
   if(on) c.classList.remove('lay-shut'); else c.querySelectorAll('.volwrap.open').forEach(w=>w.classList.remove('open'));
   const h = c.querySelector('.lhandle'); if(h) h.setAttribute('aria-expanded', on?'true':'false');
@@ -2713,8 +2852,11 @@ document.addEventListener('keydown',e=>{
 })();
 $('grid').addEventListener('keydown',e=>{
   const th = e.target.closest && e.target.closest('a.thumb');
+  /* Enter does what a click does (full screen); Space steps into the card's own controls */
   if(th && (e.key==='Enter' || e.key===' ') && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && !SEL.on && LAYOUT!=='list'){
-    e.preventDefault(); const kc = th.closest('.card'); if(kc) kbOpen(kc); return;
+    e.preventDefault(); const kc = th.closest('.card'); if(!kc) return;
+    if(e.key==='Enter' && kc._p){ openViewer(kc._p, {from: kc}); return; }
+    kbOpen(kc); return;
   }
   if(e.key==='Escape'){ const kc = e.target.closest && e.target.closest('.card'); if(kc && kc._kb){ e.stopPropagation(); kbClose(kc,true); } }
 });
@@ -2804,7 +2946,7 @@ $('grid').addEventListener('click',e=>{
 
 function renderMore(){
   const grid = $('grid'), end = Math.min(list.length, shown+PAGE), frag = document.createDocumentFragment();
-  for(let k=shown;k<end;k++){ const p=list[k]; let el=cardEls.get(p.id); if(!el){ el=buildCard(p); cardEls.set(p.id,el);} frag.appendChild(el); }
+  for(let k=shown;k<end;k++){ const p=list[k]; let el=cardEls.get(p.id); if(!el){ el=buildCard(p, k < 48); cardEls.set(p.id,el);} if(k < cols){ const im = el.querySelector('.thumb > img'); if(im) im.fetchPriority = 'high'; } frag.appendChild(el); }   // the first row is what people see first
   grid.appendChild(frag); shown = end; updateMore(); fillHoles();
 }
 /* Subreddit dropdown: rebuilt whenever the list changes (it used to be built once, before any posts existed). Subreddits with fewer than 3 posts are left out, except the one currently chosen. */
@@ -2829,7 +2971,7 @@ function refresh(){
   const fade = kids.length > 0 && !refresh.quiet && !matchMedia('(prefers-reduced-motion: reduce)').matches;
   $('grid').replaceChildren(); shown = 0;
   if(fade && $('grid').animate && LAYOUT!=='list') $('grid').animate([{opacity:.2},{opacity:1}], {duration:220, easing:'cubic-bezier(.23,1,.32,1)'});   // a filter, sort or shuffle change: the new feed fades in instead of popping (opacity only, synchronous, so nothing waits for it)
-  if(!list.length){ $('grid').innerHTML = '<div class="empty">'+(MODE==='sub' ? (FEED.loading ? 'Loading...' : subEmptyHtml()) : (POSTS.length ? 'No saved posts match these filters.<p class="emptyact"><button class="pill" id="emptyClear" type="button">Clear filters</button></p>' : introHtml()))+'</div>'; updateMore(); }
+  if(!list.length){ $('grid').innerHTML = '<div class="empty">'+(MODE==='sub' ? (FEED.loading ? 'Loading...' : subEmptyHtml()) : (POSTS.length ? csvEmptyHtml() : introHtml()))+'</div>'; updateMore(); }
   else { renderMore(); if(fade && LAYOUT==='list') listIn(); }
   updateChips(); updateSummary();
 }
@@ -2891,17 +3033,27 @@ function updateChips(){
   $('nsfwcount').textContent = nn ? '('+nn+')' : '';   // how many posts in this list count as NSFW (the automatic guess plus your own marks)
   $('browseCol').hidden = !($('catChips').childElementCount || $('kindChips').childElementCount || $('mediaChips').childElementCount);   // nothing to browse until something is loaded
 }
+/* First run shows the gallery before the words (audit 2, item 12): a dim, non-interactive masonry of the invented sample art beside the steps
+   (above them on phones). Built once; never real posts. */
+let SKY = '';
+function introSky(){
+  if(SKY) return SKY;
+  try{ SKY = '<div class="introsky" aria-hidden="true">' + SAMPLES.slice(0,12).map((x,i)=>'<img alt="" decoding="async" src="'+esc(sampleArt(i,x[3],x[4]))+'" width="'+x[3]+'" height="'+x[4]+'">').join('') + '</div>'; }
+  catch(e){ return ''; }   // SAMPLES is declared further down; before that, no sky
+  return SKY;
+}
 function introHtml(){
-  return '<div class="intro">'
+  let fresh = true; try{ fresh = !localStorage.getItem('saved-posts-everloaded'); }catch(e){}   // until a real list has been opened once, Try sample posts is as prominent as Open CSV
+  return '<div class="intro">' + introSky() + '<div class="introtext">'
    + '<p class="introuse">See every post you have ever saved on Reddit as one gallery, not just the last 1,000 Reddit shows you. Filter, star and clean it up; changes go back into your CSV.</p>'
    + '<h2 class="introh">Get your Reddit data</h2>'
    + '<ol class="steps"><li><span class="n" aria-hidden="true">1</span><span>Ask Reddit for your data at <a href="https://www.reddit.com/settings/data-request" target="_blank" rel="noopener noreferrer">reddit.com/settings/data-request</a>. It can take a few days to arrive.</span></li>'
    + '<li><span class="n" aria-hidden="true">2</span><span>Open <code>saved_posts.csv</code> from the download here. It stays in this browser; nothing is uploaded.</span></li></ol>'
-   + '<p class="introcta"><button class="pill primary" id="introOpen" type="button">Open CSV</button><button class="pill" id="introSample" type="button">Try sample posts</button><span class="dropnote">or drop the file anywhere on this page</span></p>'
+   + '<p class="introcta"><button class="pill primary" id="introOpen" type="button">Open CSV</button><button class="pill'+(fresh ? ' primary' : '')+'" id="introSample" type="button">Try sample posts</button><span class="dropnote">or drop the file anywhere on this page</span></p>'
    + '<p class="nodata" role="status"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M8 4.6v4"/><path d="M8 11.3v.1"/></svg>Nothing loaded yet. Open your CSV, or look around with the sample posts first.</p>'
    + (CLOUD_ON ? '<p class="introacct"><svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 15.5a3.5 3.5 0 0 1-.4-6.97A5 5 0 0 1 14.7 7.6a4 4 0 0 1-.2 7.9z"/><path d="M10 12.8V8.6M8.3 10.2L10 8.5l1.7 1.7"/></svg><span>Optional: create an account and upload the CSV to sync across devices.</span></p>' : '')
    + '<div class="introfoot"><a href="https://github.com/Tulosi/stargazer" target="_blank" rel="noopener noreferrer">View the project on GitHub</a><span>Created by Tulos and - mostly - Claude</span></div>'
-   + '</div>';
+   + '</div></div>';
 }
 setInterval(()=>{ if(!!loading !== document.body.classList.contains('previews-loading')) updateStats(); },500);
 /* While previews stream in, the counts run up to their new value (240ms) instead of jumping; otherwise they are set at once. */
@@ -2917,14 +3069,22 @@ let stT; function updateStats(){
   stT = setTimeout(()=>{
     let got = 0; for(const p of POSTS){ const m = META[p.id]; if(m && (!m.miss || m.rec)) got++; }
     const nf = n => (n >= 10000 && matchMedia('(max-width:720px)').matches) ? (n/1000).toFixed(n >= 100000 ? 0 : 1).replace(/\.0$/,'')+'k' : n.toLocaleString();   // 12.3k on phones, where the strip is narrow
-    countTo($('stActive'), list.length, nf); countTo($('stGot'), got, nf); countTo($('stAll'), POSTS.length, nf);
+    const ld0 = !!loading, gone = POSTS.reduce((n,p)=>{ const m = META[p.id]; return n + (m && m.miss && !m.rec ? 1 : 0); }, 0);
+    const waiting = POSTS.length - got - gone;   // no preview yet
+    /* "13 shown of 15", then "2 loading" while previews stream in, or "5 unavailable" when the archives could not return them */
+    const xn = ld0 && waiting > 0 ? waiting : gone, xw = ld0 && waiting > 0 ? 'loading' : 'unavailable';
+    countTo($('stActive'), list.length, nf); countTo($('stAll'), POSTS.length, nf); countTo($('stGot'), xn, nf);
+    $('stX').hidden = !xn; $('stXlb').textContent = xw;
+    $('stXnote').textContent = xw === 'loading' ? 'Previews still on their way from the archives' : 'Posts the archives could not return (often removed from Reddit)';
     $('stats').hidden = !POSTS.length || MODE!=='csv';
     const empty = !POSTS.length && MODE==='csv'; document.body.classList.toggle('no-data', empty);   // nothing loaded: Shuffle has nothing to act on (Filters stays for Layout and Theme; Search stays so the box is not a dead end)
     for(const id of ['shufflebtn']){ const e = $(id); if(e){ e.disabled = empty; } }
-    const ld = !!loading; $('stGot').parentNode.classList.toggle('busy', ld && got < POSTS.length); document.body.classList.toggle('previews-loading', ld);
-    /* nothing filtered, nothing still loading: three identical numbers say nothing, so phones show one */
-    const flat = !ld && POSTS.length > 0 && got === POSTS.length && list.length === POSTS.length; document.body.classList.toggle('stats-flat', flat);
-    const alb = $('stActive').parentNode.querySelector('.lb'); if(alb) alb.textContent = flat ? 'Posts' : 'Active';
+    const ld = ld0; $('stX').classList.toggle('busy', ld && waiting > 0); document.body.classList.toggle('previews-loading', ld);
+    /* nothing filtered, nothing loading or missing: "15 posts" */
+    const flat = !ld && POSTS.length > 0 && !xn && list.length === POSTS.length; document.body.classList.toggle('stats-flat', flat);
+    $('stLb').textContent = flat ? (POSTS.length === 1 ? 'post' : 'posts') : 'shown';
+    /* screen readers hear the result of a filter change, not every tick while previews stream in */
+    if(!ld){ const say = flat ? POSTS.length.toLocaleString()+' posts' : list.length.toLocaleString()+' shown of '+POSTS.length.toLocaleString(); const s = $('statsSay'); if(s && s.textContent !== say) s.textContent = say; }
   },120);
 }
 /* A refresh keeps the view: filters, sort, search and scroll position are remembered for this tab (session only, so NSFW never stays switched on in a later visit). */
@@ -2948,19 +3108,30 @@ function restoreView(){
   window.markSearchBtn && markSearchBtn();
   if(v.y > 0){ let n = 0; while(document.documentElement.scrollHeight < v.y + innerHeight + 200 && shown < list.length && n++ < 60) renderMore(); window.scrollTo(0, v.y); }
 }
+/* Nothing to show from a loaded list: name the cause. A search gets its own words and its own Clear search; filters keep Clear filters. */
+function csvEmptyHtml(){
+  const q = (state.q||'').trim();
+  const other = state.cats.size||state.kinds.size||state.media.size||state.sub||state.fav||state.nsfw!=='hide'||state.range!=='all';
+  if(q) return 'Nothing matches “'+esc(q)+'”'+(other ? ' with these filters' : '')+'.<p class="emptyact"><button class="pill" id="emptySearch" type="button">Clear search</button>'+(other ? ' <button class="pill" id="emptyClear" type="button">Clear filters</button>' : '')+'</p>';
+  return 'No saved posts match these filters.<p class="emptyact"><button class="pill" id="emptyClear" type="button">Clear filters</button></p>';
+}
 function updateSummary(){
   updateStats(); saveView();
   const active = state.cats.size||state.kinds.size||state.media.size||state.sub||state.q||state.fav||state.nsfw!=='hide'||!state.hideBroken||state.range!=='all';
   const hidden = MODE==='csv' ? Math.max(0, POSTS.length - list.length) : 0;
   /* Count only settings the user changed from the defaults (the hiding defaults are explained by the "hidden by filters" line). */
   const n = (state.nsfw!=='hide'?1:0) + ((!!state.showText)!==textDefault()?1:0) + (state.hideBroken?0:1) + (state.cats.size?1:0) + (state.kinds.size?1:0) + (state.media.size?1:0) + (state.sub?1:0) + (state.q?1:0) + (state.fav?1:0) + (state.range!=='all'?1:0);
+  const mf = (state.range!=='all'?1:0) + ((!!state.showText)!==textDefault()?1:0) + (state.fav?1:0) + (state.hideBroken?0:1);   // changed settings inside More filters
+  const mfn = $('morefiltn'); if(mfn) mfn.textContent = mf ? '· '+mf+' on' : ''; if(mf && $('morefilt')) $('morefilt').open = true;
+  const stb = $('starbtn'); if(stb){ const ok = MODE==='csv' && (FAVS.size > 0 || state.fav); stb.hidden = !ok; stb.setAttribute('aria-pressed', state.fav ? 'true' : 'false'); stb.textContent = '★ Starred' + (FAVS.size ? ' ' + FAVS.size.toLocaleString() : ''); }
   const sb = $('selbtn'); if(sb){ const ok = MODE==='csv' && POSTS.length > 0; sb.hidden = !ok; if(!ok && SEL.on) selMode(false); }
   const dt = $('decktoggle'); if(n) dt.dataset.n = String(n); else delete dt.dataset.n;
   dt.dataset.active = active ? '1' : '0';
   $('summary').innerHTML = hidden ? '<b>'+hidden.toLocaleString()+'</b> hidden by filters <button class="clear" id="rvw" type="button">Review</button>'+(active ? ' <button class="clear" id="clr" type="button">Clear filters</button>' : '')
     : (active ? list.length.toLocaleString()+' of '+POSTS.length.toLocaleString()+' posts <button class="clear" id="clr" type="button">Clear filters</button>' : '');
   const rv = $('rvw'); if(rv) rv.onclick = () => $('decktoggle').click();   // a toggle: opens the Filters panel, or closes it if it is already open
-  const c = $('clr'); if(c) c.onclick = ()=>{ state.cats.clear(); state.kinds.clear(); state.media.clear(); state.sub=''; state.q=''; syncBox(); state.fav=false; $('favonly').checked=false; textTouched=false; state.showText=textDefault(); $('showtext').checked=state.showText; saveListPrefs(); if(state.range!=='all'){ setRange('all'); return; } $('subsel').value=''; setNsfw('hide'); };
+  const c = $('clr'); if(c && MODE==='csv' && POSTS.length && !list.length) c.hidden = true;   // the empty state has its own buttons; one Clear filters is enough
+  if(c) c.onclick = ()=>{ state.cats.clear(); state.kinds.clear(); state.media.clear(); state.sub=''; state.q=''; syncBox(); state.fav=false; $('favonly').checked=false; textTouched=false; state.showText=textDefault(); $('showtext').checked=state.showText; saveListPrefs(); if(state.range!=='all'){ setRange('all'); return; } $('subsel').value=''; setNsfw('hide'); };
 }
 
 /* ---------- bulk selection ---------- */
@@ -2975,7 +3146,7 @@ function selPaint(){
 function selMode(on){
   SEL.on = on; if(!on) SEL.ids.clear();
   document.body.classList.toggle('selecting', on); $('selbar').hidden = !on;
-  $('selbtn').textContent = on ? 'Cancel' : 'Bulk Actions'; $('selbtn').setAttribute('aria-pressed', on?'true':'false');
+  $('selbtn').textContent = on ? 'Cancel' : 'Select'; $('selbtn').setAttribute('aria-pressed', on?'true':'false');
   selPaint();
 }
 async function selAct(a){
@@ -3205,6 +3376,7 @@ function viewerWake(){
     if(!(v || VIEW.stage.querySelector('img')) || (v && v.paused)) return;
     if(VIEW.root.querySelector('.volwrap.open, :is(.vctl,.vrail,.vposts) :focus-visible')) return;
     if(matchMedia('(hover:hover)').matches && VIEW.root.querySelector(':is(.vctl,.vrail,.vposts,.vclose,.vfill):hover')) return;
+    if(!v && matchMedia('(hover:hover) and (pointer:fine)').matches && VIEW.root.matches(':hover') && VIEW.ptype !== 'touch') return;   // a mouse resting on a picture keeps the caption up; H, a click or leaving the window clears it
     VIEW.root.classList.add('vidle');
   }, VIDLE_MS);
 }
@@ -3246,7 +3418,8 @@ function toggleChrome(){
 /* Caption and action rail for the post on screen (Option A). The rail is the card's own actions, labelled: Star, Saved (removes the post from
    the list, with Undo), the comment count (Reddit's thread), Open (the post) and the two-line NS/FW mark, lit when the post counts as NSFW. */
 const VR_STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.8 6.6 19.7l1.1-6.1L3.2 9.4l6.1-.8z" fill="FILL" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
-const VR_SAVE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z" fill="FILL" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+const VR_RM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></svg>';
+const VR_BACK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 5L4 9.5 8.5 14M4 9.5h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>';
 const VR_CM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>';
 const VR_OPEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
 function ageText(sec){
@@ -3265,11 +3438,11 @@ function paintChrome(p){
   const inList = ROWSET.has(p.id), star = FAVS.has(p.id), ns = isNsfw(p), n = m.n || 0;
   rail.innerHTML =
       '<button class="vr-star" type="button" aria-pressed="'+star+'" aria-label="'+(star ? 'Starred: tap to unstar' : 'Star')+'">'+VR_STAR.replace('FILL', star ? 'currentColor' : 'none')+(star ? 'Starred' : 'Star')+'</button>'
-    + '<button class="vr-save" type="button" aria-pressed="'+inList+'" aria-label="'+(inList ? 'In your list: tap to remove' : 'Not in your list: tap to add')+'">'+VR_SAVE.replace('FILL', inList ? 'currentColor' : 'none')+(inList ? 'Saved' : 'Save')+'</button>'
     + '<a class="vr-cm" href="'+esc(p.link)+'" target="_blank" rel="noopener noreferrer" aria-label="'+(n ? fmt(n)+(n===1 ? ' comment' : ' comments')+' on Reddit' : 'Comments on Reddit')+'">'+VR_CM+(n ? fmt(n) : 'Comments')+'</a>'
     + '<a class="vr-open" href="'+esc(openHref(p))+'" target="_blank" rel="noopener noreferrer" aria-label="Open post">'+VR_OPEN+'Open</a>'
-    + '<button class="vr-nsfw" type="button" aria-pressed="'+ns+'" aria-label="'+(ns ? 'NSFW: tap to unmark' : 'Mark NSFW')+'"'+(inList ? '' : ' hidden')+'>NS<br>FW</button>';
-  viewerWake();
+    + '<button class="vr-nsfw" type="button" aria-pressed="'+ns+'" aria-label="'+(ns ? 'NSFW: tap to unmark' : 'Mark NSFW')+'"'+(inList ? '' : ' hidden')+'>NS<br>FW</button>'
+    + '<button class="vr-save" type="button" aria-pressed="'+inList+'" aria-label="'+rmLabel(inList)+'">'+(inList ? VR_RM+'Remove' : VR_BACK+'Put back')+'</button>';
+  sideCap(); viewerWake();
 }
 VIEW.root.querySelector('.vrail').addEventListener('click',e=>{
   e.stopPropagation(); viewerWake();
@@ -3280,15 +3453,15 @@ VIEW.root.querySelector('.vrail').addEventListener('click',e=>{
     paintChrome(p);
     if(on){ const ns = VIEW.root.querySelector('.vr-star svg'); if(ns) ns.classList.add('pop'); }
   } else if(b.classList.contains('vr-save')){
-    if(!ROWSET.has(p.id)){ toggleSave(p).then(()=>paintChrome(p)); return; }
-    const d = neighbour(1) ? 1 : neighbour(-1) ? -1 : 0;
-    toggleSave(p).then(()=>{ if(VIEW.root.hidden || VIEW.cur!==p) return; if(d && neighbour(d)) viewerPost(d); else closeViewer(); });   // the post left the list: show the next one
+    /* Remove keeps the post on screen, now offering Put back (and the toast's Undo); the next swipe or button moves on as usual (neighbour uses VIEW.idx) */
+    toggleSave(p).then(()=>{ if(!VIEW.root.hidden && VIEW.cur===p){ paintChrome(p); updatePostNav(); } });
   } else if(b.classList.contains('vr-nsfw')){
     toggleNsfw(p).then(()=>{ if(VIEW.cur===p) paintChrome(p); updatePostNav(); });
   }
 });
 function buildControls(t, el, isGif){
   const card = t.closest('.card'); if(!card) return;
+  ensureLayer(card);
   card.querySelectorAll('.ctl,.cprog').forEach(n=>n.remove());
   const ctl = document.createElement('div'); ctl.className = 'ctl';
   ctl.innerHTML = ctlHtml(isGif);
@@ -3582,7 +3755,7 @@ $('nsfwseg').addEventListener('click',e=>{ const b = e.target.closest('.pill'); 
     if(nav && innerWidth > 720){ const r = Math.max(0, ...[...nav.querySelectorAll('.pill')].filter(x=>x.offsetParent).map(x=>x.getBoundingClientRect().right)); if(r > 0) document.documentElement.style.setProperty('--panr', Math.max(0, innerWidth - r)+'px'); }   // the nav is display:contents on wide screens, so measure its buttons
   };
   const apply = which => {
-    if(which) place();
+    if(which){ place(); if(window.untuckBar) untuckBar(); }
     for(const k in PANELS){
       const [btn, cls, id] = PANELS[k], on = k===which, el = $(id);
       body.classList.toggle(cls, !on); btn.setAttribute('aria-expanded', on ? 'true' : 'false');
@@ -3591,6 +3764,21 @@ $('nsfwseg').addEventListener('click',e=>{ const b = e.target.closest('.pill'); 
     if(which){ const t = $('toast'); if(t && !t.classList.contains('act')) t.classList.remove('on'); }   // a passing hint must not sit on top of the sheet that just opened
   };
   window.openPanel = apply;
+  (function(){   // phones: tuck the top bar on the way down, bring it back on the way up or near the top
+    const mq = matchMedia('(max-width:720px)'); let last = scrollY, tuck = false, raf = 0;
+    const set = v => { if(v !== tuck){ tuck = v; if(v){ const d = document.querySelector('.deck'); if(d) document.documentElement.style.setProperty('--deckh', d.offsetHeight+'px'); } body.classList.toggle('bar-tucked', v); } };
+    addEventListener('scroll', ()=>{
+      if(raf) return;
+      raf = requestAnimationFrame(()=>{
+        raf = 0; const y = scrollY, d = y - last;
+        const panelsShut = body.classList.contains('deck-collapsed') && body.classList.contains('src-collapsed') && body.classList.contains('view-collapsed');
+        if(!mq.matches || y < 80 || !panelsShut || (typeof SEL!=='undefined' && SEL.on) || body.classList.contains('viewing')){ set(false); last = y; return; }
+        if(d > 8){ set(true); last = y; } else if(d < -8){ set(false); last = y; }
+      });
+    },{passive:true});
+    mq.addEventListener && mq.addEventListener('change', ()=>set(false));
+    window.untuckBar = () => set(false);
+  })();
   /* Phone sheets can be dragged down to close: from the handle, or from any plain part of the sheet while it is scrolled to the top.
      Past 30% of its height, or a quick flick (over 0.11px/ms), it closes; otherwise it springs back. Dragging up is damped. */
   const RM = matchMedia('(prefers-reduced-motion: reduce)');
@@ -3614,7 +3802,7 @@ $('nsfwseg').addEventListener('click',e=>{ const b = e.target.closest('.pill'); 
       if(close){
         if(RM.matches){ apply(null); el.style.transform = el.style.transition = el.style.animation = ''; return; }
         el.style.transition = 'transform .22s var(--ease-out)'; el.style.transform = 'translateY(calc(100% + 120px))';
-        setTimeout(()=>{ apply(null); el.style.transform = el.style.transition = el.style.animation = ''; }, 220);
+        setTimeout(()=>{ el.style.transition = 'none'; el.style.opacity = '0'; apply(null); setTimeout(()=>{ el.style.transform = el.style.transition = el.style.animation = el.style.opacity = ''; }, 220); }, 220);
       } else { el.style.transition = 'transform .32s cubic-bezier(.32,.72,0,1)'; el.style.transform = ''; setTimeout(()=>{ el.style.transition = ''; }, 340); }
     };
     el.addEventListener('touchend', end); el.addEventListener('touchcancel', end);
@@ -3654,7 +3842,7 @@ $('nsfwseg').addEventListener('click',e=>{ const b = e.target.closest('.pill'); 
   syncThemeColor(); try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncThemeColor); }catch(e){}
 })();
 (function(){
-  /* Card info & controls: one setting for the glass layer on each Masonry / Grid card (info, the star / bookmark / NSFW / full-screen pill, and playback).
+  /* Card info & controls: one setting for the glass layer on each Masonry / Grid card (info, the NSFW / star / full-screen / remove pill, and playback).
      Collapsed: media only, with a handle to open one card's layer. Show on hover / focus: the layer rises with the pointer (or the focused tile on touch). Show always: open on every card. List ignores it. */
   const sel = $('cardmode'), KEY = 'saved-posts-cardmode', MODES = ['collapsed','hover','always'];
   const dflt = () => matchMedia('(hover: none)').matches ? 'collapsed' : 'hover';
@@ -3683,9 +3871,12 @@ function syncStars(){
     const b = el.querySelector('button.star'); if(!b) continue;
     const on = FAVS.has(b.dataset.id);
     b.setAttribute('aria-pressed', on?'true':'false'); b.textContent = on ? '\u2605' : '\u2606';
+    if(on && !el.classList.contains('is-star')){ el.classList.add('star-new'); setTimeout(()=>el.classList.remove('star-new'), 400); }
+    el.classList.toggle('is-star', on);
   }
 }
 $('favonly').addEventListener('change',e=>{ state.fav = e.target.checked; saveListPrefs(); refresh(); });
+$('starbtn').addEventListener('click',()=>{ state.fav = !state.fav; $('favonly').checked = state.fav; saveListPrefs(); refresh(); });   // the Starred view, one press from the feed
 updateFavCount();
 $('subsel').addEventListener('change',e=>setSub(e.target.value));
 /* The layout is remembered per list (a list of text posts suits List, a list of clips suits Masonry); the global choice is the default for lists without one. */
@@ -3766,7 +3957,7 @@ function savedCols(W){
     else if(!FULLW){ const px = +localStorage.getItem('saved-posts-tile');   // older pixel setting (370 meant one across)
       if(px>=150 && px<=370) return px > 360 ? 1 : Math.max(1, Math.floor((W + 6)/(px + 6))); }
   }catch(e){}
-  return phoneMQ.matches ? 1 : FULLW ? 3 : Math.max(1, Math.floor((W + 6)/(230 + 6)));
+  return phoneMQ.matches ? 2 : FULLW ? 3 : Math.max(1, Math.floor((W + 6)/(230 + 6)));   // phones open at 2 across (audit 2): 1 across read as a slow single column
 }
 function notchesFor(nt, labels){
   nt.replaceChildren(...labels.map((n,i)=>{ const t = document.createElement('i'), f = labels.length>1 ? i/(labels.length-1) : .5;
@@ -3861,6 +4052,11 @@ function pickThumb(s){
   }
   return /^https?:/.test(s.thumbnail||'') ? s.thumbnail : '';
 }
+/* Reddit's smallest preview copy (about 108px wide): shown blurred under a tile while its real thumbnail loads (audit 2, item 8) */
+function pickLq(s){
+  const pv = s.preview && s.preview.images && s.preview.images[0], r = pv && pv.resolutions && pv.resolutions[0];
+  return r && r.url && r.width <= 216 ? r.url.replace(/&amp;/g,'&') : undefined;
+}
 function mediaType(s,d,rec){
   if(!rec && d.removed_by_category) return 'removed';
   const u = (s.url_overridden_by_dest||s.url||'').toLowerCase();
@@ -3927,7 +4123,7 @@ function slim(d,rec){
   const rd = /reveddit\.com\/(?:v|r)\/[A-Za-z0-9_]+\/comments\/([a-z0-9]+)/i.exec(u);   // a link post pointing at a Reveddit page
   const pvu = ((s.preview && s.preview.images && s.preview.images[0] && s.preview.images[0].source && s.preview.images[0].source.url) || '').replace(/&amp;/g,'&');
   let [w,h] = pickDims(s); if(!w && ym){ w = 1280; h = 720; }
-  return {t:d.title||'', o:d.over_18?1:0, th:pickThumb(s).replace(/&amp;/g,'&') || oth, g:gm?gm[1]:undefined, rs:(!gm && rs) ? rs.toLowerCase() : undefined, pv:/^https?:/.test(pvu) ? pvu : undefined, ab:ab||undefined, rb:rb||undefined, yt:ym?ym[1]:undefined, gl, rd:rd?rd[1]:undefined,
+  return {t:d.title||'', o:d.over_18?1:0, th:pickThumb(s).replace(/&amp;/g,'&') || oth, lq:pickLq(s), g:gm?gm[1]:undefined, rs:(!gm && rs) ? rs.toLowerCase() : undefined, pv:/^https?:/.test(pvu) ? pvu : undefined, ab:ab||undefined, rb:rb||undefined, yt:ym?ym[1]:undefined, gl, rd:rd?rd[1]:undefined,
     m:type, u:(useLink || rd)?'':u, n:d.num_comments||0, s:d.score||0, a:d.author||'', c:d.created_utc||0, rec:rec||undefined, v:pickVideo(s), d:dur||undefined, w, h};
 }
 /* One archive request for a batch of ids. A 400 (the archive refused the request) is retried in smaller pieces, so one odd id or an archive-side limit
@@ -3982,6 +4178,7 @@ async function fetchBatch(ids){
 }
 const sleep = ms => new Promise(r=>setTimeout(r,ms));
 let loading = false, missing = 0;
+function setBar(v){ const b = $('loadBar'); if(!b) return; const n = Math.max(0, Math.min(100, parseFloat(v)||0)); b.style.transform = 'scaleX('+(n/100)+')'; b.classList.toggle('full', n >= 100); b.dataset.pct = String(n); }
 async function loadAll(){
   if(loading) return; loading = true;
   const gen = loadGen;
@@ -3995,7 +4192,7 @@ async function loadAll(){
   const onPage = new Map(list.slice(0, Math.max(shown, 40)).map((p,i)=>[p.id,i]));
   const queue = todo.filter(p=>!p.del).map((p,i)=>[p,i]).sort((a,b)=>(onPage.has(a[0].id) ? onPage.get(a[0].id) : 1e9+a[1]) - (onPage.has(b[0].id) ? onPage.get(b[0].id) : 1e9+b[1])).map(x=>x[0]);
   const total = POSTS.length; let done = total-queue.length;
-  const setProgress = (msg,err)=>{ $('loadText').innerHTML = (err?'<span class="err">'+msg+'</span>':msg); $('loadBar').style.width = (done/total*100)+'%'; };
+  const setProgress = (msg,err)=>{ $('loadText').innerHTML = (err?'<span class="err">'+msg+'</span>':msg); setBar((done/total*100)+'%'); };
   setProgress(done===total ? '' : 'Loading previews '+done.toLocaleString()+' / '+total.toLocaleString());
   if(done===total){ loading = false; metaReady(); await recoverAll(); return; }
   let chunkFails = 0, skipped = 0;
@@ -4246,6 +4443,11 @@ function metaRefresh(){
 let MODE = 'csv', recovering = false;
 const BM_OFF = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M4 2.5h8v11L8 10.5l-4 3z"/></svg>';
 const BM_ON  = '<svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M4 2.5h8v11L8 10.5l-4 3z"/></svg>';
+/* Remove (Nov 2026 audit 2): a bin while the post is in the list, a put-back arrow once it has been removed. It is the last button in the tray and on
+   the full-screen rail, away from Star, because a bookmark that deletes read as "saved". */
+const RM_ON  = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4.5h11M6.5 4.5V3h3v1.5M4 4.5l.7 9h6.6l.7-9M6.8 7v4.5M9.2 7v4.5"/></svg>';
+const RM_OFF = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 3.5L2.5 6.5l3 3M2.5 6.5h7a4 4 0 0 1 0 8H7"/></svg>';
+const rmLabel = on => on ? 'Remove from your list' : 'Removed: tap to put back';
 
 function parseCsv(text){
   text = String(text||'').replace(/^﻿/,'');
@@ -4464,6 +4666,7 @@ function pickMergeHint(){
   if(!mrgToasted){ mrgToasted = true; toast('It has been over '+MRG_DAYS+' days since you merged a Reddit export. See Source to update your list.'); }
 }
 $('mrgDo').addEventListener('click',()=>$('csvMerge').click());
+$('csvMergeTop').addEventListener('click',()=>$('csvMerge').click());
 $('mrgLater').addEventListener('click',()=>{ const o = mrgRead(), r = LIB.cur; if(!r) return; o[r.id] = Object.assign(o[r.id]||{t:Date.now()}, {snooze:Date.now()+7*864e5}); mrgWrite(o); updateMergeHint(); });
 /* After unloading the last list the page keeps an empty placeholder; say so plainly rather than naming it as a source. */
 const isEmptySlot = r => !!r && /^builtin/.test(r.id) && !ROWS.length && !TOMBS.size && !r.handle && !isCloudList(r);
@@ -4488,6 +4691,8 @@ function csvInfo(){
   cb.title = cloud ? 'Keep this list on this device only. Your account keeps its own copy.' : 'Merge this list into your account and keep it in step across devices';
   updateSyncUI(); updateMergeHint();
   $('csvUnload').disabled = !ROWS.length && !TOMBS.size && !r.handle && !r.cloud && LIB.list.length <= 1;   // nothing to unload: only an empty list is here
+  /* With a real list loaded, Merge is the likely next step (a newer Reddit export), so it takes the filled button and Open CSV steps back (audit 2, item 16) */
+  const loaded = ROWS.length > 0 && !r.sample; $('csvMergeTop').hidden = !loaded; $('csvOpen').classList.toggle('primary', !loaded);
   const opts = $('csvSel').options; for(let i=0;i<opts.length;i++){ const x = (LIB.cur && LIB.cur.id===opts[i].value) ? LIB.cur : LIB.list.find(q=>q.id===opts[i].value); if(x) opts[i].textContent = srcLabel(x); }
 }
 async function renderLibrary(){
@@ -4859,7 +5064,7 @@ const makePost = (i,id,perma) => {
 };
 /* Progress and result messages belong to one list: clear them whenever the list changes or goes away (unload, sign-out, switching source). */
 function clearStatus(){
-  $('recText').textContent = ''; $('loadText').textContent = ''; $('loadText').removeAttribute('title'); $('loadBar').style.width = '0';
+  $('recText').textContent = ''; $('loadText').textContent = ''; $('loadText').removeAttribute('title'); setBar('0');
   const rs = $('recStop'); if(rs) rs.hidden = true;
 }
 function resetView(){
@@ -4883,12 +5088,13 @@ function startCsvMode(){
   ROWS.forEach((r,i)=>POSTS.push(makePost(i,r.id,r.perma)));
   state.sort = 'new'; $('sort').value = 'new';   // newest first by default; Saved order is still one choice away
   state.fav = false; $('favonly').checked = false; applyListPrefs();
+  try{ if(ROWS.length && LIB.cur && !LIB.cur.sample) localStorage.setItem('saved-posts-everloaded','1'); }catch(e){}
   metaOK = false; syncSortUI();
   setSourceUI(); refresh(); updateFavCount();
   if(Object.keys(META).length) onMeta(POSTS);
   loadAll();
   /* on a touch screen the controls are tucked away: say so once, until the person has opened one */
-  try{ if(POSTS.length && matchMedia('(hover:none)').matches && document.body.classList.contains('cm-collapsed') && !localStorage.getItem('saved-posts-trayhint')) setTimeout(()=>{ try{ if(!localStorage.getItem('saved-posts-trayhint')){ localStorage.setItem('saved-posts-trayhint','1'); toast('Tap a picture to open it. Press and hold for its details and controls.'); } }catch(e){} }, 2200); }catch(e){}
+  /* the press-and-hold hint now appears on the tile itself, after full screen (holdHint) */
 }
 function removePosts(ids){
   const set = new Set(ids);
@@ -4900,8 +5106,8 @@ function syncSaveButtons(){
   for(const el of cardEls.values()){
     const b = el.querySelector('button.save:not(.nsfwb)'); if(!b) continue;
     const on = ROWSET.has(b.dataset.id);
-    b.setAttribute('aria-pressed', on?'true':'false'); b.innerHTML = on ? BM_ON : BM_OFF;
-    b.setAttribute('aria-label', on ? 'In your list: tap to remove' : 'Not in your list: tap to add'); b.title = b.getAttribute('aria-label');
+    b.setAttribute('aria-pressed', on?'true':'false'); b.innerHTML = on ? RM_ON : RM_OFF;
+    b.setAttribute('aria-label', rmLabel(on)); b.title = b.getAttribute('aria-label');
     const nbn = el.querySelector('button.nsfwb'); if(nbn) nbn.hidden = !on;
   }
 }
@@ -4944,13 +5150,16 @@ async function toggleSave(p){
   if(ROWSET.has(p.id)){
     const old = ROWS.find(x=>x.id===p.id) || {id:p.id, perma:p.perma||p.link, starred:false};
     const keep = {id:old.id, perma:old.perma, starred:!!old.starred};
+    p._keepStar = keep.starred;   // Put back (same button) brings the star back too
     deleteRows([p.id]);
     await commit();
     if(MODE==='csv') removePosts([p.id]); else syncSaveButtons();
     let first = false; try{ first = !localStorage.getItem('saved-posts-bmhint'); if(first) localStorage.setItem('saved-posts-bmhint','1'); }catch(e){}
-    toast('Deleted from "'+LIB.cur.name+'"'+(first ? '. The bookmark means a post is in your list; press it again to add one back.' : ''), {label:'Undo', fn:()=>restoreRows([keep])});
+    toast('Removed from "'+LIB.cur.name+'"'+(first ? '. The arrow on the same button puts it back.' : ''), {label:'Undo', fn:()=>restoreRows([keep])});
   } else {
-    ROWS.unshift({id:p.id, perma:p.perma || p.link, starred:false, t:nowT((TOMBS.get(p.id)||{}).t)}); TOMBS.delete(p.id); ROWSET.add(p.id); markDirty(p.id);
+    const st = !!p._keepStar; delete p._keepStar;
+    ROWS.unshift({id:p.id, perma:p.perma || p.link, starred:st, t:nowT((TOMBS.get(p.id)||{}).t)}); TOMBS.delete(p.id); ROWSET.add(p.id); markDirty(p.id);
+    if(st){ FAVS.add(p.id); syncStars(); updateFavCount(); }
     if(MODE!=='csv') keepLocalMeta(p.id);
     await commit(); syncSaveButtons();
     toast('Saved to "'+LIB.cur.name+'"');
@@ -4982,12 +5191,25 @@ function tgPaint(){
   R.querySelector('.tg-count').textContent = left > 0 ? (TG.i + 1).toLocaleString()+' of '+TG.list.length.toLocaleString()+(TG.n.rm ? ' · '+TG.n.rm+' removed' : '')+(TG.n.star ? ' · '+TG.n.star+' starred' : '') : 'Done';
   R.querySelector('.tg-undo').hidden = !TG.hist.length;
   R.querySelectorAll('.tg-acts button').forEach(b=>b.disabled = left <= 0);
-  if(left <= 0){
-    st.innerHTML = '<div class="tg-done">All done. Kept '+TG.n.keep+', removed '+TG.n.rm+', starred '+TG.n.star+'.<br><button class="pill" type="button" data-tg-close>Back to the feed</button></div>';
-    return;
-  }
+  if(left <= 0){ tgDone(st); return; }
+  /* The first time ever, the keys and swipes sit under the first card (audit 2, item 18) */
+  let hint = false; try{ hint = TG.i === 0 && !localStorage.getItem('saved-posts-tghint'); }catch(e){}
+  R.querySelector('.tg-hint').hidden = !hint;
   const a = TG.list[TG.i], b = TG.list[TG.i + 1];
   st.replaceChildren(...[b ? tgCard(b, true) : null, tgCard(a)].filter(Boolean));
+}
+/* The end of a Triage run is a small peak (audit 2, item 19): the cards starred in this run fan out, and the three counts run up to their values. */
+function tgDone(st){
+  const starred = TG.hist.filter(h=>h.kind==='star').map(h=>tgPic(h.p)).filter(Boolean).slice(-3);
+  const fan = starred.length ? '<div class="tg-fan" aria-hidden="true">'+starred.map((u,i)=>'<img alt="" referrerpolicy="no-referrer" src="'+esc(u)+'" style="--i:'+(i - (starred.length-1)/2)+'">').join('')+'</div>' : '';
+  st.innerHTML = '<div class="tg-done">'+fan+'<p>All done</p><div class="tg-tally"><span><b data-n="'+TG.n.keep+'">0</b> kept</span><span><b data-n="'+TG.n.rm+'">0</b> removed</span><span><b data-n="'+TG.n.star+'">0</b> starred</span></div>'
+    + '<button class="pill" type="button" data-tg-close>Back to the feed</button></div>';
+  const RMQ = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  st.querySelectorAll('.tg-tally b').forEach(b=>{
+    const n = +b.dataset.n; if(RMQ || !n){ b.textContent = n.toLocaleString(); return; }
+    const t0 = performance.now(), D = 600, step = t => { const k = Math.min(1, (t - t0)/D), e = 1 - Math.pow(1 - k, 3); b.textContent = Math.round(n*e).toLocaleString(); if(k < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  });
 }
 function openTriage(){
   if(MODE!=='csv' || !list.length){ toast('Open a list first.'); return; }
@@ -5001,6 +5223,7 @@ function openTriage(){
 function closeTriage(){
   if(!TG.on) return; TG.on = false;
   $('triage').hidden = true; document.body.classList.remove('triaging');
+  if(TG.hist.length) try{ localStorage.setItem('saved-posts-tghint','1'); }catch(e){}
   $('triage').querySelector('.tg-stack').replaceChildren();
   if(TG.n.star && state.fav) refresh();
   if(TG.n.rm || TG.n.star) toast('Triage: kept '+TG.n.keep+', removed '+TG.n.rm+', starred '+TG.n.star+'.');
@@ -5265,13 +5488,13 @@ async function feedRound(){
   if(!todo.length && FEED.live!==true) return;
   FEED.loading = true; todo.forEach(s=>s.err=''); updateMore();
   if(FEED.live!==false){
-    $('loadText').textContent = 'Loading the hot feed from Reddit...'; $('loadBar').style.width = '10%';
+    $('loadText').textContent = 'Loading the hot feed from Reddit...'; setBar('10%');
     try{
       await feedLive(gen);
       if(gen!==FEED.gen) return;
       FEED.live = true; FEED.loading = false; syncSortUI();
       $('loadText').textContent = POSTS.length.toLocaleString()+' posts loaded from Reddit\'s hot feed';
-      $('loadBar').style.width = '100%'; refresh(true); return;
+      setBar('100%'); refresh(true); return;
     }catch(e){
       if(gen!==FEED.gen) return;
       if(FEED.live===true){   // it worked before: report the failure but keep the feed live so the button retries
@@ -5285,12 +5508,12 @@ async function feedRound(){
   }
   const limit = Math.min(100, Math.max(4, Math.ceil(ROUND/todo.length)));
   $('loadText').textContent = 'Loading '+(todo.length>3 ? todo.length+' subreddits' : todo.map(s=>'r/'+s.name).join(', '))+'...';
-  $('loadBar').style.width = '5%';
+  setBar('5%');
   let idx = 0, doneCount = 0, tick = null;
   const worker = async () => {
     while(idx < todo.length && gen===FEED.gen){
       await feedSub(todo[idx++], limit, gen);
-      doneCount++; $('loadBar').style.width = Math.max(5, Math.round(doneCount/todo.length*100))+'%';
+      doneCount++; setBar(Math.max(5, Math.round(doneCount/todo.length*100))+'%');
       if(gen===FEED.gen && !tick) tick = setTimeout(()=>{ tick = null; refresh(true); },250);
     }
   };
@@ -5299,7 +5522,7 @@ async function feedRound(){
   clearTimeout(tick); FEED.loading = false;
   const failed = FEED.subs.filter(s=>s.err);
   $('loadText').innerHTML = (FEED.note ? '<span class="err">'+esc(FEED.note)+'</span> ' : '') + (failed.length ? '<span class="err">'+failed.map(s=>'r/'+esc(s.name)+': '+esc(s.err)).join(', ')+'</span>' : POSTS.length.toLocaleString()+' posts loaded');
-  $('loadBar').style.width = '100%';
+  setBar('100%');
   refresh(true);
 }
 function startSubMode(subs, label){
@@ -5370,7 +5593,8 @@ async function openCsvResult(r){
   await persistRec(rec); await activate(rec); startCsvMode(); noteMerge(rec.id, pullTime(r));
   csvStatus('Opened "'+r.name+'" with '+rows.length.toLocaleString()+' posts.');
 }
-document.addEventListener('click',e=>{ if(e.target.closest && e.target.closest('#emptyClear')){ const c = $('clr'); if(c) c.click(); } if(e.target.closest && e.target.closest('#introOpen')) $('csvOpen').click(); if(e.target.closest && e.target.closest('#introSample')) openSample(); });
+document.addEventListener('click',e=>{ if(e.target.closest && e.target.closest('#emptyClear')){ const c = $('clr'); if(c) c.click(); }
+  if(e.target.closest && e.target.closest('#emptySearch')){ state.q = ''; syncBox(); refresh(); } if(e.target.closest && e.target.closest('#introOpen')) $('csvOpen').click(); if(e.target.closest && e.target.closest('#introSample')) openSample(); });
 /* A small invented list (generated artwork, nothing from a real account) so the page can be tried before the Reddit export arrives. */
 /* Sample posts: invented, with generated artwork in many colours and three kinds of scene, plus one clip (a tiny built-in animated GIF),
    one text post and one marked NSFW, so the first look shows what Stargazer does. Never real posts. Extra kinds go last, so the first twelve keep their order. */

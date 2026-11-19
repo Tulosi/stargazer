@@ -15,12 +15,12 @@ with sync_playwright() as p:
     ev("""async(t)=>{ await persistRec({id:'x',name:'x.csv',text:t,handle:null,updated:Date.now()}); await activate(await idbReq('csv','readonly',s=>s.get('x'))); for(const k in META) delete META[k]; startCsvMode(); }""", H + rows)
     pg.wait_for_timeout(500)
     msg = lambda: ev("document.getElementById('recText').textContent + document.getElementById('loadText').textContent")
-    ev("""()=>{ document.getElementById('recText').textContent='Recovered 265 removed posts from archives'; document.getElementById('loadText').textContent='3 posts loaded'; document.getElementById('loadBar').style.width='100%'; }""")
+    ev("""()=>{ document.getElementById('recText').textContent='Recovered 265 removed posts from archives'; document.getElementById('loadText').textContent='3 posts loaded'; setBar(100); }""")
     check('message is showing', 'Recovered 265' in msg())
     # unload the list: confirm dialog, then it is replaced by an empty one
     ev("document.getElementById('csvUnload').click()"); pg.wait_for_timeout(300)
     pg.click('#cOk'); pg.wait_for_timeout(1200)
-    check('unloading the list clears the message', msg()=='' and ev("document.getElementById('loadBar').style.width") in ('0px','0'))
+    check('unloading the list clears the message', msg()=='' and ev("document.getElementById('loadBar').dataset.pct") in (None, '0'))
     check('the status strip is hidden when nothing is left to report', not ev("(()=>{ const s=document.querySelector('.status'); return s && getComputedStyle(s).display!=='none'; })()"))
     # a recovery that finishes after the list changed must not write into the new one
     ev("""async()=>{ const gen = loadGen; startCsvMode(); window.__late = ()=>{ const t = document.getElementById('recText'); if(gen===loadGen) t.textContent='late write'; }; }"""); pg.wait_for_timeout(200)

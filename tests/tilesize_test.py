@@ -63,7 +63,7 @@ with sync_playwright() as p:
     # phones: 3 / 2 / 1 across
     ctx, pg, errs = page(b, 390, 844, True)
     check('phone: three notches 1, 2, 3, in the same order as desktop', pg.evaluate(LABELS) == [1, 2, 3])
-    check('phone: starts with one column, at the left end', pg.evaluate(COLS) == 1 and pg.evaluate("$('size').value") == '0')
+    check('phone: starts with two columns, the middle step (audit 2)', pg.evaluate(COLS) == 2 and pg.evaluate("$('size').value") == '1')
     for i, want in ((1, 2), (2, 3), (0, 1)):
         pg.evaluate("(%s)(%d)" % (SET, i)); pg.wait_for_timeout(150)
         check('phone: step %d gives %d column(s)' % (i, want), pg.evaluate(COLS) == want)

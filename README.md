@@ -33,7 +33,7 @@ Stargazer turns that export into a visual gallery you can actually comb through.
 **Browse**
 - Three layouts: **Masonry** (best for pictures and clips), **Grid** (equal squares) and **List** (compact rows with a small thumbnail, easiest for scanning text posts, which List shows by default; Masonry and Grid keep them hidden unless you switch Show text posts on). Choose a different layout for each list; List view also lets you pick 1, 2, 3 or Auto columns.
 - Tap a tile to open it full screen. **Card info & controls**: keep tiles media-only (Collapsed, where pressing and holding a tile, or its small handle, opens that card's title, Open post and Comments buttons, NSFW, star, bookmark, full-screen and player controls), let them rise on hover or focus, or show them always. On a phone, pinch the feed for more or fewer tiles across.
-- A built-in full-screen viewer for images, galleries, videos, YouTube and RedGifs, with the post's caption and its actions (star, saved, comments, open, NSFW) along the side, previous/next post navigation (arrow keys, swipe or buttons), a Fit / Fill button that crops to fill the screen, and RedGifs clips in HD. The caption and buttons fade after a few seconds; tap to show or hide them, or press and hold for a clean look.
+- A built-in full-screen viewer for images, galleries, videos, YouTube and RedGifs, with the post's caption and its actions (star, comments, open, NSFW, remove) along the side, previous/next post navigation (arrow keys, swipe or buttons), a Fit / Fill button that crops to fill the screen, and RedGifs clips in HD. The caption and buttons fade after a few seconds; tap to show or hide them, or press and hold for a clean look.
 - Search titles, subreddits and authors (type `r/subreddit1+subreddit2` etc, to see several subreddits combined); sort by hot, newest, oldest, most comments, highest score, subreddit, or clip length (longest or shortest first); limit by time range.
 - Light and dark themes, tile size in numbered steps of tiles across (always down to one tile across, more steps on bigger screens), plus a Full width button for big tiles across the whole window, and a layout that adapts to phones.
 
@@ -43,7 +43,7 @@ Stargazer turns that export into a visual gallery you can actually comb through.
 
 **Curate**
 - Star your favourites.
-- Unsave posts with **Undo**, or use **Bulk Actions** to star, mark NSFW or delete many at once.
+- Remove posts with **Undo** (or put them back with the same button), star them into a **Starred** view one tap from the feed, or use **Select** to star, mark NSFW or delete many at once.
 - **Remove dead posts** in one step: clear out removed or deleted posts and media that no longer loads (you are asked first, and can export a backup).
 - **Triage**: go through your posts in random order one at a time, swiping right to keep, left to remove or up to star, with Undo.
 - **Find duplicates**: the same picture or clip saved more than once; keep one (the starred copy) and remove the rest, with Undo.
@@ -59,7 +59,7 @@ Stargazer turns that export into a visual gallery you can actually comb through.
 <table>
   <tr>
     <td width="50%"><img src="docs/screenshots/list.jpg" alt="List view in two columns"><br><sub><b>List view</b>: compact rows that are easy to scan, in 1, 2, 3 or Auto columns.</sub></td>
-    <td width="50%"><img src="docs/screenshots/bulk.jpg" alt="Bulk Actions strip with four posts selected"><br><sub><b>Bulk Actions</b>: select many posts, then star, mark NSFW or delete them at once.</sub></td>
+    <td width="50%"><img src="docs/screenshots/bulk.jpg" alt="Select strip with four posts selected"><br><sub><b>Select</b>: select many posts, then star, mark NSFW or delete them at once.</sub></td>
   </tr>
   <tr>
     <td width="50%"><img src="docs/screenshots/filters.jpg" alt="The Filters panel"><br><sub><b>Filters</b>: layout, sort, time range, subreddit, NSFW handling and more.</sub></td>

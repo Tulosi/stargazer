@@ -22,7 +22,7 @@ with sync_playwright() as p:
     check('caption: subreddit and age, title, author and points', ev("'r/'+VIEW.cur.sub") in cap and t0 in cap and 'ago' in cap and 'u/' in cap and 'points' in cap)
     check('the dialog is named after the post', ev("document.getElementById('viewer').getAttribute('aria-label')") == t0)
     order = ev("[...document.querySelectorAll('#viewer .vrail > *')].map(x=>x.className)")
-    check('rail: Star, Saved, comments, Open, NS/FW (%s)' % order, order == ['vr-star', 'vr-save', 'vr-cm', 'vr-open', 'vr-nsfw'])
+    check('rail: Star, comments, Open, NS/FW, then Remove last (%s)' % order, order == ['vr-star', 'vr-cm', 'vr-open', 'vr-nsfw', 'vr-save'])
     check('rail buttons are at least 44px tall', ev("[...document.querySelectorAll('#viewer .vrail > :not([hidden])')].every(x=>x.getBoundingClientRect().height>=44)"))
     check('only one NSFW control in full screen', ev("document.querySelectorAll('#viewer [class*=nsfw]').length") == 1)
     check('caption and rail do not overlap the post buttons', ev("""(()=>{ const a=document.querySelector('#viewer .vcap').getBoundingClientRect(), r=document.querySelector('#viewer .vrail').getBoundingClientRect(), p=document.querySelector('#viewer .vposts').getBoundingClientRect(); return a.bottom<=p.top && r.bottom<=p.top && a.right<=r.left; })()"""))
@@ -55,13 +55,21 @@ with sync_playwright() as p:
     ev("openViewer(POSTS.find(p=>META[p.id].o===1))"); pg.wait_for_timeout(500)
     check('on an NSFW post the one NS/FW mark is lit', ev("document.querySelector('#viewer .vr-nsfw').getAttribute('aria-pressed')") == 'true')
     ev("closeViewer()"); pg.wait_for_timeout(300)
-    # Saved: removes the post and moves on
+    # Remove: removes the post and keeps it on screen with Put back
     pg.tap('#grid .card a.thumb'); pg.wait_for_timeout(600)
     first = ev("VIEW.cur.id"); n = ev("POSTS.length")
     pg.tap('#viewer .vr-save'); pg.wait_for_timeout(700)
-    check('Saved removes the post from the list (with a tombstone) and shows the next one', ev("POSTS.length") == n - 1 and ev("TOMBS.has('%s')" % first) and ev("VIEW.cur.id") != first and not ev("document.getElementById('viewer').hidden"))
+    check('Remove takes the post out of the list (with a tombstone) and keeps it on screen, offering Put back', ev("POSTS.length") == n - 1 and ev("TOMBS.has('%s')" % first) and ev("VIEW.cur.id") == first and not ev("document.getElementById('viewer').hidden") and 'Put back' in ev("document.querySelector('#viewer .vr-save').textContent"))
     check('with Undo offered', 'Undo' in ev("document.getElementById('toast').innerText"))
     nav = ev("[document.querySelector('#viewer .vpp').disabled, document.querySelector('#viewer .vpn').disabled]")
+    ev("viewerPost(1)"); pg.wait_for_timeout(500)
+    check('the next swipe or button moves on from the removed post', ev("VIEW.cur.id") != first)
+    # a tap on the black beside the post toggles the overlay and never closes full screen
+    ev("viewerWake()"); pg.wait_for_timeout(100)
+    ev("VIEW.root.dispatchEvent(new MouseEvent('click',{bubbles:true}))"); pg.wait_for_timeout(200)
+    check('a tap on the black around the post hides the overlay and keeps full screen open', not ev("VIEW.root.hidden") and ev("VIEW.root.classList.contains('vidle')"))
+    ev("VIEW.stage.dispatchEvent(new MouseEvent('click',{bubbles:true}))"); pg.wait_for_timeout(200)
+    check('another tap brings it back, still in full screen', not ev("VIEW.root.hidden") and not ev("VIEW.root.classList.contains('vidle')"))
     check('previous / next still work after the removal', nav != [True, True])
     # press and hold on a picture
     box = ev("(()=>{ const r=document.querySelector('#viewer .vstage img').getBoundingClientRect(); return [r.left+r.width/2, r.top+r.height/2]; })()")

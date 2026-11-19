@@ -1,4 +1,4 @@
-"""Sticky Active / Retrieved / Total counts under the logo bar; bracketed notes only on hover. Run: python tests/stats_test.py"""
+"""Sticky "13 shown of 15" line in the top bar, with "N loading" / "N unavailable" when it applies; notes only on hover; a polite live region says the result. Run: python tests/stats_test.py"""
 import os
 from playwright.sync_api import sync_playwright
 PAGE = 'file://' + os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'site', 'index.html'))
@@ -18,7 +18,10 @@ with sync_playwright() as p:
     pg.wait_for_timeout(400)
     check('strip visible', pg.is_visible('#stats'))
     check('total is every item in the source', pg.inner_text('#stAll') == '40')
-    check('retrieved excludes items the archives could not return', pg.inner_text('#stGot') == '25')
+    check('while previews stream in, the posts still waiting are counted as loading', pg.inner_text('#stGot') == '10' and pg.inner_text('#stXlb') == 'loading')
+    ev("()=>{ loading = null; updateStats(); }"); pg.wait_for_timeout(500)
+    check('once loading ends, posts the archives could not return are counted as unavailable', pg.inner_text('#stGot') == '5' and pg.inner_text('#stXlb') == 'unavailable' and pg.is_visible('#stX'))
+    check('screen readers get the result in a polite live region', ev("(()=>{ const s=document.getElementById('statsSay'); return s.getAttribute('aria-live')==='polite' && /shown of 40/.test(s.textContent); })()"))
     check('active excludes filtered results (text posts hidden by default)', int(pg.inner_text('#stActive')) < 40)
     check('hidden-by-filters note explains the gap', ev("document.getElementById('summary').textContent.includes('hidden by filters')") )
     check('Filters badge ignores the defaults', ev("document.getElementById('decktoggle').dataset.n") in (None, '0'))
@@ -32,7 +35,7 @@ with sync_playwright() as p:
     pg.keyboard.press('Escape'); pg.wait_for_timeout(100)
     check('notes hidden until hover', not pg.is_visible('#stats .st em'))
     pg.hover('#stats .st'); pg.wait_for_timeout(150)
-    check('note shows on hover', pg.is_visible('#stats .st em') and 'Excludes filtered' in pg.inner_text('#stats .st em'))
+    check('note shows on hover', pg.is_visible('#stats .st em') and 'filters' in pg.inner_text('#stats .st em'))
     ev("scrollTo(0,400)"); pg.wait_for_timeout(200)
     check('strip stays on screen when scrolled', ev("document.getElementById('stats').getBoundingClientRect().top") < 120)
     # phone: folds to one line on scroll down, stays folded on scroll up, opens only at the very top

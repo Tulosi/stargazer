@@ -27,7 +27,7 @@ with sync_playwright() as p:
     ev("document.getElementById('mrgLater').click()")
     check('Remind me later clears the dot', not ev("document.getElementById('srctoggle').hasAttribute('data-attn')"))
     ev("(()=>{ for(const p of POSTS){ META[p.id]={t:'T '+p.id,o:0,th:'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',m:'image',u:'',n:0,s:0,a:'',c:1700000000,w:400,h:300}; } onMeta(POSTS); refresh(); })()"); pg.wait_for_timeout(800)
-    check('bookmark says what it means', ev("document.querySelector('.card button.save:not(.nsfwb)').getAttribute('aria-label')") == 'In your list: tap to remove')
+    check('bookmark says what it means', ev("document.querySelector('.card button.save:not(.nsfwb)').getAttribute('aria-label')") == 'Remove from your list')
     # Card info & controls (the layer)
     setm = lambda m: (ev("(m)=>{ const s=document.getElementById('cardmode'); s.value=m; s.dispatchEvent(new Event('change')); }", m), pg.wait_for_timeout(450))
     lay = "(()=>{ const c=document.querySelector('.card'); const l=c.querySelector('.layer'); return [+getComputedStyle(l).opacity, getComputedStyle(l).pointerEvents]; })()"

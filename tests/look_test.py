@@ -28,7 +28,7 @@ with sync_playwright() as p:
     check('tray is neutral smoked glass (%s)' % col, bg == 'none' and col.startswith('rgba(20, 20, 24'))
     check('tray has no gradient top line', ev("getComputedStyle(%s,'::before').content" % lay) in ('none', 'normal'))
     ev("state.showText=true; state.nsfw='show'; refresh(); updateStats()"); pg.wait_for_timeout(500)
-    check('desktop shows one number labelled Posts when nothing is filtered', ev("[...document.querySelectorAll('#stats .st')].filter(e=>e.offsetParent!==null).length")==1 and ev("document.querySelector('#stats .st .lb').textContent")=='Posts')
+    check('desktop shows one number reading "N posts" when nothing is filtered', ev("[...document.querySelectorAll('#stats .st')].filter(e=>e.offsetParent!==null).length")==1 and ev("document.getElementById('stLb').textContent")=='posts' and ev("getComputedStyle(document.querySelector('#stats .sof')).display")=='none')
     check('one accent: the star accent matches the page accent', ev("getComputedStyle(document.body).getPropertyValue('--hot').trim()==getComputedStyle(document.body).getPropertyValue('--accent').trim()"))
     check('no page errors', not errs)
     print('ALL PASS' if not bad else 'FAILED: %d' % len(bad))

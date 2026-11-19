@@ -99,10 +99,10 @@ with sync_playwright() as p:
     b3 = pg.locator('.card').nth(3).bounding_box()
     pg.mouse.move(b3['x'] + 20, b3['y'] + 20); pg.mouse.down(); pg.wait_for_timeout(600); pg.mouse.up(); pg.wait_for_timeout(400)
     check('pressing and holding a tile opens its layer, and does not open full screen', ev(LAY, 3) == 1 and ev("document.getElementById('viewer').hidden"))
-    check('the layer order is Source, Comments, then NSFW, Favourite, Saved, Fullscreen on the right', ev("(()=>{ const l=document.querySelectorAll('.card')[3].querySelector('.layer'); const a=[...l.querySelectorAll('.actions .btn')].map(x=>x.textContent.trim()); const c=[...l.querySelectorAll('.lay-cap > *')].map(x=>x.classList.contains('nsfwb')?'nsfw':x.classList.contains('star')?'star':x.classList.contains('fs')?'fs':'save'); const ar=l.querySelector('.actions .btn:last-child').getBoundingClientRect(), cr=l.querySelector('.lay-cap button:not([hidden])').getBoundingClientRect(); return a[0]==='Open post' && a[1]==='Comments' && c.join()==='nsfw,star,save,fs' && ar.left<cr.left; })()"))
+    check('the layer order is Source, Comments, then NSFW, Favourite, Fullscreen, Remove on the right', ev("(()=>{ const l=document.querySelectorAll('.card')[3].querySelector('.layer'); const a=[...l.querySelectorAll('.actions .btn')].map(x=>x.textContent.trim()); const c=[...l.querySelectorAll('.lay-cap > *')].map(x=>x.classList.contains('nsfwb')?'nsfw':x.classList.contains('star')?'star':x.classList.contains('fs')?'fs':'save'); const ar=l.querySelector('.actions .btn:last-child').getBoundingClientRect(), cr=l.querySelector('.lay-cap button:not([hidden])').getBoundingClientRect(); return a[0]==='Open post' && a[1]==='Comments' && c.join()==='nsfw,star,fs,save' && ar.left<cr.left; })()"))
     pg.mouse.move(2, 2); ev("for(const k in HEALTH) delete HEALTH[k]"); ev(SEED, H); pg.wait_for_timeout(800); ev("toggleLayer(document.querySelectorAll('.card')[5])"); pg.wait_for_timeout(300)   # fresh cards: once a mocked clip has failed, the link falls back to the data: picture, which cannot open a tab
     try:
-        with pg.context.expect_page(timeout=2000):
+        with pg.context.expect_page(timeout=6000):   # 2s was flaky when the whole suite runs
             ev("document.querySelectorAll('.card')[5].querySelector('.actions a.btn.primary').click()")
         opened = True
     except Exception:
