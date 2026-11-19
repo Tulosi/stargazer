@@ -87,7 +87,7 @@ What "local" does and does not mean:
 
 - Thumbnails and clips are fetched by your browser from Reddit and the usual media hosts (`i.redd.it`, `preview.redd.it`, Imgur, RedGifs, YouTube), so you need an internet connection to see previews. The list itself, your filters and your edits work offline.
 - Recovering removed posts sends the post's ID to the public archives listed above, and RedGifs clips are looked up on RedGifs. Nothing else about you is sent.
-- The font (Geist) is built into the page, so no font service is asked for anything. Scripts are never loaded from third parties.
+- The fonts (Geist, plus Chakra Petch and JetBrains Mono for the Lemondrop look) are built into the page, so no font service is asked for anything. Scripts are never loaded from third parties.
 
 ## Download the standalone page
 
