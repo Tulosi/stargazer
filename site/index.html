@@ -958,8 +958,8 @@ html[data-skin="lemondrop"] .deck-bar .pill{color:color-mix(in srgb,var(--ink) 7
 @media (hover:hover){html[data-skin="lemondrop"] .pill:hover{box-shadow:inset 0 0 0 1px var(--line-2);color:var(--ink)}}
 html[data-skin="lemondrop"] :is(#decktoggle,#viewtoggle,#srctoggle,#searchbtn)[aria-expanded="true"],html[data-skin="lemondrop"] .deck-bar .pill[aria-expanded="true"]{background:var(--seg-on);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-2),inset 0 -2px 0 var(--sg-mark)}
 @media (max-width:720px){html[data-skin="lemondrop"] #navbtns .pill{box-shadow:none;background:transparent}html[data-skin="lemondrop"] #navbtns .pill[aria-expanded="true"]{background:transparent;box-shadow:inset 0 2px 0 var(--sg-mark)}}   /* phone bottom bar: bare icons, a mark over the open one */
-html[data-skin="lemondrop"] .pill.primary{background:var(--sg-y);color:#0b0b0a;box-shadow:none;clip-path:polygon(0 0,100% 0,100% 70%,calc(100% - 10px) 100%,0 100%)}
-html[data-skin="lemondrop"][data-theme="light"] .pill.primary{box-shadow:inset 0 0 0 1px #12110f}
+html[data-skin="lemondrop"] .pill.primary{--cut:10px;background:var(--sg-y);color:#0b0b0a;box-shadow:none;clip-path:polygon(0 0,100% 0,100% calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,0 100%)}
+html[data-skin="lemondrop"][data-theme="light"] .pill.primary,html[data-skin="lemondrop"][data-theme="light"] body:not(.layout-list) .layer .actions .btn.primary{box-shadow:inset 0 0 0 1px #12110f;background:linear-gradient(to top left,transparent 50%,#12110f 50%,#12110f calc(50% + 1.42px),transparent calc(50% + 1.42px)) right bottom/var(--cut) var(--cut) no-repeat,var(--sg-y)}   /* the outline runs across the 45-degree cut too */
 html[data-skin="lemondrop"] .pill.warnbtn{box-shadow:inset 0 0 0 1px var(--alert-line)}
 html[data-skin="lemondrop"] #q{background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
 html[data-skin="lemondrop"] .field,html[data-skin="lemondrop"] .subform input,html[data-skin="lemondrop"] .prefixed{background:var(--surface);box-shadow:inset 0 0 0 1px var(--line-2)}
@@ -992,7 +992,7 @@ html[data-skin="lemondrop"] body:not(.layout-list) .layer .title{font-weight:600
 html[data-skin="lemondrop"] body:not(.layout-list) .layer .meta{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase}
 html[data-skin="lemondrop"] body:not(.layout-list) .layer .meta .sub{font:500 10.5px var(--font-mono);letter-spacing:.06em}
 html[data-skin="lemondrop"] body:not(.layout-list) .layer .actions .btn{text-transform:uppercase;letter-spacing:.08em;font-size:11px;box-shadow:inset 0 0 0 1px rgba(241,238,230,.22)}
-html[data-skin="lemondrop"] body:not(.layout-list) .layer .actions .btn.primary{background:var(--sg-y);color:#0b0b0a;box-shadow:none;clip-path:polygon(0 0,100% 0,100% 66%,calc(100% - 8px) 100%,0 100%)}
+html[data-skin="lemondrop"] body:not(.layout-list) .layer .actions .btn.primary{--cut:8px;background:var(--sg-y);color:#0b0b0a;box-shadow:none;clip-path:polygon(0 0,100% 0,100% calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,0 100%)}
 html[data-skin="lemondrop"] body:not(.layout-list) .lay-cap .star[aria-pressed=true]{color:var(--sg-y)}
 @container (max-width:380px){html[data-skin="lemondrop"] body:not(.layout-list) .layer .actions .btn{box-shadow:none}}
 html[data-skin="lemondrop"][data-theme="light"] body:not(.layout-list) .layer{background:rgba(251,250,247,.72);color:#12110f;box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}
@@ -1000,7 +1000,6 @@ html[data-skin="lemondrop"][data-theme="light"] body:not(.layout-list) .layer :i
 html[data-skin="lemondrop"][data-theme="light"] body:not(.layout-list) .layer .title{text-shadow:none}
 html[data-skin="lemondrop"][data-theme="light"] body:not(.layout-list) .layer :is(.meta,.meta .note,.arch){color:rgba(18,17,15,.7)}
 html[data-skin="lemondrop"][data-theme="light"] body:not(.layout-list) .layer .actions .btn{color:#12110f;box-shadow:inset 0 0 0 1px rgba(18,17,15,.25)}
-html[data-skin="lemondrop"][data-theme="light"] body:not(.layout-list) .layer .actions .btn.primary{box-shadow:inset 0 0 0 1px #12110f}
 html[data-skin="lemondrop"][data-theme="light"] body:not(.layout-list) .lay-cap :is(.star,.fs,.save){color:#12110f}
 html[data-skin="lemondrop"][data-theme="light"] body:not(.layout-list) .lay-cap .nsfwb[aria-pressed=false]{color:rgba(18,17,15,.45)}
 html[data-skin="lemondrop"][data-theme="light"] body:not(.layout-list) .lay-cap .star[aria-pressed=true]{color:#12110f}
