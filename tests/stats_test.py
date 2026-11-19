@@ -10,6 +10,7 @@ H = 'id,permalink,starred,updated,deleted\r\n'
 rows = ''.join('p%05d,/r/pics/comments/p%05d/t/,0,1000,0\r\n' % (i, i) for i in range(40))
 with sync_playwright() as p:
     b = p.chromium.launch(); pg = b.new_page(viewport={'width': 900, 'height': 700}); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
+    pg.add_init_script("try{localStorage.setItem('saved-posts-skin','legacy')}catch(e){}")   # these checks read Legacy's words and controls (Lemondrop shows some labels in caps and a bare Fit / Fill)
     pg.route('**/*', lambda r: r.continue_() if r.request.url.startswith('file:') else r.abort())
     pg.goto(PAGE); pg.wait_for_timeout(800); ev = pg.evaluate
     ev("""async(t)=>{ await persistRec({id:'x',name:'x.csv',text:t,handle:null,updated:Date.now()}); await activate(await idbReq('csv','readonly',s=>s.get('x'))); for(const k in META) delete META[k]; startCsvMode(); }""", H + rows)
@@ -40,6 +41,7 @@ with sync_playwright() as p:
     check('strip stays on screen when scrolled', ev("document.getElementById('stats').getBoundingClientRect().top") < 120)
     # phone: folds to one line on scroll down, stays folded on scroll up, opens only at the very top
     m = b.new_page(viewport={'width': 400, 'height': 700}); m.route('**/*', lambda r: r.continue_() if r.request.url.startswith('file:') else r.abort())
+    m.add_init_script("try{localStorage.setItem('saved-posts-skin','legacy')}catch(e){}")   # these checks read Legacy's words and controls (Lemondrop shows some labels in caps and a bare Fit / Fill)
     m.goto(PAGE); m.wait_for_timeout(800)
     m.evaluate("""async(t)=>{ await persistRec({id:'x',name:'x.csv',text:t,handle:null,updated:Date.now()}); await activate(await idbReq('csv','readonly',s=>s.get('x'))); startCsvMode(); }""", H + rows * 1)
     m.wait_for_timeout(600)

@@ -61,7 +61,7 @@ with sync_playwright() as p:
     pg.goto(PAGE); pg.wait_for_timeout(400)
     t = pg.evaluate("(async()=>{const t=performance.now(); const r=await fetchBatch(['abc1','abc2']); return [r.length, Math.round(performance.now()-t)]})()")
     check('slow Arctic Shift: PullPush answers the batch (%s)' % t, t[0] == 2 and 2400 <= t[1] < 6000)
-    check('hedge waits 2.5s before asking PullPush', 'HEDGE_MS = 2500' in open(PAGE[7:]).read())
+    check('hedge waits 2.5s before asking PullPush', 'HEDGE_MS = 2500' in open(PAGE[7:], encoding='utf-8').read())
     for r in hang:
         try: r.abort()
         except Exception: pass

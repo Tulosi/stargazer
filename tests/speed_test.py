@@ -74,7 +74,7 @@ with sync_playwright() as p:
     check('cards show the cached titles', pg.evaluate("[...document.querySelectorAll('#grid .card')].some(c=>/Post \\d/.test(c.textContent))"))
     ctx.close()
     # 4. Static checks
-    src = open(PAGE[7:]).read()
+    src = open(PAGE[7:], encoding='utf-8').read()
     check('preview cache lasts 30 days', 'CACHE_TTL = 30*24*3600*1000' in src)
     check('Geist is embedded: no font service request', "font-family:'Geist'" in src and 'src:url(data:font/woff2;base64,' in src and 'fonts.googleapis.com' not in src and 'fonts.gstatic.com' not in src)
     check('no page errors', not errs)

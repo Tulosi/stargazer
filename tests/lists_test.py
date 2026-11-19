@@ -8,6 +8,7 @@ def check(n, ok):
     if not ok: bad.append(n)
 with sync_playwright() as p:
     b = p.chromium.launch(); pg = b.new_page(viewport={'width': 400, 'height': 900}); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
+    pg.add_init_script("try{localStorage.setItem('saved-posts-skin','legacy')}catch(e){}")   # text checks read the Legacy words (Lemondrop shows some labels in caps)
     H = {'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*'}
     def route(r):
         u = r.request.url

@@ -18,6 +18,7 @@ threading.Thread(target=srv.serve_forever, daemon=True).start()
 with sync_playwright() as p:
     b = p.chromium.launch(args=['--autoplay-policy=no-user-gesture-required'])
     ctx = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True); pg = ctx.new_page(); errs = []
+    ctx.add_init_script("try{localStorage.setItem('saved-posts-skin','legacy')}catch(e){}")   # these checks read Legacy's words and controls (Lemondrop shows some labels in caps and a bare Fit / Fill)
     pg.on('pageerror', lambda e: errs.append(str(e)))
     def route(r):
         u = r.request.url

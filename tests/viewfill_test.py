@@ -36,6 +36,7 @@ def seed(id, meta):
     return "(()=>{ const id='%s'; ROWS.push({id,perma:'https://www.reddit.com/r/gifs/comments/'+id+'/x/',starred:false,t:5}); ROWSET.add(id); META[id]=Object.assign({t:'clip',o:0,th:'',m:'gif',n:0,s:0,a:'',c:1700000000,w:160,h:90}, %s); })()" % (id, json.dumps(meta))
 with sync_playwright() as p:
     b = p.chromium.launch(args=['--autoplay-policy=no-user-gesture-required']); ctx = b.new_context(viewport={'width': 1000, 'height': 700}); pg = ctx.new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
+    ctx.add_init_script("try{localStorage.setItem('saved-posts-skin','legacy')}catch(e){}")   # these checks read Legacy's words and controls (Lemondrop shows some labels in caps and a bare Fit / Fill)
     pg.route('**/*', handle)
     pg.goto('http://127.0.0.1:%d/index.html' % port); pg.wait_for_timeout(1000); ev = pg.evaluate
     ev(seed('quiet1', {'u': 'https://www.redgifs.com/watch/quietone', 'v': 'https://v.redd.it/q/silent.mp4'}))
@@ -91,6 +92,7 @@ with sync_playwright() as p:
     check('the shortcut is listed', 'fills the screen' in ev("document.getElementById('kbhelp').textContent"))
     # phone
     ph = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True); pp = ph.new_page(); pp.route('**/*', handle)
+    ph.add_init_script("try{localStorage.setItem('saved-posts-skin','legacy')}catch(e){}")   # these checks read Legacy's words and controls (Lemondrop shows some labels in caps and a bare Fit / Fill)
     pp.goto('http://127.0.0.1:%d/index.html' % port); pp.wait_for_timeout(1000)
     pp.evaluate(seed('quiet1', {'u': 'https://www.redgifs.com/watch/quietone', 'v': 'https://v.redd.it/q/silent.mp4'})); pp.evaluate('startCsvMode()'); pp.wait_for_timeout(2500)
     pp.evaluate("openViewer(POSTS.find(x=>x.id==='quiet1'))"); pp.wait_for_timeout(1500)

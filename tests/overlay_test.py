@@ -11,6 +11,7 @@ def check(n, ok):
 with sync_playwright() as p:
     b = p.chromium.launch(); errs = []
     ctx = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True); pg = ctx.new_page(); pg.on('pageerror', lambda e: errs.append(str(e)))
+    ctx.add_init_script("try{localStorage.setItem('saved-posts-skin','legacy')}catch(e){}")   # text checks read the Legacy words (Lemondrop shows some labels in caps)
     pg.route('**/*', lambda r: r.continue_() if r.request.url.startswith(('file:', 'data:')) else r.abort())
     pg.goto(PAGE); pg.wait_for_timeout(700); ev = pg.evaluate
     ev("openSample()"); pg.wait_for_timeout(1000)
