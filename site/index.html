@@ -398,7 +398,7 @@ body:not(.layout-list) .badge.media{background:none;-webkit-backdrop-filter:none
    lands it there. Same five-point shape as the logo and the Star buttons. */
 .card{--star-mark:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.8 6.6 19.7l1.1-6.1L3.2 9.4l6.1-.8z'/%3E%3C/svg%3E")}
 body:not(.selecting) .card.is-star::before{content:"";position:absolute;top:8px;right:8px;width:15px;height:15px;z-index:4;pointer-events:none;background:#fff;-webkit-mask:var(--star-mark) center/contain no-repeat;mask:var(--star-mark) center/contain no-repeat;filter:drop-shadow(0 1px 2px rgba(0,0,0,.55))}
-body.layout-list:not(.selecting) .card.is-star::before{background:var(--accent);filter:none;top:10px;right:10px}
+body.layout-list:not(.selecting) .card.is-star::before{content:none}   /* List: the lit Star button in the row already says so; no second mark */
 @media (prefers-reduced-motion:no-preference){body:not(.selecting) .card.is-star.star-new::before{animation:starland .3s cubic-bezier(.23,1,.32,1)}}
 @media (prefers-reduced-motion:reduce){body:not(.selecting) .card.is-star.star-new::before{animation:fadein .2s ease-out}}
 @keyframes starland{from{opacity:0;transform:scale(1.8) translate(-8px,8px)}}
@@ -1307,7 +1307,8 @@ const SOURCES = [
 ];
 
 const META = {};
-let textTouched = false;   // the person has switched Show text posts themselves, so layout changes stop overriding it
+let textTouched = false;   // the person has switched Show text posts themselves in Masonry / Grid, so those layouts stop overriding it
+let gridText = null, inList = false;   // List always opens with text posts shown; gridText keeps the Masonry / Grid choice meanwhile
 const textDefault = () => LAYOUT==='list';   // List suits text posts, so they start on there
 const state = {q:'', cats:new Set(), kinds:new Set(), media:new Set(), nsfw:'hide', sub:'', sort:'saved', fav:false, hideBroken:true, showText:false, range:'all', seed:String(Date.now())};
 const PAGE = 120;
@@ -3226,14 +3227,14 @@ let stT; function updateStats(){
 const VKEY2 = 'saved-posts-view';
 let vsT; function saveView(){ clearTimeout(vsT); vsT = setTimeout(()=>{ try{
   if(MODE!=='csv' || !POSTS.length) return;
-  sessionStorage.setItem(VKEY2, JSON.stringify({cats:[...state.cats], kinds:[...state.kinds], media:[...state.media], nsfw:state.nsfw, sub:state.sub, sort:state.sort, fav:state.fav, showText:state.showText, textTouched, hideBroken:state.hideBroken, range:state.range, q:state.q, seed:state.seed, y:Math.round(scrollY)}));
+  sessionStorage.setItem(VKEY2, JSON.stringify({cats:[...state.cats], kinds:[...state.kinds], media:[...state.media], nsfw:state.nsfw, sub:state.sub, sort:state.sort, fav:state.fav, showText:(inList && gridText!==null ? gridText : state.showText), textTouched, hideBroken:state.hideBroken, range:state.range, q:state.q, seed:state.seed, y:Math.round(scrollY)}));
 }catch(e){} }, 300); }
 addEventListener('scroll', saveView, {passive:true});
 function restoreView(){
   let v = null; try{ v = JSON.parse(sessionStorage.getItem(VKEY2)||'null'); }catch(e){}
   if(!v || MODE!=='csv') return;
   state.cats = new Set(v.cats||[]); state.kinds = new Set(v.kinds||[]); state.media = new Set(v.media||[]);
-  state.sub = v.sub||''; state.fav = !!v.fav; state.showText = !!v.showText; textTouched = !!v.textTouched; state.hideBroken = v.hideBroken!==false; state.q = v.q||''; state.seed = v.seed || state.seed;
+  state.sub = v.sub||''; state.fav = !!v.fav; if(inList){ gridText = !!v.showText; state.showText = true; } else state.showText = !!v.showText; textTouched = !!v.textTouched; state.hideBroken = v.hideBroken!==false; state.q = v.q||''; state.seed = v.seed || state.seed;
   if(v.sort && $('sort').querySelector('option[value='+v.sort+']')){ state.sort = v.sort; $('sort').value = v.sort; }
   if(v.range){ state.range = v.range; $('range').value = v.range; }
   syncBox(); $('favonly').checked = state.fav; $('showtext').checked = state.showText; $('hidebroken') && ($('hidebroken').checked = state.hideBroken);
@@ -3266,7 +3267,7 @@ function updateSummary(){
     : (active ? list.length.toLocaleString()+' of '+POSTS.length.toLocaleString()+' posts <button class="clear" id="clr" type="button">Clear filters</button>' : '');
   const rv = $('rvw'); if(rv) rv.onclick = () => $('decktoggle').click();   // a toggle: opens the Filters panel, or closes it if it is already open
   const c = $('clr'); if(c && MODE==='csv' && POSTS.length && !list.length) c.hidden = true;   // the empty state has its own buttons; one Clear filters is enough
-  if(c) c.onclick = ()=>{ state.cats.clear(); state.kinds.clear(); state.media.clear(); state.sub=''; state.q=''; syncBox(); state.fav=false; $('favonly').checked=false; textTouched=false; state.showText=textDefault(); $('showtext').checked=state.showText; saveListPrefs(); if(state.range!=='all'){ setRange('all'); return; } $('subsel').value=''; setNsfw('hide'); };
+  if(c) c.onclick = ()=>{ state.cats.clear(); state.kinds.clear(); state.media.clear(); state.sub=''; state.q=''; syncBox(); state.fav=false; $('favonly').checked=false; textTouched=false; if(inList) gridText=false; state.showText=textDefault(); $('showtext').checked=state.showText; saveListPrefs(); if(state.range!=='all'){ setRange('all'); return; } $('subsel').value=''; setNsfw('hide'); };
 }
 
 /* ---------- bulk selection ---------- */
@@ -3879,7 +3880,7 @@ function setNsfw(m){
   document.body.classList.toggle('unblur', m==='show'||m==='only');   // Uncensored and Only show NSFW tiles without the blur
   refresh();
 }
-$('showtext').addEventListener('change',e=>{ state.showText = e.target.checked; textTouched = true; saveListPrefs(); refresh(); paintLayoutHint(); });
+$('showtext').addEventListener('change',e=>{ state.showText = e.target.checked; if(!inList){ textTouched = true; saveListPrefs(); } refresh(); paintLayoutHint(); });   // switched in List: only for this visit to List
 $('nsfwseg').addEventListener('click',e=>{ const b = e.target.closest('.pill'); if(b && b.dataset.m!==state.nsfw) setNsfw(b.dataset.m); });
 (function(){
   const fb = $('decktoggle'), sb = $('srctoggle'), vb = $('viewtoggle'), body = document.body;
@@ -4021,12 +4022,12 @@ $('subsel').addEventListener('change',e=>setSub(e.target.value));
 /* The layout is remembered per list (a list of text posts suits List, a list of clips suits Masonry); the global choice is the default for lists without one. */
 /* Per-list choices kept in this browser: sort, Starred only, and Show text posts once the person has toggled it. */
 function listPrefs(){ try{ return JSON.parse(localStorage.getItem('saved-posts-listprefs')||'{}') || {}; }catch(e){ return {}; } }
-function saveListPrefs(){ if(!LIB.cur || MODE!=='csv') return; const m = listPrefs(); const o = {sort:state.sort==='random'?'new':state.sort, fav:!!state.fav}; if(textTouched) o.showText = !!state.showText; m[LIB.cur.id] = o; try{ localStorage.setItem('saved-posts-listprefs', JSON.stringify(m)); }catch(e){} }
+function saveListPrefs(){ if(!LIB.cur || MODE!=='csv') return; const m = listPrefs(); const o = {sort:state.sort==='random'?'new':state.sort, fav:!!state.fav}; if(textTouched) o.showText = !!(inList && gridText!==null ? gridText : state.showText); m[LIB.cur.id] = o; try{ localStorage.setItem('saved-posts-listprefs', JSON.stringify(m)); }catch(e){} }
 function applyListPrefs(){
   const o = LIB.cur && listPrefs()[LIB.cur.id]; if(!o) return;
   if(o.sort && $('sort').querySelector('option[value='+o.sort+']')){ state.sort = o.sort; $('sort').value = o.sort; }
   state.fav = !!o.fav; $('favonly').checked = state.fav;
-  if(typeof o.showText==='boolean'){ state.showText = o.showText; textTouched = true; $('showtext').checked = o.showText; }
+  if(typeof o.showText==='boolean'){ textTouched = true; if(inList) gridText = o.showText; else { state.showText = o.showText; $('showtext').checked = o.showText; } }   // in List the saved choice waits for Masonry / Grid
 }
 function listLayouts(){ try{ return JSON.parse(localStorage.getItem('saved-posts-layouts')||'{}') || {}; }catch(e){ return {}; } }
 function setListLayout(id, l){ if(id==null) return; const m = listLayouts(); m[id] = l; try{ localStorage.setItem('saved-posts-layouts', JSON.stringify(m)); }catch(e){} }
@@ -4035,16 +4036,24 @@ function applyListLayout(){
   if(l && LAYOUTS[l] && l!==LAYOUT){ LAYOUT = l; paintLayout(); }
   applyTextDefault();
 }
-/* Text posts default to shown in List and hidden elsewhere, until the person toggles them themselves. */
+/* Text posts: List always opens with them shown (Nov 2026: List is where they read best), whatever Masonry / Grid use. Switching them off in List lasts until
+   List is left; Masonry / Grid then get their own choice back (gridText). Masonry / Grid default to off until the person toggles them there (textTouched). */
 function paintLayoutHint(){
   const h = $('layouthint'); if(!h) return;
   h.textContent = LAYOUTS[LAYOUT];
   if(LAYOUT!=='list' && !state.showText){ const n = document.createElement('span'); n.className = 'laynote'; n.textContent = 'Text posts default to off in this view.'; h.appendChild(n); }
 }
 function applyTextDefault(){
-  if(textTouched || state.showText===textDefault()) { paintLayoutHint(); return; }
-  state.showText = textDefault(); const t = $('showtext'); if(t) t.checked = state.showText;
-  paintLayoutHint(); if(typeof refresh==='function' && POSTS && POSTS.length) refresh();
+  const before = state.showText;
+  if(LAYOUT==='list'){
+    if(!inList){ inList = true; gridText = state.showText; state.showText = true; }
+  } else {
+    if(inList){ inList = false; if(gridText!==null) state.showText = gridText; gridText = null; }
+    if(!textTouched) state.showText = textDefault();
+  }
+  const t = $('showtext'); if(t) t.checked = state.showText;
+  paintLayoutHint();
+  if(state.showText!==before && typeof refresh==='function' && POSTS && POSTS.length) refresh();
 }
 function paintLayout(){ document.querySelectorAll('#layoutseg .pill').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.l===LAYOUT))); document.body.classList.toggle('layout-grid', LAYOUT==='grid'); document.body.classList.toggle('layout-list', LAYOUT==='list'); const h = $('layouthint'); paintLayoutHint();  for(const c of cardEls.values()) cardTabs(c, !!c._kb); document.querySelectorAll('.card.btns-open').forEach(c=>{ c.classList.remove('btns-open'); const b = c.querySelector('.morebtn'); if(b) b.setAttribute('aria-expanded','false'); }); }
 document.querySelectorAll('#layoutseg .pill').forEach(b=>b.addEventListener('click',()=>{
@@ -5034,9 +5043,16 @@ async function syncCloudInner(rec){
       }
       if(rows.length < 1000) break;
     }
+    if(rec.sample){ delete rec.sample; if(rec.name==='Sample posts (not yours)') rec.name = 'My saved posts'; }   // an account list that began as the sample list (before Nov 2026)
+    const stray = new Map(); ROWS.forEach(x=>{ if(isSampleId(x.id)) stray.set(x.id, x); }); remoteRows.forEach(x=>{ if(isSampleId(x.id) && !stray.has(x.id)) stray.set(x.id, x); });
+    if(stray.size){   // invented sample posts that reached this account: delete them here and (through the upload below) in the account
+      const here = [...stray.keys()].filter(id=>ROWSET.has(id)); if(here.length) deleteRows(here);
+      for(const [id,x] of stray) if(!TOMBS.has(id)){ TOMBS.set(id,{t:nowT(x.t), perma:x.perma||''}); markDirty(id); }
+    }
     const res = mergeSets({rows:ROWS, tombs:TOMBS}, {rows:remoteRows, tombs:remoteTombs}), r = res.report;
     const bits = []; if(r.added.length) bits.push(r.added.length+' new'); if(r.removedHere.length) bits.push(r.removedHere.length+' removed'); if(r.starsChanged) bits.push(r.starsChanged+' star changes');
     applyMerged(res, bits.length ? 'Synced from your account: '+bits.join(', ')+'.' : '');
+    if(stray.size){ rec.text = rowsToCsv(ROWS, TOMBS); rec.updated = Date.now(); for(const id of stray.keys()) delete META[id]; }
     // what to upload
     const toSend = [];
     const cur = new Map(); ROWS.forEach(x=>cur.set(x.id, recToWire(x,false))); TOMBS.forEach((x,id)=>cur.set(id, recToWire({id, perma:x.perma, t:x.t}, true)));
@@ -5067,7 +5083,13 @@ function acctRender(){
   csvInfo();
 }
 async function linkAccount(){
-  const rec = LIB.cur; if(!rec || !SESSION) return;
+  let rec = LIB.cur; if(!rec || !SESSION) return;
+  if(rec.sample){   // the sample list is never linked: open this account's list (or a new empty one) and drop the samples
+    const acct = (await libAll()).find(r=>r.cloud && !r.sample && (!r.cloudUser || r.cloudUser===SESSION.uid))
+      || {id:'acct-'+Date.now().toString(36), name:'My saved posts', text:SEED_CSV, handle:null, updated:Date.now()};
+    await persistRec(acct); await activate(acct); await dropSampleLists(acct.id); startCsvMode();
+    rec = acct;
+  }
   if(rec.cloudUser && rec.cloudUser!==SESSION.uid){
     const d = await confirmDialog({title:'Link this list to a different account?', paras:['This list on this device was synced with another account. Combining it with "'+SESSION.email+'" would add those posts to this account.'], ok:'Combine'});
     if(d!=='ok'){ SESSION = null; saveSession(); acctRender(); return; }
@@ -5729,7 +5751,7 @@ async function openCsvResult(r){
   const {rows} = csvToRows(r.text);
   if(!rows.length){ csvStatus('No posts found in that file. It needs an id and permalink column.','warn'); return; }
   const rec = {id:'csv-'+Date.now().toString(36), name:r.name, text:r.text, handle:r.handle, updated:Date.now(), synced:!!r.handle};
-  await persistRec(rec); await activate(rec); startCsvMode(); noteMerge(rec.id, pullTime(r));
+  await persistRec(rec); await activate(rec); await dropSampleLists(rec.id); startCsvMode(); noteMerge(rec.id, pullTime(r));
   csvStatus('Opened "'+r.name+'" with '+rows.length.toLocaleString()+' posts.');
 }
 document.addEventListener('click',e=>{ if(e.target.closest && e.target.closest('#emptyClear')){ const c = $('clr'); if(c) c.click(); }
@@ -5751,6 +5773,14 @@ function sampleArt(i,w,h){
     g += '<path d="'+d+' L'+w+' '+h+' Z" fill="hsl('+(hue+8)+',36%,'+(32-L*9)+'%)" opacity="'+(.55+L*.2)+'"/>';
   }
   return 'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+w+' '+h+'" width="'+w+'" height="'+h+'">'+g+'</svg>');
+}
+/* The invented sample posts have ids zsmp001..zsmp015 (base 36 numbers Reddit will not reach for decades). They are only for a first look:
+   opening or merging a real CSV, or signing in, drops the sample list, and an account that ever received them deletes them on its next sync. */
+const isSampleId = id => /^zsmp\d{3}$/.test(id||'');
+async function dropSampleLists(keepId){
+  if(LIB.db){ for(const r of await libAll()){ if(r.sample && r.id!==keepId){ try{ await idbReq('csv','readwrite',s=>s.delete(r.id)); }catch(e){} } } }
+  for(const id of Object.keys(META)) if(isSampleId(id)) delete META[id];
+  await renderLibrary();
 }
 async function openSample(){
   const rows = SAMPLES.map((x,i)=>({id:'zsmp'+String(i+1).padStart(3,'0'), sub:x[0]}));
@@ -5782,6 +5812,7 @@ $('csvOpen').addEventListener('click',async()=>{ const r = await pickCsv(false);
 })();
 $('csvMerge').addEventListener('click',async()=>{
   const r = await pickCsv(true); if(!r) return;
+  if(LIB.cur && LIB.cur.sample){ await openCsvResult(r); return; }   // never merge real posts into the invented ones: open the file as its own list
   const remote = csvToRows(r.text);
   if(!remote.rows.length && !remote.tombs.size){ csvStatus('No posts found in that file. It needs an id and permalink column.','warn'); return; }
   const res = mergeSets({rows:ROWS, tombs:TOMBS}, remote), rep = res.report;

@@ -1,4 +1,4 @@
-"""Text posts default on in List, off in Masonry/Grid, unless toggled by hand; the hint note follows. Run: python tests/listtext_test.py"""
+"""Text posts: List always opens with them shown; Masonry/Grid default to off unless toggled by hand there (List visits leave that choice alone); the hint note follows. Run: python tests/listtext_test.py"""
 import os
 from playwright.sync_api import sync_playwright
 PAGE = 'file://' + os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'site', 'index.html'))
@@ -26,10 +26,22 @@ with sync_playwright() as p:
     check('grid: back to hidden with the note', txt() == 0 and not ev("document.getElementById('showtext').checked") and 'default to off' in note())
     lay('list'); pg.click('#showtext') if False else ev("document.getElementById('showtext').click()"); pg.wait_for_timeout(300)
     check('manually turned off in list', txt() == 0)
-    lay('masonry'); lay('list')
-    check('manual choice is respected across layouts (stays off)', txt() == 0)
-    ev("document.getElementById('showtext').click()"); pg.wait_for_timeout(300); lay('grid')
-    check('manually on: stays on in grid, no note', txt() == 2 and note() == '')
+    lay('masonry')
+    check('switching off in List does not carry to Masonry (still its default, off)', txt() == 0)
+    lay('list')
+    check('List opens with text posts shown again', txt() == 2 and ev("document.getElementById('showtext').checked"))
+    lay('grid'); ev("document.getElementById('showtext').click()"); pg.wait_for_timeout(300)
+    check('turned on by hand in Grid: shown, no note', txt() == 2 and note() == '')
+    lay('masonry')
+    check('the Masonry / Grid choice is kept across those layouts', txt() == 2)
+    ev("document.getElementById('showtext').click()"); pg.wait_for_timeout(300)
+    check('turned off by hand in Masonry', txt() == 0)
+    lay('list')
+    check('List still opens with text posts shown, even after turning them off elsewhere', txt() == 2)
+    pg.reload(); pg.wait_for_timeout(1200)
+    check('after a reload in List they are still shown', ev("LAYOUT") == 'list' and ev("state.showText") and ev("document.getElementById('showtext').checked"))
+    lay('masonry')
+    check('and Masonry gets its own off choice back', txt() == 0 and not ev("state.showText"))
     check('no page errors', not errs)
     b.close()
 raise SystemExit(1 if bad else 0)
