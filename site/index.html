@@ -2772,17 +2772,21 @@ new MutationObserver(()=>{ zReset(); }).observe(VIEW.stage,{childList:true});
   const tend = e=>{ if(!ZOOM.pts.size) return; e.preventDefault(); for(const t of e.changedTouches) up('t'+t.identifier, t.clientX, t.clientY); };
   st.addEventListener('touchend',tend,{passive:false});
   st.addEventListener('touchcancel',e=>{ for(const t of e.changedTouches) up('t'+t.identifier, t.clientX, t.clientY); },{passive:false});
-  /* Clips: a swipe on the video moves between posts the same way. Its touches are only watched (not taken over), so a plain tap still reaches the
-     video and shows or hides the player bar; a swipe cancels that tap. Embedded players (YouTube, RedGifs) keep their own touches, so the buttons stay. */
+  /* Everything but a picture swipes between posts the same way: a clip, the black around a YouTube player, a post that failed to load ("Nothing to
+     show"), a message, the empty stage. Its touches are only watched (not taken over), so a plain tap still reaches a video (player bar) or the black
+     (overlay); a swipe cancels that tap. Pictures have their own handler above (pinch, pan); buttons, the player bar and the rail keep their touches,
+     and an embedded player (YouTube, RedGifs' iframe) gets touches on itself only, which never reach the page. */
   let vsw = null;
-  st.addEventListener('touchstart',e=>{ const v = e.target.closest && e.target.closest('video'); vsw = (v && e.touches.length===1) ? {x:e.touches[0].clientX, y:e.touches[0].clientY, t:Date.now()} : null; },{passive:true});
-  st.addEventListener('touchmove',e=>{ if(!vsw) return; if(e.touches.length > 1){ vsw = null; stageY(0); return; } dragFollow(e.touches[0].clientX - vsw.x, e.touches[0].clientY - vsw.y); },{passive:true});
-  st.addEventListener('touchend',e=>{
+  const swipeable = t => !!(t && t.closest) && !t.closest('button,a,input,select,textarea,iframe,.vctl,.vrail,.volfly') && !(t.tagName==='IMG' && st.contains(t));
+  const R = VIEW.root;
+  R.addEventListener('touchstart',e=>{ vsw = (e.touches.length===1 && swipeable(e.target)) ? {x:e.touches[0].clientX, y:e.touches[0].clientY, t:Date.now()} : null; },{passive:true});
+  R.addEventListener('touchmove',e=>{ if(!vsw) return; if(e.touches.length > 1){ vsw = null; stageY(0); return; } dragFollow(e.touches[0].clientX - vsw.x, e.touches[0].clientY - vsw.y); },{passive:true});
+  R.addEventListener('touchend',e=>{
     if(!vsw) return; const t = e.changedTouches[0], dx = t.clientX - vsw.x, dy = t.clientY - vsw.y, ms = Date.now() - vsw.t; vsw = null;
     if(dragEnd(dx, dy, ms)){ e.preventDefault(); return; }
     const sw = swipeStep(dx, dy); if(sw && sw.axis==='x'){ e.preventDefault(); slideTo(sw.d); }
   },{passive:false});
-  st.addEventListener('touchcancel',()=>{ if(vsw){ vsw = null; stageY(0, 'transform 440ms '+SPRING_EASE); } },{passive:true});
+  R.addEventListener('touchcancel',()=>{ if(vsw){ vsw = null; stageY(0, 'transform 440ms '+SPRING_EASE); } },{passive:true});
   // iOS Safari reports pinches as gestures; keep the page itself from zooming
   ['gesturestart','gesturechange','gestureend'].forEach(ev=>VIEW.root.addEventListener(ev,e=>e.preventDefault()));
   // mouse and pen
