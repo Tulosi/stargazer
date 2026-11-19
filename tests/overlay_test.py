@@ -64,12 +64,21 @@ with sync_playwright() as p:
     nav = ev("[document.querySelector('#viewer .vpp').disabled, document.querySelector('#viewer .vpn').disabled]")
     ev("viewerPost(1)"); pg.wait_for_timeout(500)
     check('the next swipe or button moves on from the removed post', ev("VIEW.cur.id") != first)
+    # after moving on in the same session the overlay stays down: mouse movement and repaints do not bring it back, a tap does
+    check('after moving to another post the overlay stays down', ev("VIEW.root.classList.contains('vidle')"))
+    pg.mouse.move(200, 200); pg.mouse.move(400, 300); ev("viewerWake(); paintChrome(VIEW.cur)"); pg.wait_for_timeout(150)
+    check('mouse movement and repaints leave it down', ev("VIEW.root.classList.contains('vidle')"))
     # a tap on the black beside the post toggles the overlay and never closes full screen
-    ev("viewerWake()"); pg.wait_for_timeout(100)
     ev("VIEW.root.dispatchEvent(new MouseEvent('click',{bubbles:true}))"); pg.wait_for_timeout(200)
-    check('a tap on the black around the post hides the overlay and keeps full screen open', not ev("VIEW.root.hidden") and ev("VIEW.root.classList.contains('vidle')"))
+    check('a tap on the black around the post brings it back, still in full screen', not ev("VIEW.root.hidden") and not ev("VIEW.root.classList.contains('vidle')"))
     ev("VIEW.stage.dispatchEvent(new MouseEvent('click',{bubbles:true}))"); pg.wait_for_timeout(200)
-    check('another tap brings it back, still in full screen', not ev("VIEW.root.hidden") and not ev("VIEW.root.classList.contains('vidle')"))
+    check('another tap hides it, still in full screen', not ev("VIEW.root.hidden") and ev("VIEW.root.classList.contains('vidle')"))
+    ev("VIEW.stage.dispatchEvent(new MouseEvent('click',{bubbles:true}))"); pg.wait_for_timeout(200)
+    ev("viewerPost(1)"); pg.wait_for_timeout(500)
+    check('shown by hand on one post, it is down again on the next', ev("VIEW.root.classList.contains('vidle')"))
+    ev("const q = VIEW.cur; closeViewer(); openViewer(q)"); pg.wait_for_timeout(500)
+    check('leaving and opening full screen again shows it on the first post', not ev("VIEW.root.classList.contains('vidle')"))
+    ev("closeViewer(); openViewer(list.find(p=>{ const m=metaOf(p); return m && m.m==='image'; }))"); pg.wait_for_timeout(600)   # back on a picture for the press-and-hold checks
     check('previous / next still work after the removal', nav != [True, True])
     # press and hold on a picture
     box = ev("(()=>{ const r=document.querySelector('#viewer .vstage img').getBoundingClientRect(); return [r.left+r.width/2, r.top+r.height/2]; })()")
